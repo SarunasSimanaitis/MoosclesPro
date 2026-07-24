@@ -27,14 +27,29 @@ export default function ExerciseCard({ exercise }: ExerciseCardProps) {
     );
   };
 
+  const completedSets = sets.filter((set) => set.completed).length;
+  const isCompleted = completedSets === sets.length;
+
   return (
     <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6">
-      <div className="mb-5">
-        <h2 className="text-xl font-semibold">{exercise.name}</h2>
+      <div className="mb-5 flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-semibold">{exercise.name}</h2>
 
-        <p className="text-sm text-zinc-500">
-          {exercise.muscleGroup} • {exercise.equipment}
-        </p>
+          <p className="text-sm text-zinc-500">
+            {exercise.muscleGroup} • {exercise.equipment}
+          </p>
+        </div>
+
+        <span
+          className={`rounded-full px-3 py-1 text-sm font-medium ${
+            isCompleted
+              ? "bg-green-500/20 text-green-400"
+              : "bg-zinc-800 text-zinc-400"
+          }`}
+        >
+          {completedSets}/{sets.length}
+        </span>
       </div>
 
       <div className="space-y-3">

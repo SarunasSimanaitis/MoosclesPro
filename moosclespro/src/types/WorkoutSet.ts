@@ -1,6 +1,7 @@
 export interface WorkoutSet {
-  id: string
-  weight: number
-  reps: number
-  completed: boolean
+    id: string;
+    weight: number;
+    reps: number;
+    completed: boolean;
+    order: number;
 }

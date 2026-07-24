@@ -2,10 +2,12 @@ import { Play, Clock3, Dumbbell } from "lucide-react";
 import Card from "../ui/Card";
 import Button from "../ui/Button";
 import { dashboard } from "../../data/dashboard";
+import { useNavigate } from "react-router-dom";
 
 export default function TodayWorkoutCard() {
   const { todayWorkout } = dashboard;
 
+  const navigate = useNavigate();
   return (
     <Card>
       <div className="flex items-start justify-between">
@@ -14,9 +16,7 @@ export default function TodayWorkoutCard() {
             Today's Workout
           </p>
 
-          <h2 className="mt-3 text-4xl font-bold">
-            {todayWorkout.title}
-          </h2>
+          <h2 className="mt-3 text-4xl font-bold">{todayWorkout.title}</h2>
 
           <div className="mt-5 flex gap-6 text-sm text-zinc-400">
             <div className="flex items-center gap-2">
@@ -31,7 +31,7 @@ export default function TodayWorkoutCard() {
           </div>
         </div>
 
-        <Button>
+        <Button onClick={() => navigate("/workout")}>
           <Play size={18} />
           <span>Start Workout</span>
         </Button>

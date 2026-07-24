@@ -9,7 +9,7 @@ import History from "./pages/History";
 import Statistics from "./pages/Statistics";
 import Exercises from "./pages/Exercises";
 import Settings from "./pages/Settings";
-import WorkoutSessionPage from "./pages/WorkoutSessionsPage";
+import WorkoutSessionPage from "./pages/WorkoutSessionPage.tsx";
 
 export default function App() {
   return (

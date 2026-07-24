@@ -1,4 +1,5 @@
 import { routines } from "../data/routines";
+import ExerciseCard from "../components/workout/ExerciseCard";
 
 export default function WorkoutSessionPage() {
   const routine = routines[0];
@@ -13,16 +14,10 @@ export default function WorkoutSessionPage() {
 
       <div className="mt-8 space-y-6">
         {routine.exercises.map((exercise) => (
-          <div
+          <ExerciseCard
             key={exercise.id}
-            className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6"
-          >
-            <h2 className="text-xl font-semibold">{exercise.name}</h2>
-
-            <p className="mt-1 text-sm text-zinc-500">
-              {exercise.muscleGroup} • {exercise.equipment}
-            </p>
-          </div>
+            exercise={exercise}
+          />
         ))}
       </div>
     </main>

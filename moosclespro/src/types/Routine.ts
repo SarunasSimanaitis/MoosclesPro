@@ -1,7 +1,7 @@
-import type { Exercise } from "./Exercise"
+import type { RoutineExercise } from "./RoutineExercise";
 
 export interface Routine {
-  id: string
-  name: string
-  exercises: Exercise[]
+  id: string;
+  name: string;
+  exercises: RoutineExercise[];
 }

@@ -1,7 +1,12 @@
-import type { Exercise } from "./Exercise"
-import type { WorkoutSet } from "./WorkoutSet"
+import type { Exercise } from "./Exercise";
+import type { WorkoutSet } from "./WorkoutSet";
 
 export interface WorkoutExercise {
-  exercise: Exercise
-  sets: WorkoutSet[]
+  exercise: Exercise;
+
+  targetSets: number;
+  targetReps: string;
+  restSeconds: number;
+
+  sets: WorkoutSet[];
 }

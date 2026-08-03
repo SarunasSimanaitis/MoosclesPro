@@ -1,21 +1,25 @@
 import { useState } from "react";
-import type { Exercise } from "../../types/Exercise";
+import type { RoutineExercise } from "../../types/RoutineExercise";
 import SetRow from "./SetRow";
 
 type ExerciseCardProps = {
-  exercise: Exercise;
+  routineExercise: RoutineExercise;
 };
 
 type Set = {
   completed: boolean;
 };
 
-export default function ExerciseCard({ exercise }: ExerciseCardProps) {
-  const [sets, setSets] = useState<Set[]>([
-    { completed: false },
-    { completed: false },
-    { completed: false },
-  ]);
+export default function ExerciseCard({
+  routineExercise,
+}: ExerciseCardProps) {
+  const { exercise, targetSets, targetReps, restSeconds } = routineExercise;
+
+  const [sets, setSets] = useState<Set[]>(
+    Array.from({ length: targetSets }, () => ({
+      completed: false,
+    }))
+  );
 
   const toggleSet = (index: number) => {
     setSets((previousSets) =>
@@ -38,6 +42,10 @@ export default function ExerciseCard({ exercise }: ExerciseCardProps) {
 
           <p className="text-sm text-zinc-500">
             {exercise.muscleGroup} • {exercise.equipment}
+          </p>
+
+          <p className="mt-2 text-sm text-indigo-400">
+            {targetSets} sets • {targetReps} reps • {restSeconds}s rest
           </p>
         </div>
 

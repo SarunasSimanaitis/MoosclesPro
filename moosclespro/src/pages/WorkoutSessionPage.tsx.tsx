@@ -10,6 +10,7 @@ import { saveWorkoutSession } from "../utils/workoutStorage";
 
 export default function WorkoutSessionPage() {
   const routine = routines[0];
+  const [startedAt] = useState(() => new Date().toISOString());
   const [workoutExercises, setWorkoutExercises] = useState<WorkoutExercise[]>(
     routine.exercises.map((routineExercise) => {
       const sets: WorkoutSet[] = Array.from(
@@ -106,13 +107,13 @@ export default function WorkoutSessionPage() {
   }
 
   function finishWorkout() {
-    const now = new Date().toISOString();
+    const completedAt = new Date().toISOString();
 
     const session = {
       id: crypto.randomUUID(),
       routineId: routine.id,
-      startedAt: now,
-      completedAt: now,
+      startedAt,
+      completedAt,
       exercises: workoutExercises,
     };
 

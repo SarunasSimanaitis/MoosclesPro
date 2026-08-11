@@ -6,10 +6,10 @@ import { routines } from "../data/routines";
 
 import type { WorkoutExercise } from "../types/WorkoutExercise";
 import type { WorkoutSet } from "../types/WorkoutSet";
+import { saveWorkoutSession } from "../utils/workoutStorage";
 
 export default function WorkoutSessionPage() {
   const routine = routines[0];
-
   const [workoutExercises, setWorkoutExercises] = useState<WorkoutExercise[]>(
     routine.exercises.map((routineExercise) => {
       const sets: WorkoutSet[] = Array.from(
@@ -81,29 +81,43 @@ export default function WorkoutSessionPage() {
     });
   }
 
-function updateCompleted(exerciseId: string, setId: string) {
-  setWorkoutExercises((previousExercises) =>
-    previousExercises.map((exercise) => {
-      if (exercise.exercise.id !== exerciseId) {
-        return exercise;
-      }
+  function updateCompleted(exerciseId: string, setId: string) {
+    setWorkoutExercises((previousExercises) =>
+      previousExercises.map((exercise) => {
+        if (exercise.exercise.id !== exerciseId) {
+          return exercise;
+        }
 
-      return {
-        ...exercise,
-        sets: exercise.sets.map((set) => {
-          if (set.id !== setId) {
-            return set;
-          }
+        return {
+          ...exercise,
+          sets: exercise.sets.map((set) => {
+            if (set.id !== setId) {
+              return set;
+            }
 
-          return {
-            ...set,
-            completed: !set.completed,
-          };
-        }),
-      };
-    }),
-  );
-}
+            return {
+              ...set,
+              completed: !set.completed,
+            };
+          }),
+        };
+      }),
+    );
+  }
+
+  function finishWorkout() {
+    const now = new Date().toISOString();
+
+    const session = {
+      id: crypto.randomUUID(),
+      routineId: routine.id,
+      startedAt: now,
+      completedAt: now,
+      exercises: workoutExercises,
+    };
+
+    saveWorkoutSession(session);
+  }
 
   return (
     <main className="mx-auto max-w-5xl p-8">
@@ -118,13 +132,16 @@ function updateCompleted(exerciseId: string, setId: string) {
             workoutExercise={workoutExercise}
             updateWeight={updateWeight}
             updateReps={updateReps}
-              updateCompleted={updateCompleted}
+            updateCompleted={updateCompleted}
           />
         ))}
       </div>
 
       <div className="mt-10 flex justify-end">
-        <button className="rounded-xl bg-indigo-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-indigo-500">
+        <button
+          onClick={finishWorkout}
+          className="rounded-xl bg-indigo-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-indigo-500"
+        >
           Finish Workout
         </button>
       </div>

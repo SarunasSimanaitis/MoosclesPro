@@ -3,7 +3,7 @@ import { navigation } from "../../data/navigation";
 
 export default function Sidebar() {
   return (
-    <aside className="sticky top-0 flex h-screen w-72 flex-col overflow-y-auto border-r border-zinc-800 bg-zinc-950">
+    <aside className="flex w-72 flex-col border-r border-zinc-800 bg-zinc-950">
       <div className="border-b border-zinc-800 px-8 py-8">
         <h1 className="text-3xl font-black tracking-tight text-zinc-50">
           Mooscles
@@ -15,7 +15,7 @@ export default function Sidebar() {
         </p>
       </div>
 
-      <nav className="flex-1 space-y-2 p-5">
+      <nav className="space-y-2 p-5">
         {navigation.map((link) => {
           const Icon = link.icon;
 

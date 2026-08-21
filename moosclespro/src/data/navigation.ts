@@ -6,6 +6,7 @@ import {
   ChartColumn,
   NotebookTabs,
   Settings,
+  Sparkles,
 } from "lucide-react";
 
 export const navigation = [
@@ -38,6 +39,11 @@ export const navigation = [
     label: "Exercises",
     path: "/exercises",
     icon: NotebookTabs,
+  },
+  {
+    label: "Mindset",
+    path: "/mindset",
+    icon: Sparkles,
   },
   {
     label: "Settings",

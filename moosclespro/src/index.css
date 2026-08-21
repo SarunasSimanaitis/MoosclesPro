@@ -1,19 +1,45 @@
 @import "tailwindcss";
 
 :root {
+  color-scheme: light;
+
+  --background: #f5f1e8;
+  --surface: #fffdf8;
+  --surface-soft: #f0e9dd;
+
+  --primary: #c58a3a;
+  --primary-hover: #a86f20;
+  --primary-soft: rgba(197, 138, 58, 0.12);
+
+  --text: #30261e;
+  --text-muted: #85776a;
+
+  --border: #e5ddd0;
+  --border-strong: #d8ccbb;
+
+  --success: #6f8f63;
+  --danger: #a85d4a;
+}
+
+.dark {
   color-scheme: dark;
 
-  --background: #09090b;
-  --surface: #18181b;
-  --surface-light: #27272a;
+  --background: #171513;
+  --surface: #211e1a;
+  --surface-soft: #2b2722;
 
-  --primary: #6366f1;
-  --primary-hover: #7c83ff;
+  --primary: #c58a3a;
+  --primary-hover: #d39a49;
+  --primary-soft: rgba(197, 138, 58, 0.14);
 
-  --text: #fafafa;
-  --text-muted: #a1a1aa;
+  --text: #f5f0e8;
+  --text-muted: #aaa096;
 
-  --border: #27272a;
+  --border: #3a342d;
+  --border-strong: #4a4238;
+
+  --success: #8ca87d;
+  --danger: #c47761;
 }
 
 * {
@@ -29,15 +55,26 @@ body {
   min-height: 100vh;
 
   background: var(--background);
-
   color: var(--text);
 
   font-family:
     Inter,
     system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
     sans-serif;
+
+  transition:
+    background-color 200ms ease,
+    color 200ms ease;
 }
 
 button {
   cursor: pointer;
+}
+
+::selection {
+  background: var(--primary);
+  color: white;
 }

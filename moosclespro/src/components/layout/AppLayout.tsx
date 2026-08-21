@@ -1,22 +1,14 @@
 import { Outlet } from "react-router-dom";
-import Sidebar from "../navigation/Sidebar";
+import Navbar from "../navigation/Navbar";
 
 export default function AppLayout() {
   return (
-    <div className="min-h-screen bg-zinc-950">
+    <div className="min-h-screen bg-[var(--background)] text-[var(--text)]">
+      <Navbar />
 
-      <div className="mx-auto flex max-w-[1900px]">
-
-        <Sidebar />
-
-        <main className="flex-1 px-10 py-8">
-
-          <Outlet />
-
-        </main>
-
-      </div>
-
+      <main className="mx-auto max-w-[1900px] px-5 py-8 lg:px-10 lg:py-10">
+        <Outlet />
+      </main>
     </div>
   );
 }

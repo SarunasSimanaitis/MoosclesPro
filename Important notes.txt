@@ -1,3 +1,0 @@
-React re-renders when state changes via its setter (setState), not when you mutate variables directly.
-State should live in the lowest common parent that needs it.
-Avoid duplicate state. If something can be calculated (like completed sets, workout progress, total volume), calculate it instead of storing another piece of state.

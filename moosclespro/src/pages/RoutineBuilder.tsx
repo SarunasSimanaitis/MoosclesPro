@@ -1,0 +1,470 @@
+import {
+  ArrowLeft,
+  Check,
+  Dumbbell,
+  Plus,
+  Trash2,
+} from "lucide-react";
+
+import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+
+import { exercises } from "../data/exercises";
+import { useRoutineStore } from "../stores/routineStore";
+import type { RoutineExercise } from "../types/RoutineExercise";
+
+export default function RoutineBuilder() {
+  const navigate = useNavigate();
+
+  const addRoutine = useRoutineStore(
+    (state) => state.addRoutine,
+  );
+
+  const [name, setName] = useState("");
+
+  const [routineExercises, setRoutineExercises] =
+    useState<RoutineExercise[]>([]);
+
+  const [showExercisePicker, setShowExercisePicker] =
+    useState(false);
+
+  const [search, setSearch] = useState("");
+
+  const availableExercises = useMemo(() => {
+    const normalizedSearch =
+      search.trim().toLowerCase();
+
+    return exercises.filter((exercise) => {
+      if (!normalizedSearch) {
+        return true;
+      }
+
+      return (
+        exercise.name
+          .toLowerCase()
+          .includes(normalizedSearch) ||
+        exercise.muscleGroup
+          .toLowerCase()
+          .includes(normalizedSearch)
+      );
+    });
+  }, [search]);
+
+  function addExercise(
+    exerciseId: string,
+  ) {
+    const exercise = exercises.find(
+      (item) => item.id === exerciseId,
+    );
+
+    if (!exercise) {
+      return;
+    }
+
+    const alreadyAdded = routineExercises.some(
+      (item) =>
+        item.exercise.id === exercise.id,
+    );
+
+    if (alreadyAdded) {
+      return;
+    }
+
+    setRoutineExercises((current) => [
+      ...current,
+      {
+        exercise,
+        targetSets: 3,
+        targetReps: "8-12",
+        restSeconds: 90,
+      },
+    ]);
+
+    setShowExercisePicker(false);
+    setSearch("");
+  }
+
+  function removeExercise(
+    exerciseId: string,
+  ) {
+    setRoutineExercises((current) =>
+      current.filter(
+        (item) =>
+          item.exercise.id !== exerciseId,
+      ),
+    );
+  }
+
+  function updateExercise(
+    exerciseId: string,
+    changes: Partial<
+      Omit<RoutineExercise, "exercise">
+    >,
+  ) {
+    setRoutineExercises((current) =>
+      current.map((item) =>
+        item.exercise.id === exerciseId
+          ? {
+              ...item,
+              ...changes,
+            }
+          : item,
+      ),
+    );
+  }
+
+  function saveRoutine() {
+    const trimmedName = name.trim();
+
+    if (!trimmedName) {
+      return;
+    }
+
+    if (routineExercises.length === 0) {
+      return;
+    }
+
+    addRoutine({
+      id: `custom-${crypto.randomUUID()}`,
+      name: trimmedName,
+      exercises: routineExercises,
+    });
+
+    navigate("/workouts");
+  }
+
+  return (
+    <main className="mx-auto max-w-5xl space-y-8">
+      {/* Back */}
+
+      <button
+        type="button"
+        onClick={() => navigate("/workouts")}
+        className="flex items-center gap-2 text-sm font-semibold text-[var(--text-muted)] transition hover:text-[var(--primary)]"
+      >
+        <ArrowLeft size={17} />
+
+        Back to workouts
+      </button>
+
+      {/* Header */}
+
+      <section>
+        <p className="text-sm font-semibold uppercase tracking-[0.25em] text-[var(--primary)]">
+          Routine Builder
+        </p>
+
+        <h1 className="mt-3 text-4xl font-black tracking-tight text-[var(--text)]">
+          Create your routine
+        </h1>
+
+        <p className="mt-3 text-lg text-[var(--text-muted)]">
+          Build a workout around your own training goals.
+        </p>
+      </section>
+
+      {/* Routine name */}
+
+      <section className="rounded-[2rem] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-sm md:p-8">
+        <label
+          htmlFor="routine-name"
+          className="text-sm font-bold text-[var(--text)]"
+        >
+          Routine name
+        </label>
+
+        <input
+          id="routine-name"
+          type="text"
+          value={name}
+          onChange={(event) =>
+            setName(event.target.value)
+          }
+          placeholder="e.g. Monday Push"
+          className="mt-3 w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface-soft)] px-4 py-3 text-[var(--text)] outline-none transition placeholder:text-[var(--text-muted)] focus:border-[var(--primary)]"
+        />
+      </section>
+
+      {/* Exercises */}
+
+      <section className="rounded-[2rem] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-sm md:p-8">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <h2 className="text-xl font-black text-[var(--text)]">
+              Exercises
+            </h2>
+
+            <p className="mt-1 text-sm text-[var(--text-muted)]">
+              {routineExercises.length} exercises
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={() =>
+              setShowExercisePicker(
+                (current) => !current,
+              )
+            }
+            className="flex items-center gap-2 rounded-xl bg-[var(--primary)] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[var(--primary-hover)]"
+          >
+            <Plus size={17} />
+
+            Add Exercise
+          </button>
+        </div>
+
+        {/* Exercise picker */}
+
+        {showExercisePicker && (
+          <div className="mt-6 rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-5">
+            <input
+              type="search"
+              value={search}
+              onChange={(event) =>
+                setSearch(event.target.value)
+              }
+              placeholder="Search exercises..."
+              className="w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface)] px-4 py-3 text-sm text-[var(--text)] outline-none focus:border-[var(--primary)]"
+            />
+
+            <div className="mt-4 max-h-72 space-y-2 overflow-y-auto">
+              {availableExercises.map(
+                (exercise) => {
+                  const alreadyAdded =
+                    routineExercises.some(
+                      (item) =>
+                        item.exercise.id ===
+                        exercise.id,
+                    );
+
+                  return (
+                    <button
+                      key={exercise.id}
+                      type="button"
+                      disabled={alreadyAdded}
+                      onClick={() =>
+                        addExercise(
+                          exercise.id,
+                        )
+                      }
+                      className="flex w-full items-center justify-between rounded-xl border border-transparent bg-[var(--surface)] px-4 py-3 text-left transition hover:border-[var(--primary)] disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      <div className="flex items-center gap-3">
+                        <Dumbbell
+                          size={18}
+                          className="text-[var(--primary)]"
+                        />
+
+                        <div>
+                          <p className="font-semibold text-[var(--text)]">
+                            {exercise.name}
+                          </p>
+
+                          <p className="text-xs text-[var(--text-muted)]">
+                            {exercise.muscleGroup} ·{" "}
+                            {exercise.equipment}
+                          </p>
+                        </div>
+                      </div>
+
+                      {alreadyAdded && (
+                        <Check
+                          size={18}
+                          className="text-[var(--primary)]"
+                        />
+                      )}
+                    </button>
+                  );
+                },
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Selected exercises */}
+
+        {routineExercises.length > 0 ? (
+          <div className="mt-6 space-y-4">
+            {routineExercises.map(
+              (routineExercise, index) => (
+                <div
+                  key={
+                    routineExercise.exercise.id
+                  }
+                  className="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-5"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-start gap-3">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[var(--primary-soft)] text-sm font-black text-[var(--primary)]">
+                        {index + 1}
+                      </div>
+
+                      <div>
+                        <h3 className="font-bold text-[var(--text)]">
+                          {
+                            routineExercise
+                              .exercise.name
+                          }
+                        </h3>
+
+                        <p className="mt-1 text-xs text-[var(--text-muted)]">
+                          {
+                            routineExercise
+                              .exercise.muscleGroup
+                          }{" "}
+                          ·{" "}
+                          {
+                            routineExercise
+                              .exercise.equipment
+                          }
+                        </p>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        removeExercise(
+                          routineExercise
+                            .exercise.id,
+                        )
+                      }
+                      className="rounded-lg p-2 text-[var(--text-muted)] transition hover:bg-red-500/10 hover:text-red-500"
+                      aria-label={`Remove ${routineExercise.exercise.name}`}
+                    >
+                      <Trash2 size={17} />
+                    </button>
+                  </div>
+
+                  <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                    <label className="text-sm">
+                      <span className="mb-2 block font-semibold text-[var(--text-muted)]">
+                        Sets
+                      </span>
+
+                      <input
+                        type="number"
+                        min={1}
+                        step={1}
+                        value={
+                          routineExercise.targetSets
+                        }
+                        onChange={(event) =>
+                          updateExercise(
+                            routineExercise
+                              .exercise.id,
+                            {
+                              targetSets: Math.max(
+                                1,
+                                Number(
+                                  event.target
+                                    .value,
+                                ),
+                              ),
+                            },
+                          )
+                        }
+                        className="w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface)] px-3 py-2.5 text-[var(--text)] outline-none focus:border-[var(--primary)]"
+                      />
+                    </label>
+
+                    <label className="text-sm">
+                      <span className="mb-2 block font-semibold text-[var(--text-muted)]">
+                        Target reps
+                      </span>
+
+                      <input
+                        type="text"
+                        value={
+                          routineExercise.targetReps
+                        }
+                        onChange={(event) =>
+                          updateExercise(
+                            routineExercise
+                              .exercise.id,
+                            {
+                              targetReps:
+                                event.target
+                                  .value,
+                            },
+                          )
+                        }
+                        placeholder="8-12"
+                        className="w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface)] px-3 py-2.5 text-[var(--text)] outline-none focus:border-[var(--primary)]"
+                      />
+                    </label>
+
+                    <label className="text-sm">
+                      <span className="mb-2 block font-semibold text-[var(--text-muted)]">
+                        Rest (seconds)
+                      </span>
+
+                      <input
+                        type="number"
+                        min={0}
+                        step={15}
+                        value={
+                          routineExercise.restSeconds
+                        }
+                        onChange={(event) =>
+                          updateExercise(
+                            routineExercise
+                              .exercise.id,
+                            {
+                              restSeconds:
+                                Math.max(
+                                  0,
+                                  Number(
+                                    event.target
+                                      .value,
+                                  ),
+                                ),
+                            },
+                          )
+                        }
+                        className="w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface)] px-3 py-2.5 text-[var(--text)] outline-none focus:border-[var(--primary)]"
+                      />
+                    </label>
+                  </div>
+                </div>
+              ),
+            )}
+          </div>
+        ) : (
+          <div className="mt-6 rounded-2xl border border-dashed border-[var(--border-strong)] p-10 text-center">
+            <Dumbbell
+              size={28}
+              className="mx-auto text-[var(--text-muted)]"
+            />
+
+            <p className="mt-4 font-semibold text-[var(--text)]">
+              No exercises yet
+            </p>
+
+            <p className="mt-1 text-sm text-[var(--text-muted)]">
+              Add exercises to start building your
+              routine.
+            </p>
+          </div>
+        )}
+      </section>
+
+      {/* Save */}
+
+      <div className="flex justify-end">
+        <button
+          type="button"
+          onClick={saveRoutine}
+          disabled={
+            !name.trim() ||
+            routineExercises.length === 0
+          }
+          className="rounded-xl bg-[var(--primary)] px-7 py-3.5 font-semibold text-white transition hover:bg-[var(--primary-hover)] disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          Save Routine
+        </button>
+      </div>
+    </main>
+  );
+}

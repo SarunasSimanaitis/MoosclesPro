@@ -13,11 +13,18 @@ import Workouts from "./pages/Workouts";
 import WorkoutSessionPage from "./pages/WorkoutSessionPage";
 import ExerciseDetails from "./pages/ExerciseDetails";
 import RoutineBuilder from "./pages/RoutineBuilder";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Authentication */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+
+        {/* Main application */}
         <Route element={<AppLayout />}>
           <Route path="/" element={<Dashboard />} />
 
@@ -35,9 +42,12 @@ export default function App() {
 
           <Route path="/session" element={<Session />} />
           <Route path="/history" element={<History />} />
-
           <Route path="/statistics" element={<Statistics />} />
-          <Route path="/exercises" element={<Exercises />} />
+
+          <Route
+            path="/exercises"
+            element={<Exercises />}
+          />
 
           <Route
             path="/exercises/:exerciseId"
@@ -45,7 +55,6 @@ export default function App() {
           />
 
           <Route path="/mindset" element={<Mindset />} />
-
           <Route path="/settings" element={<Settings />} />
         </Route>
       </Routes>

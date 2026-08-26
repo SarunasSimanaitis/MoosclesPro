@@ -1,8 +1,9 @@
 import { betterAuth } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
 import { MongoClient } from "mongodb";
+import { env } from "node:process";
 
-const mongodbUri = process.env.MONGODB_URI;
+const mongodbUri = env.MONGODB_URI;
 
 if (!mongodbUri) {
   throw new Error("MONGODB_URI is not configured.");
@@ -22,6 +23,6 @@ export const auth = betterAuth({
   },
 
   trustedOrigins: [
-    process.env.BETTER_AUTH_URL ?? "http://localhost:5173",
+    env.BETTER_AUTH_URL ?? "http://localhost:5173",
   ],
 });

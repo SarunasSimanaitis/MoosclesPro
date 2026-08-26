@@ -1,9 +1,9 @@
-import { auth } from "../../src/lib/auth";
+import { auth } from "../../src/lib/auth.js";
 
-export async function GET(request: Request) {
+export function GET(request: Request) {
   return auth.handler(request);
 }
 
-export async function POST(request: Request) {
+export function POST(request: Request) {
   return auth.handler(request);
 }

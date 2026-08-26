@@ -10,7 +10,6 @@ if (!mongodbUri) {
 }
 
 const mongoClient = new MongoClient(mongodbUri);
-
 const database = mongoClient.db("moosclespro");
 
 export const auth = betterAuth({

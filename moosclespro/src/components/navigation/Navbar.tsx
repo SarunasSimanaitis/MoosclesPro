@@ -56,6 +56,23 @@ export default function Navbar() {
 
         {/* Actions */}
         <div className="flex items-center gap-2">
+          {/* Login */}
+          <NavLink
+            to="/login"
+            className="hidden rounded-xl px-4 py-2.5 text-sm font-semibold text-[var(--text-muted)] transition-colors hover:bg-[var(--surface)] hover:text-[var(--text)] sm:block"
+          >
+            Log in
+          </NavLink>
+
+          {/* Register */}
+          <NavLink
+            to="/register"
+            className="hidden rounded-xl bg-[var(--primary)] px-4 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90 sm:block"
+          >
+            Create account
+          </NavLink>
+
+          {/* Theme */}
           <Button
             variant="ghost"
             size="sm"
@@ -81,9 +98,7 @@ export default function Navbar() {
             onClick={() => setMobileOpen((open) => !open)}
             className="h-10 w-10 rounded-xl p-0 md:hidden"
             aria-label={
-              mobileOpen
-                ? "Close navigation"
-                : "Open navigation"
+              mobileOpen ? "Close navigation" : "Open navigation"
             }
             aria-expanded={mobileOpen}
           >
@@ -128,6 +143,25 @@ export default function Navbar() {
                 </NavLink>
               );
             })}
+
+            {/* Mobile Authentication */}
+            <div className="mt-3 border-t border-[var(--border)] pt-3">
+              <NavLink
+                to="/login"
+                onClick={() => setMobileOpen(false)}
+                className="flex items-center rounded-xl px-4 py-3 text-sm font-semibold text-[var(--text-muted)] transition-colors hover:bg-[var(--surface)] hover:text-[var(--text)]"
+              >
+                Log in
+              </NavLink>
+
+              <NavLink
+                to="/register"
+                onClick={() => setMobileOpen(false)}
+                className="mt-1 flex items-center justify-center rounded-xl bg-[var(--primary)] px-4 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+              >
+                Create account
+              </NavLink>
+            </div>
           </div>
         </nav>
       )}

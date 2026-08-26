@@ -1,29 +1,35 @@
+import type { ReactNode } from "react";
+
 type CardProps = {
-  children: React.ReactNode
-  className?: string
-}
+  children: ReactNode;
+  className?: string;
+  hover?: boolean;
+};
 
 export default function Card({
   children,
   className = "",
+  hover = false,
 }: CardProps) {
   return (
     <div
       className={`
-        rounded-3xl
+        rounded-[var(--radius-xl)]
         border
-        border-zinc-800/70
-        bg-zinc-900
-        p-6
-        shadow-sm
+        border-[var(--border)]
+        bg-[var(--surface)]
+        shadow-[var(--shadow-sm)]
         transition-all
         duration-300
-        hover:border-zinc-700
-        hover:-translate-y-1
+        ${
+          hover
+            ? "hover:-translate-y-1 hover:border-[var(--border-strong)] hover:shadow-[var(--shadow-md)]"
+            : ""
+        }
         ${className}
       `}
     >
       {children}
     </div>
-  )
+  );
 }

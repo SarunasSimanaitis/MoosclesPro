@@ -4,11 +4,13 @@ export type MuscleGroup =
   | "Shoulders"
   | "Biceps"
   | "Triceps"
-  | "Quads"
+  | "Forearms"
+  | "Quadriceps"
   | "Hamstrings"
   | "Glutes"
   | "Calves"
   | "Core"
+  | "Cardio"
   | "Full Body";
 
 export type Equipment =
@@ -19,6 +21,8 @@ export type Equipment =
   | "Bodyweight"
   | "Kettlebell"
   | "Resistance Band"
+  | "EZ Bar"
+  | "Smith Machine"
   | "Other";
 
 export type ExerciseCategory =
@@ -29,6 +33,7 @@ export type ExerciseCategory =
 
 export interface Exercise {
   id: string;
+
   name: string;
 
   muscleGroup: MuscleGroup;

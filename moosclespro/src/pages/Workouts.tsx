@@ -1,9 +1,14 @@
 import {
   ArrowRight,
   Clock3,
+  Copy,
   Dumbbell,
+  MoreHorizontal,
+  Pencil,
   Plus,
+  Trash2,
 } from "lucide-react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { routines } from "../data/routines";
@@ -12,14 +17,57 @@ import { useRoutineStore } from "../stores/routineStore";
 export default function Workouts() {
   const navigate = useNavigate();
 
+  const [openMenu, setOpenMenu] = useState<string | null>(
+    null,
+  );
+
   const customRoutines = useRoutineStore(
     (state) => state.customRoutines,
+  );
+
+  const deleteRoutine = useRoutineStore(
+    (state) => state.deleteRoutine,
+  );
+
+  const duplicateRoutine = useRoutineStore(
+    (state) => state.duplicateRoutine,
   );
 
   const allRoutines = [
     ...routines,
     ...customRoutines,
   ];
+
+  function handleDelete(
+    routineId: string,
+    routineName: string,
+  ) {
+    const confirmed = window.confirm(
+      `Delete "${routineName}"? This cannot be undone.`,
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    deleteRoutine(routineId);
+    setOpenMenu(null);
+  }
+
+  function handleDuplicate(
+    routineId: string,
+  ) {
+    const routine = allRoutines.find(
+      (item) => item.id === routineId,
+    );
+
+    if (!routine) {
+      return;
+    }
+
+    duplicateRoutine(routine);
+    setOpenMenu(null);
+  }
 
   return (
     <main className="space-y-10">
@@ -42,11 +90,12 @@ export default function Workouts() {
 
         <button
           type="button"
-          onClick={() => navigate("/workouts/create")}
+          onClick={() =>
+            navigate("/workouts/create")
+          }
           className="flex shrink-0 items-center justify-center gap-2 rounded-xl bg-[var(--primary)] px-5 py-3 font-semibold text-white transition hover:bg-[var(--primary-hover)]"
         >
           <Plus size={18} />
-
           Create Routine
         </button>
       </section>
@@ -54,86 +103,170 @@ export default function Workouts() {
       {/* Routine Grid */}
 
       <section className="grid gap-6 lg:grid-cols-2">
-        {allRoutines.map((routine) => (
-          <article
-            key={routine.id}
-            className="group rounded-[2rem] border border-[var(--border)] bg-[var(--surface)] p-7 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg md:p-8"
-          >
-            {/* Routine Header */}
+        {allRoutines.map((routine) => {
+          const isCustom =
+            routine.id.startsWith("custom-");
 
-            <div className="flex items-start justify-between gap-5">
-              <div>
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--primary-soft)] text-[var(--primary)]">
-                  <Dumbbell size={23} />
+          const menuOpen =
+            openMenu === routine.id;
+
+          return (
+            <article
+              key={routine.id}
+              className="group rounded-[2rem] border border-[var(--border)] bg-[var(--surface)] p-7 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg md:p-8"
+            >
+              {/* Header */}
+
+              <div className="flex items-start justify-between gap-5">
+                <div>
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--primary-soft)] text-[var(--primary)]">
+                    <Dumbbell size={23} />
+                  </div>
+
+                  <h2 className="mt-6 text-2xl font-black text-[var(--text)]">
+                    {routine.name}
+                  </h2>
+
+                  <p className="mt-2 text-[var(--text-muted)]">
+                    {routine.exercises.length} exercises
+                  </p>
                 </div>
 
-                <h2 className="mt-6 text-2xl font-black text-[var(--text)]">
-                  {routine.name}
-                </h2>
+                <div className="relative flex items-center gap-2">
+                  <span className="rounded-full border border-[var(--border)] bg-[var(--surface-soft)] px-3 py-1.5 text-xs font-semibold text-[var(--text-muted)]">
+                    {isCustom
+                      ? "Custom"
+                      : "Routine"}
+                  </span>
 
-                <p className="mt-2 text-[var(--text-muted)]">
-                  {routine.exercises.length} exercises
-                </p>
-              </div>
-
-              <span className="rounded-full border border-[var(--border)] bg-[var(--surface-soft)] px-3 py-1.5 text-xs font-semibold text-[var(--text-muted)]">
-                {routine.id.startsWith("custom-")
-                  ? "Custom"
-                  : "Routine"}
-              </span>
-            </div>
-
-            {/* Exercises */}
-
-            <div className="mt-7 space-y-3">
-              {routine.exercises
-                .slice(0, 4)
-                .map((routineExercise) => (
-                  <div
-                    key={routineExercise.exercise.id}
-                    className="flex items-center justify-between rounded-xl bg-[var(--surface-soft)] px-4 py-3"
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setOpenMenu(
+                        menuOpen
+                          ? null
+                          : routine.id,
+                      )
+                    }
+                    className="flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--text-muted)] transition hover:border-[var(--primary)] hover:text-[var(--primary)]"
+                    aria-label="Routine actions"
                   >
-                    <span className="font-medium text-[var(--text)]">
-                      {routineExercise.exercise.name}
-                    </span>
+                    <MoreHorizontal size={18} />
+                  </button>
 
-                    <span className="text-sm text-[var(--text-muted)]">
-                      {routineExercise.targetSets} ×{" "}
-                      {routineExercise.targetReps}
-                    </span>
-                  </div>
-                ))}
+                  {menuOpen && (
+                    <div className="absolute right-0 top-11 z-20 w-48 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-1.5 shadow-xl">
+                      {isCustom && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            navigate(
+                              `/workouts/create?edit=${routine.id}`,
+                            );
+                            setOpenMenu(null);
+                          }}
+                          className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-[var(--text)] transition hover:bg-[var(--surface-soft)]"
+                        >
+                          <Pencil size={16} />
+                          Edit routine
+                        </button>
+                      )}
 
-              {routine.exercises.length > 4 && (
-                <p className="px-1 text-sm text-[var(--text-muted)]">
-                  + {routine.exercises.length - 4} more exercises
-                </p>
-              )}
-            </div>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleDuplicate(
+                            routine.id,
+                          )
+                        }
+                        className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-[var(--text)] transition hover:bg-[var(--surface-soft)]"
+                      >
+                        <Copy size={16} />
+                        Duplicate
+                      </button>
 
-            {/* Footer */}
-
-            <div className="mt-7 flex items-center justify-between border-t border-[var(--border)] pt-6">
-              <div className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
-                <Clock3 size={16} />
-
-                <span>Approx. 45 min</span>
+                      {isCustom && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleDelete(
+                              routine.id,
+                              routine.name,
+                            )
+                          }
+                          className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-[var(--danger)] transition hover:bg-[var(--danger)]/10"
+                        >
+                          <Trash2 size={16} />
+                          Delete routine
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
 
-              <button
-                type="button"
-                onClick={() =>
-                  navigate(`/workout/${routine.id}`)
-                }
-                className="flex items-center gap-2 rounded-xl bg-[var(--primary)] px-5 py-3 font-semibold text-white transition hover:bg-[var(--primary-hover)]"
-              >
-                Start
+              {/* Exercises */}
 
-                <ArrowRight size={17} />
-              </button>
-            </div>
-          </article>
-        ))}
+              <div className="mt-7 space-y-3">
+                {routine.exercises
+                  .slice(0, 4)
+                  .map((routineExercise) => (
+                    <div
+                      key={
+                        routineExercise.exercise.id
+                      }
+                      className="flex items-center justify-between rounded-xl bg-[var(--surface-soft)] px-4 py-3"
+                    >
+                      <span className="font-medium text-[var(--text)]">
+                        {
+                          routineExercise.exercise
+                            .name
+                        }
+                      </span>
+
+                      <span className="text-sm text-[var(--text-muted)]">
+                        {routineExercise.targetSets} ×{" "}
+                        {
+                          routineExercise.targetReps
+                        }
+                      </span>
+                    </div>
+                  ))}
+
+                {routine.exercises.length > 4 && (
+                  <p className="px-1 text-sm text-[var(--text-muted)]">
+                    +{" "}
+                    {routine.exercises.length -
+                      4}{" "}
+                    more exercises
+                  </p>
+                )}
+              </div>
+
+              {/* Footer */}
+
+              <div className="mt-7 flex items-center justify-between border-t border-[var(--border)] pt-6">
+                <div className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
+                  <Clock3 size={16} />
+                  <span>Approx. 45 min</span>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    navigate(
+                      `/workout/${routine.id}`,
+                    )
+                  }
+                  className="flex items-center gap-2 rounded-xl bg-[var(--primary)] px-5 py-3 font-semibold text-white transition hover:bg-[var(--primary-hover)]"
+                >
+                  Start
+                  <ArrowRight size={17} />
+                </button>
+              </div>
+            </article>
+          );
+        })}
       </section>
     </main>
   );

@@ -6,11 +6,11 @@ export default function Greeting() {
 
   return (
     <div>
-      <h1 className="text-5xl font-bold tracking-tight">
+      <h1 className="text-4xl font-black tracking-tight text-[var(--text)] md:text-5xl">
         {greeting.title}, {dashboard.user.name}
       </h1>
 
-      <p className="mt-2 text-zinc-400">
+      <p className="mt-3 text-lg text-[var(--text-muted)]">
         {greeting.subtitle}
       </p>
     </div>

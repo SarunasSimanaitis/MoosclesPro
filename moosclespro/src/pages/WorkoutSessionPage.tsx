@@ -1,5 +1,13 @@
-import { useState } from "react";
-import { ArrowLeft, CheckCircle2, Clock3, Dumbbell } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import {
+  ArrowLeft,
+  CheckCircle2,
+  Clock3,
+  Dumbbell,
+  Pause,
+  Play,
+  RotateCcw,
+} from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import ExerciseCard from "../components/workout/ExerciseCard";
@@ -20,13 +28,6 @@ export default function WorkoutSessionPage() {
     (state) => state.customRoutines,
   );
 
-  /*
-   * Combine built-in and custom routines.
-   *
-   * This is the important fix:
-   * custom routines live in Zustand,
-   * while built-in routines come from routines.ts.
-   */
   const allRoutines = [
     ...routines,
     ...customRoutines,
@@ -36,10 +37,6 @@ export default function WorkoutSessionPage() {
     (item) => item.id === routineId,
   );
 
-  /*
-   * If the routine doesn't exist, show a proper
-   * empty/error state instead of crashing.
-   */
   if (!routine) {
     return (
       <main className="mx-auto flex min-h-[70vh] max-w-3xl items-center justify-center px-6">
@@ -134,6 +131,134 @@ function WorkoutSession({
       ),
     );
 
+  /*
+   * Workout timer
+   */
+
+  const [elapsedSeconds, setElapsedSeconds] =
+    useState(0);
+
+  const [isPaused, setIsPaused] =
+    useState(false);
+
+  useEffect(() => {
+    if (isPaused) {
+      return;
+    }
+
+    const interval = window.setInterval(() => {
+      setElapsedSeconds(
+        Math.floor(
+          (Date.now() -
+            new Date(startedAt).getTime()) /
+            1000,
+        ),
+      );
+    }, 1000);
+
+    return () => {
+      window.clearInterval(interval);
+    };
+  }, [startedAt, isPaused]);
+
+  /*
+   * Rest timer
+   */
+
+  const [restTime, setRestTime] =
+    useState<number | null>(null);
+
+  const [restDuration, setRestDuration] =
+    useState(0);
+
+  useEffect(() => {
+    if (restTime === null) {
+      return;
+    }
+
+    if (restTime <= 0) {
+      setRestTime(null);
+      return;
+    }
+
+    const interval = window.setInterval(() => {
+      setRestTime((current) =>
+        current === null
+          ? null
+          : Math.max(0, current - 1),
+      );
+    }, 1000);
+
+    return () => {
+      window.clearInterval(interval);
+    };
+  }, [restTime]);
+
+  /*
+   * Prevent duplicate saves
+   */
+
+  const [isFinishing, setIsFinishing] =
+    useState(false);
+
+  /*
+   * Workout calculations
+   */
+
+  const completedSets =
+    workoutExercises.reduce(
+      (total, exercise) =>
+        total +
+        exercise.sets.filter(
+          (set) => set.completed,
+        ).length,
+      0,
+    );
+
+  const totalSets =
+    workoutExercises.reduce(
+      (total, exercise) =>
+        total + exercise.sets.length,
+      0,
+    );
+
+  const progress =
+    totalSets > 0
+      ? (completedSets / totalSets) * 100
+      : 0;
+
+  const totalVolume = useMemo(() => {
+    return workoutExercises.reduce(
+      (total, exercise) => {
+        return (
+          total +
+          exercise.sets.reduce(
+            (exerciseTotal, set) => {
+              if (!set.completed) {
+                return exerciseTotal;
+              }
+
+              return (
+                exerciseTotal +
+                set.weight * set.reps
+              );
+            },
+            0,
+          )
+        );
+      },
+      0,
+    );
+  }, [workoutExercises]);
+
+  const formattedTime = formatDuration(
+    elapsedSeconds,
+  );
+
+  /*
+   * Update weight
+   */
+
   function updateWeight(
     exerciseId: string,
     setId: string,
@@ -169,6 +294,10 @@ function WorkoutSession({
         ),
     );
   }
+
+  /*
+   * Update reps
+   */
 
   function updateReps(
     exerciseId: string,
@@ -206,6 +335,10 @@ function WorkoutSession({
     );
   }
 
+  /*
+   * Toggle completed set
+   */
+
   function updateCompleted(
     exerciseId: string,
     setId: string,
@@ -229,10 +362,18 @@ function WorkoutSession({
                     return set;
                   }
 
+                  const completed =
+                    !set.completed;
+
+                  if (completed) {
+                    startRestTimer(
+                      exercise.restSeconds,
+                    );
+                  }
+
                   return {
                     ...set,
-                    completed:
-                      !set.completed,
+                    completed,
                   };
                 },
               ),
@@ -242,7 +383,29 @@ function WorkoutSession({
     );
   }
 
+  function startRestTimer(
+    seconds: number,
+  ) {
+    setRestDuration(seconds);
+    setRestTime(seconds);
+  }
+
+  function resetRestTimer() {
+    setRestTime(null);
+    setRestDuration(0);
+  }
+
+  /*
+   * Finish workout
+   */
+
   function finishWorkout() {
+    if (isFinishing) {
+      return;
+    }
+
+    setIsFinishing(true);
+
     const completedAt =
       new Date().toISOString();
 
@@ -256,38 +419,48 @@ function WorkoutSession({
 
     saveWorkoutSession(session);
 
-    navigate("/history");
+    navigate("/history", {
+      replace: true,
+    });
   }
 
-  const completedSets =
-    workoutExercises.reduce(
-      (total, exercise) =>
-        total +
-        exercise.sets.filter(
-          (set) => set.completed,
-        ).length,
-      0,
+  /*
+   * Leave workout
+   */
+
+  function handleBack() {
+    const hasProgress =
+      completedSets > 0 ||
+      workoutExercises.some(
+        (exercise) =>
+          exercise.sets.some(
+            (set) =>
+              set.weight > 0 ||
+              set.reps > 0,
+          ),
+      );
+
+    if (!hasProgress) {
+      onBack();
+      return;
+    }
+
+    const shouldLeave = window.confirm(
+      "You have an active workout. Leave without saving it?",
     );
 
-  const totalSets =
-    workoutExercises.reduce(
-      (total, exercise) =>
-        total + exercise.sets.length,
-      0,
-    );
-
-  const progress =
-    totalSets > 0
-      ? (completedSets / totalSets) * 100
-      : 0;
+    if (shouldLeave) {
+      onBack();
+    }
+  }
 
   return (
-    <main className="mx-auto max-w-5xl space-y-8">
+    <main className="mx-auto max-w-5xl space-y-6 pb-10">
       {/* Back */}
 
       <button
         type="button"
-        onClick={onBack}
+        onClick={handleBack}
         className="flex items-center gap-2 text-sm font-semibold text-[var(--text-muted)] transition hover:text-[var(--primary)]"
       >
         <ArrowLeft size={17} />
@@ -297,56 +470,208 @@ function WorkoutSession({
 
       {/* Header */}
 
-      <section className="rounded-[2rem] border border-[var(--border)] bg-[var(--surface)] p-7 shadow-sm md:p-8">
-        <div className="flex flex-col justify-between gap-6 md:flex-row md:items-start">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.25em] text-[var(--primary)]">
-              Active Workout
-            </p>
+      <section className="rounded-[2rem] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-sm md:p-8">
+        <div className="flex flex-col gap-6">
+          <div className="flex flex-col justify-between gap-5 md:flex-row md:items-start">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.25em] text-[var(--primary)]">
+                Active Workout
+              </p>
 
-            <h1 className="mt-3 text-4xl font-black tracking-tight text-[var(--text)]">
-              {routine.name}
-            </h1>
+              <h1 className="mt-3 text-3xl font-black tracking-tight text-[var(--text)] md:text-4xl">
+                {routine.name}
+              </h1>
 
-            <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-[var(--text-muted)]">
-              <span className="flex items-center gap-2">
-                <Dumbbell size={16} />
+              <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm text-[var(--text-muted)]">
+                <span className="flex items-center gap-2">
+                  <Dumbbell size={16} />
 
-                {workoutExercises.length} exercises
-              </span>
+                  {workoutExercises.length}{" "}
+                  exercises
+                </span>
 
-              <span className="flex items-center gap-2">
-                <Clock3 size={16} />
+                <span className="flex items-center gap-2">
+                  <CheckCircle2 size={16} />
 
-                {completedSets}/{totalSets} sets
-              </span>
+                  {completedSets}/{totalSets} sets
+                </span>
+
+                <span className="flex items-center gap-2">
+                  <Clock3 size={16} />
+
+                  {formattedTime}
+                </span>
+              </div>
+            </div>
+
+            {/* Timer */}
+
+            <div className="flex items-center gap-2">
+              <div className="rounded-2xl bg-[var(--surface-soft)] px-5 py-4 text-center">
+                <p className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
+                  Time
+                </p>
+
+                <p className="mt-1 font-mono text-2xl font-black text-[var(--text)]">
+                  {formattedTime}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setIsPaused(
+                    (current) => !current,
+                  )
+                }
+                className="flex h-14 w-14 items-center justify-center rounded-2xl border border-[var(--border-strong)] bg-[var(--surface-soft)] text-[var(--text-muted)] transition hover:border-[var(--primary)] hover:text-[var(--primary)]"
+                aria-label={
+                  isPaused
+                    ? "Resume workout"
+                    : "Pause workout"
+                }
+              >
+                {isPaused ? (
+                  <Play size={20} />
+                ) : (
+                  <Pause size={20} />
+                )}
+              </button>
             </div>
           </div>
 
-          <div className="rounded-2xl bg-[var(--surface-soft)] px-5 py-4">
-            <p className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
-              Progress
-            </p>
+          {/* Progress */}
 
-            <p className="mt-1 text-2xl font-black text-[var(--text)]">
-              {Math.round(progress)}%
-            </p>
+          <div>
+            <div className="mb-2 flex items-center justify-between text-sm">
+              <span className="font-semibold text-[var(--text)]">
+                Workout progress
+              </span>
+
+              <span className="font-bold text-[var(--primary)]">
+                {Math.round(progress)}%
+              </span>
+            </div>
+
+            <div className="h-3 overflow-hidden rounded-full bg-[var(--surface-soft)]">
+              <div
+                className="h-full rounded-full bg-[var(--primary)] transition-all duration-300"
+                style={{
+                  width: `${progress}%`,
+                }}
+              />
+            </div>
           </div>
-        </div>
 
-        {/* Progress bar */}
+          {/* Stats */}
 
-        <div className="mt-7">
-          <div className="h-3 overflow-hidden rounded-full bg-[var(--surface-soft)]">
-            <div
-              className="h-full rounded-full bg-[var(--primary)] transition-all duration-300"
-              style={{
-                width: `${progress}%`,
-              }}
-            />
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+            <div className="rounded-2xl bg-[var(--surface-soft)] p-4">
+              <p className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
+                Exercises
+              </p>
+
+              <p className="mt-1 text-xl font-black text-[var(--text)]">
+                {workoutExercises.length}
+              </p>
+            </div>
+
+            <div className="rounded-2xl bg-[var(--surface-soft)] p-4">
+              <p className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
+                Completed sets
+              </p>
+
+              <p className="mt-1 text-xl font-black text-[var(--text)]">
+                {completedSets}
+              </p>
+            </div>
+
+            <div className="col-span-2 rounded-2xl bg-[var(--surface-soft)] p-4 md:col-span-1">
+              <p className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
+                Volume
+              </p>
+
+              <p className="mt-1 text-xl font-black text-[var(--text)]">
+                {totalVolume.toLocaleString()}{" "}
+                kg
+              </p>
+            </div>
           </div>
         </div>
       </section>
+
+      {/* Rest Timer */}
+
+      {restTime !== null && (
+        <section className="sticky top-24 z-20 rounded-[1.5rem] border border-[var(--primary)]/30 bg-[var(--primary-soft)] p-4 shadow-lg backdrop-blur">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--primary)]">
+                Rest timer
+              </p>
+
+              <p className="mt-1 text-2xl font-black text-[var(--text)]">
+                {formatDuration(restTime)}
+              </p>
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() =>
+                  setRestTime((current) =>
+                    current === null
+                      ? null
+                      : Math.max(
+                          0,
+                          current - 15,
+                        ),
+                  )
+                }
+                className="rounded-xl border border-[var(--border-strong)] bg-[var(--surface)] px-4 py-2 text-sm font-semibold text-[var(--text)] transition hover:border-[var(--primary)]"
+              >
+                -15s
+              </button>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setRestTime(
+                    restTime + 15,
+                  )
+                }
+                className="rounded-xl border border-[var(--border-strong)] bg-[var(--surface)] px-4 py-2 text-sm font-semibold text-[var(--text)] transition hover:border-[var(--primary)]"
+              >
+                +15s
+              </button>
+
+              <button
+                type="button"
+                onClick={resetRestTimer}
+                className="flex items-center gap-2 rounded-xl bg-[var(--primary)] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[var(--primary-hover)]"
+              >
+                <RotateCcw size={15} />
+
+                Stop
+              </button>
+            </div>
+          </div>
+
+          {restDuration > 0 && (
+            <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-[var(--surface)]">
+              <div
+                className="h-full rounded-full bg-[var(--primary)] transition-all duration-1000"
+                style={{
+                  width: `${
+                    (restTime / restDuration) *
+                    100
+                  }%`,
+                }}
+              />
+            </div>
+          )}
+        </section>
+      )}
 
       {/* Exercises */}
 
@@ -354,9 +679,7 @@ function WorkoutSession({
         {workoutExercises.map(
           (workoutExercise) => (
             <ExerciseCard
-              key={
-                workoutExercise.exercise.id
-              }
+              key={workoutExercise.exercise.id}
               workoutExercise={
                 workoutExercise
               }
@@ -372,14 +695,15 @@ function WorkoutSession({
 
       {/* Finish */}
 
-      <section className="flex flex-col items-center justify-between gap-5 rounded-[2rem] border border-[var(--border)] bg-[var(--surface)] p-6 md:flex-row">
+      <section className="flex flex-col gap-5 rounded-[2rem] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-sm md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-3">
           <CheckCircle2
-            size={22}
+            size={24}
             className={
-              completedSets === totalSets &&
+              completedSets ===
+                totalSets &&
               totalSets > 0
-                ? "text-[var(--primary)]"
+                ? "text-[var(--success)]"
                 : "text-[var(--text-muted)]"
             }
           />
@@ -403,11 +727,30 @@ function WorkoutSession({
         <button
           type="button"
           onClick={finishWorkout}
-          className="w-full rounded-xl bg-[var(--primary)] px-7 py-3.5 font-semibold text-white transition hover:bg-[var(--primary-hover)] md:w-auto"
+          disabled={isFinishing}
+          className="w-full rounded-xl bg-[var(--primary)] px-7 py-3.5 font-semibold text-white transition hover:bg-[var(--primary-hover)] disabled:cursor-not-allowed disabled:opacity-60 md:w-auto"
         >
-          Finish Workout
+          {isFinishing
+            ? "Saving Workout..."
+            : "Finish Workout"}
         </button>
       </section>
     </main>
   );
+}
+
+function formatDuration(
+  totalSeconds: number,
+) {
+  const minutes = Math.floor(
+    totalSeconds / 60,
+  );
+
+  const seconds = totalSeconds % 60;
+
+  return `${minutes
+    .toString()
+    .padStart(2, "0")}:${seconds
+    .toString()
+    .padStart(2, "0")}`;
 }

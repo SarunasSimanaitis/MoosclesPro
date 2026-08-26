@@ -7,9 +7,29 @@ import {
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
 
+import { dashboard } from "../data/dashboard";
+import Button from "../components/ui/Button";
+import Card from "../components/ui/Card";
+import ProgressBar from "../components/ui/ProgressBar";
+
 export default function Dashboard() {
+  const {
+    user,
+    stats,
+    todayWorkout,
+    weeklyGoal,
+  } = dashboard;
+
+  const weeklyPercentage =
+    weeklyGoal.target > 0
+      ? Math.round(
+          (weeklyGoal.completed / weeklyGoal.target) * 100,
+        )
+      : 0;
+
   return (
     <div className="space-y-10">
+      {/* Header */}
       <section>
         <p className="text-sm font-semibold uppercase tracking-[0.25em] text-[var(--primary)]">
           Dashboard
@@ -18,7 +38,7 @@ export default function Dashboard() {
         <div className="mt-3 flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
           <div>
             <h1 className="text-4xl font-black tracking-tight text-[var(--text)] md:text-5xl">
-              Welcome back.
+              Welcome back, {user.name}.
             </h1>
 
             <p className="mt-3 max-w-2xl text-lg text-[var(--text-muted)]">
@@ -26,57 +46,59 @@ export default function Dashboard() {
             </p>
           </div>
 
-          <NavLink
-            to="/workout"
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--primary)] px-5 py-3 font-semibold text-white transition hover:bg-[var(--primary-hover)]"
-          >
-            Start Workout
-            <ArrowRight size={18} />
+          <NavLink to="/workout">
+            <Button>
+              Start Workout
+              <ArrowRight size={18} />
+            </Button>
           </NavLink>
         </div>
       </section>
 
+      {/* Stats */}
       <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
         <StatCard
           icon={<Flame size={20} />}
           label="Current Streak"
-          value="14"
+          value={stats.streak.toString()}
           suffix="days"
         />
 
         <StatCard
           icon={<Dumbbell size={20} />}
           label="Workouts"
-          value="126"
+          value={stats.workouts.toString()}
           suffix="completed"
         />
 
         <StatCard
           icon={<TrendingUp size={20} />}
           label="Total Volume"
-          value="58,240"
+          value={stats.volume.toLocaleString()}
           suffix="kg"
         />
 
         <StatCard
           icon={<Target size={20} />}
-          label="Weekly Goal"
-          value="3"
-          suffix="of 4"
+          label="Training Hours"
+          value={stats.hours.toString()}
+          suffix="hours"
         />
       </section>
 
+      {/* Main Content */}
       <section className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
-        <div className="relative overflow-hidden rounded-[2rem] border border-[var(--border)] bg-[var(--surface)] p-8 shadow-sm md:p-10">
+        {/* Today's Workout */}
+        <Card className="relative overflow-hidden p-8 md:p-10">
           <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[var(--primary)]/10 blur-3xl" />
 
           <div className="relative">
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--primary)]">
-              Today's workout
+              Today's Workout
             </p>
 
             <h2 className="mt-4 text-3xl font-black text-[var(--text)]">
-              Upper Body Strength
+              {todayWorkout.title}
             </h2>
 
             <p className="mt-3 max-w-xl leading-relaxed text-[var(--text-muted)]">
@@ -85,32 +107,31 @@ export default function Dashboard() {
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3 text-sm text-[var(--text-muted)]">
-              <span className="rounded-full border border-[var(--border)] bg-[var(--surface-soft)] px-4 py-2">
-                5 exercises
-              </span>
+              <WorkoutTag>
+                {todayWorkout.exercises} exercises
+              </WorkoutTag>
 
-              <span className="rounded-full border border-[var(--border)] bg-[var(--surface-soft)] px-4 py-2">
-                16 sets
-              </span>
-
-              <span className="rounded-full border border-[var(--border)] bg-[var(--surface-soft)] px-4 py-2">
-                ~45 min
-              </span>
+              <WorkoutTag>
+                ~{todayWorkout.duration.replace(" min", "")} min
+              </WorkoutTag>
             </div>
 
-            <NavLink
-              to="/workout"
-              className="mt-8 inline-flex items-center gap-2 rounded-xl border border-[var(--border-strong)] px-5 py-3 font-semibold text-[var(--text)] transition hover:border-[var(--primary)] hover:text-[var(--primary)]"
-            >
-              Continue workout
-              <ArrowRight size={17} />
+            <NavLink to="/workout">
+              <Button
+                variant="secondary"
+                className="mt-8"
+              >
+                Continue Workout
+                <ArrowRight size={17} />
+              </Button>
             </NavLink>
           </div>
-        </div>
+        </Card>
 
-        <div className="rounded-[2rem] border border-[var(--border)] bg-[var(--surface)] p-8 shadow-sm">
+        {/* Weekly Goal */}
+        <Card className="p-8">
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--primary)]">
-            Weekly goal
+            Weekly Goal
           </p>
 
           <h2 className="mt-3 text-2xl font-bold text-[var(--text)]">
@@ -120,26 +141,35 @@ export default function Dashboard() {
           <div className="mt-8">
             <div className="flex items-end justify-between">
               <span className="text-4xl font-black text-[var(--text)]">
-                3/4
+                {weeklyGoal.completed}/{weeklyGoal.target}
               </span>
 
               <span className="text-sm text-[var(--text-muted)]">
-                workouts
+                {weeklyPercentage}%
               </span>
             </div>
 
-            <div className="mt-4 h-3 overflow-hidden rounded-full bg-[var(--surface-soft)]">
-              <div className="h-full w-3/4 rounded-full bg-[var(--primary)]" />
-            </div>
+            <ProgressBar
+              value={weeklyGoal.completed}
+              max={weeklyGoal.target}
+              className="mt-4"
+            />
 
             <p className="mt-4 text-sm leading-relaxed text-[var(--text-muted)]">
-              One more workout this week and you've hit your goal.
+              {weeklyGoal.completed >= weeklyGoal.target
+                ? "You've hit your goal this week. Great work."
+                : `${weeklyGoal.target - weeklyGoal.completed} more workout${
+                    weeklyGoal.target - weeklyGoal.completed === 1
+                      ? ""
+                      : "s"
+                  } to reach your goal.`}
             </p>
           </div>
-        </div>
+        </Card>
       </section>
 
-      <section className="rounded-[2rem] border border-[var(--border)] bg-[var(--text)] p-8 text-[var(--surface)] md:p-10">
+      {/* Mindset */}
+      <section className="rounded-[var(--radius-xl)] bg-[var(--text)] p-8 text-[var(--surface)] shadow-[var(--shadow-md)] md:p-10">
         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--primary)]">
           Mindset
         </p>
@@ -149,12 +179,14 @@ export default function Dashboard() {
           showing up.”
         </blockquote>
 
-        <NavLink
-          to="/mindset"
-          className="mt-7 inline-flex items-center gap-2 text-sm font-semibold text-[var(--surface)] transition hover:text-[var(--primary)]"
-        >
-          Explore Mindset
-          <ArrowRight size={16} />
+        <NavLink to="/mindset">
+          <Button
+            variant="ghost"
+            className="mt-7 px-0 text-[var(--surface)] hover:bg-transparent hover:text-[var(--primary)]"
+          >
+            Explore Mindset
+            <ArrowRight size={16} />
+          </Button>
         </NavLink>
       </section>
     </div>
@@ -175,7 +207,7 @@ function StatCard({
   suffix,
 }: StatCardProps) {
   return (
-    <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-sm">
+    <Card className="p-6">
       <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--primary-soft)] text-[var(--primary)]">
         {icon}
       </div>
@@ -193,6 +225,18 @@ function StatCard({
           {suffix}
         </span>
       </div>
-    </div>
+    </Card>
+  );
+}
+
+function WorkoutTag({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <span className="rounded-full border border-[var(--border)] bg-[var(--surface-soft)] px-4 py-2">
+      {children}
+    </span>
   );
 }

@@ -1,6 +1,6 @@
 export const dashboard = {
   user: {
-    name: "Dzeky",
+    name: "",
   },
 
   level: {

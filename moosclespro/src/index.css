@@ -3,43 +3,83 @@
 :root {
   color-scheme: light;
 
+  /* Backgrounds */
   --background: #f5f1e8;
   --surface: #fffdf8;
   --surface-soft: #f0e9dd;
+  --surface-hover: #f8f4ec;
 
+  /* Brand */
   --primary: #c58a3a;
   --primary-hover: #a86f20;
   --primary-soft: rgba(197, 138, 58, 0.12);
 
+  /* Text */
   --text: #30261e;
   --text-muted: #85776a;
 
+  /* Borders */
   --border: #e5ddd0;
   --border-strong: #d8ccbb;
 
+  /* Status */
   --success: #6f8f63;
+  --success-soft: rgba(111, 143, 99, 0.12);
+
+  --warning: #b7791f;
+  --warning-soft: rgba(183, 121, 31, 0.12);
+
   --danger: #a85d4a;
+  --danger-soft: rgba(168, 93, 74, 0.12);
+
+  /* Shadows */
+  --shadow-sm: 0 2px 10px rgba(48, 38, 30, 0.05);
+  --shadow-md: 0 8px 24px rgba(48, 38, 30, 0.08);
+  --shadow-lg: 0 16px 40px rgba(48, 38, 30, 0.12);
+
+    /* Radius */
+  --radius-sm: 0.75rem;
+  --radius-md: 1rem;
+  --radius-lg: 1.5rem;
+  --radius-xl: 2rem;
 }
 
 .dark {
   color-scheme: dark;
 
+  /* Backgrounds */
   --background: #171513;
   --surface: #211e1a;
   --surface-soft: #2b2722;
+  --surface-hover: #302c26;
 
+  /* Brand */
   --primary: #c58a3a;
   --primary-hover: #d39a49;
   --primary-soft: rgba(197, 138, 58, 0.14);
 
+  /* Text */
   --text: #f5f0e8;
   --text-muted: #aaa096;
 
+  /* Borders */
   --border: #3a342d;
   --border-strong: #4a4238;
 
+  /* Status */
   --success: #8ca87d;
+  --success-soft: rgba(140, 168, 125, 0.14);
+
+  --warning: #d49a3a;
+  --warning-soft: rgba(212, 154, 58, 0.14);
+
   --danger: #c47761;
+  --danger-soft: rgba(196, 119, 97, 0.14);
+
+  /* Shadows */
+  --shadow-sm: 0 2px 12px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.25);
+  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.35);
 }
 
 * {
@@ -52,6 +92,7 @@ html {
 
 body {
   margin: 0;
+  min-width: 320px;
   min-height: 100vh;
 
   background: var(--background);
@@ -70,11 +111,32 @@ body {
     color 200ms ease;
 }
 
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
 button {
   cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-muted);
+  opacity: 0.7;
 }
 
 ::selection {
   background: var(--primary);
   color: white;
+}
+
+#root {
+  min-height: 100vh;
 }

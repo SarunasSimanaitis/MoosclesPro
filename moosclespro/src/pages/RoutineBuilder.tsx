@@ -7,7 +7,10 @@ import {
 } from "lucide-react";
 
 import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import {
+  useNavigate,
+  useSearchParams,
+} from "react-router-dom";
 
 import { exercises } from "../data/exercises";
 import { useRoutineStore } from "../stores/routineStore";
@@ -16,14 +19,37 @@ import type { RoutineExercise } from "../types/RoutineExercise";
 export default function RoutineBuilder() {
   const navigate = useNavigate();
 
+  const [searchParams] = useSearchParams();
+
+  const editRoutineId =
+    searchParams.get("edit");
+
+  const customRoutines = useRoutineStore(
+    (state) => state.customRoutines,
+  );
+
   const addRoutine = useRoutineStore(
     (state) => state.addRoutine,
   );
 
-  const [name, setName] = useState("");
+  const updateRoutine = useRoutineStore(
+    (state) => state.updateRoutine,
+  );
+
+  const editingRoutine = editRoutineId
+    ? customRoutines.find(
+        (routine) => routine.id === editRoutineId,
+      )
+    : undefined;
+
+  const [name, setName] = useState(
+    editingRoutine?.name ?? "",
+  );
 
   const [routineExercises, setRoutineExercises] =
-    useState<RoutineExercise[]>([]);
+    useState<RoutineExercise[]>(
+      editingRoutine?.exercises ?? [],
+    );
 
   const [showExercisePicker, setShowExercisePicker] =
     useState(false);
@@ -105,9 +131,9 @@ export default function RoutineBuilder() {
       current.map((item) =>
         item.exercise.id === exerciseId
           ? {
-              ...item,
-              ...changes,
-            }
+            ...item,
+            ...changes,
+          }
           : item,
       ),
     );
@@ -124,11 +150,19 @@ export default function RoutineBuilder() {
       return;
     }
 
-    addRoutine({
-      id: `custom-${crypto.randomUUID()}`,
+    const routine = {
+      id:
+        editingRoutine?.id ??
+        `custom-${crypto.randomUUID()}`,
       name: trimmedName,
       exercises: routineExercises,
-    });
+    };
+
+    if (editingRoutine) {
+      updateRoutine(routine);
+    } else {
+      addRoutine(routine);
+    }
 
     navigate("/workouts");
   }
@@ -155,11 +189,15 @@ export default function RoutineBuilder() {
         </p>
 
         <h1 className="mt-3 text-4xl font-black tracking-tight text-[var(--text)]">
-          Create your routine
+          {editingRoutine
+            ? "Edit your routine"
+            : "Create your routine"}
         </h1>
 
         <p className="mt-3 text-lg text-[var(--text-muted)]">
-          Build a workout around your own training goals.
+          {editingRoutine
+  ? "Fine-tune your exercises, sets, reps, and rest."
+  : "Build a workout around your own training goals."}
         </p>
       </section>
 
@@ -337,7 +375,7 @@ export default function RoutineBuilder() {
                     </button>
                   </div>
 
-                  <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                  <div className="mt-5 grid gap-4 lg:grid-cols-[1fr_1fr_2fr]">
                     <label className="text-sm">
                       <span className="mb-2 block font-semibold text-[var(--text-muted)]">
                         Sets
@@ -395,37 +433,67 @@ export default function RoutineBuilder() {
                       />
                     </label>
 
-                    <label className="text-sm">
+                    <div className="text-sm">
                       <span className="mb-2 block font-semibold text-[var(--text-muted)]">
-                        Rest (seconds)
+                        Rest Between Sets
                       </span>
 
-                      <input
-                        type="number"
-                        min={0}
-                        step={15}
-                        value={
-                          routineExercise.restSeconds
-                        }
-                        onChange={(event) =>
-                          updateExercise(
-                            routineExercise
-                              .exercise.id,
-                            {
-                              restSeconds:
-                                Math.max(
+                      <div className="grid grid-cols-3 gap-2">
+                        {[30, 45, 60, 90, 120, 150].map(
+                          (seconds) => {
+                            const isSelected =
+                              routineExercise.restSeconds ===
+                              seconds;
+
+                            return (
+                              <button
+                                key={seconds}
+                                type="button"
+                                onClick={() =>
+                                  updateExercise(
+                                    routineExercise.exercise.id,
+                                    {
+                                      restSeconds: seconds,
+                                    },
+                                  )
+                                }
+                                className={`rounded-xl border px-3 py-2.5 text-sm font-semibold transition ${isSelected
+                                  ? "border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary)]"
+                                  : "border-[var(--border-strong)] bg-[var(--surface)] text-[var(--text-muted)] hover:border-[var(--primary)] hover:text-[var(--primary)]"
+                                  }`}
+                              >
+                                {seconds}s
+                              </button>
+                            );
+                          },
+                        )}
+                      </div>
+
+                      <div className="mt-2 flex items-center gap-2">
+                        <input
+                          type="number"
+                          min={0}
+                          step={5}
+                          value={routineExercise.restSeconds}
+                          onChange={(event) =>
+                            updateExercise(
+                              routineExercise.exercise.id,
+                              {
+                                restSeconds: Math.max(
                                   0,
-                                  Number(
-                                    event.target
-                                      .value,
-                                  ),
+                                  Number(event.target.value),
                                 ),
-                            },
-                          )
-                        }
-                        className="w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface)] px-3 py-2.5 text-[var(--text)] outline-none focus:border-[var(--primary)]"
-                      />
-                    </label>
+                              },
+                            )
+                          }
+                          className="w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface)] px-3 py-2.5 text-[var(--text)] outline-none transition focus:border-[var(--primary)]"
+                        />
+
+                        <span className="shrink-0 text-sm text-[var(--text-muted)]">
+                          seconds
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               ),
@@ -462,7 +530,9 @@ export default function RoutineBuilder() {
           }
           className="rounded-xl bg-[var(--primary)] px-7 py-3.5 font-semibold text-white transition hover:bg-[var(--primary-hover)] disabled:cursor-not-allowed disabled:opacity-40"
         >
-          Save Routine
+          {editingRoutine
+  ? "Save Changes"
+  : "Save Routine"}
         </button>
       </div>
     </main>

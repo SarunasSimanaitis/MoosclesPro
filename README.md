@@ -66,19 +66,19 @@ MoosclesPro is designed to make workout tracking simple, focused, and consistent
 
 ### Dashboard
 
-![MoosclesPro Dashboard](./screenshots\MoosclesPro_Dashboard.png)
+![MoosclesPro Dashboard](./screenshots/MoosclesPro_Dashboard.png)
 
 ### Workouts
 
-![MoosclesPro Workouts](./screenshots\MoosclesPro_Workouts.png)
+![MoosclesPro Workouts](./screenshots/MoosclesPro_Workouts.png)
 
 ### Exercise Library
 
-![MoosclesPro Exercise Library](./screenshots\MoosclesPro_Exercises.png)
+![MoosclesPro Exercise Library](./screenshots/MoosclesPro_Exercises.png)
 
 ### Mindset
 
-![MoosclesPro Mindset](./screenshots\MoosclesPro_Mindset.png)
+![MoosclesPro Mindset](./screenshots/MoosclesPro_Mindset.png)
 
 ---
 

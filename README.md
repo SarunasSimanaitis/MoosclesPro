@@ -6,7 +6,7 @@ MoosclesPro is designed to make workout tracking simple, focused, and consistent
 
 > Train with consistency.
 
-🌐 **Live Demo:** [MoosclesPro](https://mooscles-61wbydxjo-lithuanianprogrammer.vercel.app/)
+🌐 **Live Demo:** [MoosclesPro](https://mooscles-pro.vercel.app/)
 
 ---
 

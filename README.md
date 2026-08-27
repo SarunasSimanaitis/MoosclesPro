@@ -110,12 +110,12 @@ Design principles:
 - [x] Dashboard UI
 - [x] Sidebar navigation
 - [x] Weekly goal card
-- [ ] Workout engine
-- [ ] Functional workout sessions
+- [x] Workout engine
+- [x] Functional workout sessions
 - [ ] Real XP & leveling
 - [ ] Statistics engine
-- [ ] Database
-- [ ] Authentication
+- [x] Database
+- [x] Authentication
 - [ ] Backend API
 
 ---

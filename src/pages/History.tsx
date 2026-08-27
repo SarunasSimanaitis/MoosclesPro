@@ -7,12 +7,10 @@ import {
   Weight,
 } from "lucide-react";
 import { useState } from "react";
-
 import { useNavigate } from "react-router-dom";
 
 import { routines } from "../data/routines";
 import { useRoutineStore } from "../stores/routineStore";
-
 import { getWorkoutSessions } from "../utils/workoutStorage";
 
 import type { WorkoutSession } from "../types/WorkoutSession";
@@ -25,7 +23,12 @@ export default function History() {
   );
 
   const [sessions] = useState<WorkoutSession[]>(
-    () => getWorkoutSessions(),
+    () =>
+      [...getWorkoutSessions()].sort(
+        (a, b) =>
+          new Date(b.completedAt).getTime() -
+          new Date(a.completedAt).getTime(),
+      ),
   );
 
   const allRoutines = [
@@ -33,7 +36,9 @@ export default function History() {
     ...customRoutines,
   ];
 
-  function getRoutineName(routineId: string) {
+  function getRoutineName(
+    routineId: string,
+  ) {
     return (
       allRoutines.find(
         (routine) => routine.id === routineId,
@@ -45,14 +50,11 @@ export default function History() {
     session: WorkoutSession,
   ) {
     return session.exercises.reduce(
-      (total, exercise) => {
-        return (
-          total +
-          exercise.sets.filter(
-            (set) => set.completed,
-          ).length
-        );
-      },
+      (total, exercise) =>
+        total +
+        exercise.sets.filter(
+          (set) => set.completed,
+        ).length,
       0,
     );
   }
@@ -61,25 +63,23 @@ export default function History() {
     session: WorkoutSession,
   ) {
     return session.exercises.reduce(
-      (total, exercise) => {
-        return (
-          total +
-          exercise.sets.reduce(
-            (exerciseTotal, set) => {
-              return (
-                exerciseTotal +
-                set.weight * set.reps
-              );
-            },
-            0,
-          )
-        );
-      },
+      (total, exercise) =>
+        total +
+        exercise.sets.reduce(
+          (exerciseTotal, set) =>
+            exerciseTotal +
+            (set.completed
+              ? set.weight * set.reps
+              : 0),
+          0,
+        ),
       0,
     );
   }
 
-  function getDuration(session: WorkoutSession) {
+  function getDuration(
+    session: WorkoutSession,
+  ) {
     const start = new Date(
       session.startedAt,
     ).getTime();
@@ -88,10 +88,26 @@ export default function History() {
       session.completedAt,
     ).getTime();
 
-    return Math.max(
+    const totalSeconds = Math.max(
       0,
-      Math.round((end - start) / 60000),
+      Math.round((end - start) / 1000),
     );
+
+    const minutes = Math.floor(
+      totalSeconds / 60,
+    );
+
+    const seconds = totalSeconds % 60;
+
+    if (minutes === 0) {
+      return `${seconds} sec`;
+    }
+
+    if (seconds === 0) {
+      return `${minutes} min`;
+    }
+
+    return `${minutes} min ${seconds} sec`;
   }
 
   return (
@@ -141,8 +157,6 @@ export default function History() {
           </button>
         </section>
       ) : (
-        /* History list */
-
         <section className="space-y-5">
           {sessions.map((session) => {
             const routineName =
@@ -154,21 +168,15 @@ export default function History() {
             const totalVolume =
               getTotalVolume(session);
 
-            const duration =
-              getDuration(session);
-
             return (
               <article
                 key={session.id}
                 className="group rounded-[2rem] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg md:p-8"
               >
-                {/* Top */}
-
                 <div className="flex flex-col justify-between gap-5 md:flex-row md:items-start">
                   <div>
                     <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.2em] text-[var(--primary)]">
                       <CheckCircle2 size={16} />
-
                       Completed Workout
                     </div>
 
@@ -178,9 +186,7 @@ export default function History() {
 
                     <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-[var(--text-muted)]">
                       <span className="flex items-center gap-2">
-                        <CalendarDays
-                          size={16}
-                        />
+                        <CalendarDays size={16} />
 
                         {new Date(
                           session.completedAt,
@@ -190,28 +196,29 @@ export default function History() {
                       <span className="flex items-center gap-2">
                         <Clock3 size={16} />
 
-                        {duration} min
+                        {getDuration(session)}
                       </span>
                     </div>
                   </div>
 
                   <button
                     type="button"
+                    onClick={() =>
+                      navigate(
+                        `/history/${session.id}`,
+                      )
+                    }
                     className="flex items-center gap-2 self-start text-sm font-semibold text-[var(--primary)] transition hover:gap-3"
                   >
                     View details
-
                     <ArrowRight size={17} />
                   </button>
                 </div>
-
-                {/* Stats */}
 
                 <div className="mt-7 grid gap-4 md:grid-cols-3">
                   <div className="rounded-2xl bg-[var(--surface-soft)] p-5">
                     <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
                       <Dumbbell size={15} />
-
                       Exercises
                     </div>
 
@@ -223,7 +230,6 @@ export default function History() {
                   <div className="rounded-2xl bg-[var(--surface-soft)] p-5">
                     <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
                       <CheckCircle2 size={15} />
-
                       Completed Sets
                     </div>
 
@@ -235,7 +241,6 @@ export default function History() {
                   <div className="rounded-2xl bg-[var(--surface-soft)] p-5">
                     <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
                       <Weight size={15} />
-
                       Volume
                     </div>
 

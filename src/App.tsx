@@ -15,6 +15,7 @@ import ExerciseDetails from "./pages/ExerciseDetails";
 import RoutineBuilder from "./pages/RoutineBuilder";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import WorkoutDetails from "./pages/WorkoutDetails";
 
 export default function App() {
   return (
@@ -42,6 +43,12 @@ export default function App() {
 
           <Route path="/session" element={<Session />} />
           <Route path="/history" element={<History />} />
+
+          <Route
+            path="/history/:sessionId"
+            element={<WorkoutDetails />}
+          />
+
           <Route path="/statistics" element={<Statistics />} />
 
           <Route

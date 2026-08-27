@@ -1,10 +1,12 @@
 # 🏋️ MoosclesPro
 
-A modern fitness tracker built with **React**, **TypeScript**, and **Tailwind CSS**.
+A modern fitness tracker built with **React, TypeScript, and Tailwind CSS**.
 
-MoosclesPro focuses on helping users stay consistent with their workouts through a clean interface, thoughtful user experience, and meaningful progress tracking.
+MoosclesPro is designed to make workout tracking simple, focused, and consistent — from choosing a routine to completing sessions and reviewing progress.
 
 > Train with consistency.
+
+🌐 **Live Demo:** [MoosclesPro](https://mooscles-61wbydxjo-lithuanianprogrammer.vercel.app/)
 
 ---
 
@@ -13,113 +15,89 @@ MoosclesPro focuses on helping users stay consistent with their workouts through
 ### Current
 
 - 🏠 Modern dashboard
-- 👋 Dynamic greeting
-- 🎯 Weekly workout goal
-- 🏅 XP & level system (in progress)
-- 💪 Today's workout overview
-- 📊 Statistics cards
-- 🎨 Clean, responsive UI
-- 🌙 Dark theme
-- 🟣 Premium design system
-
-### Planned
-
-- 🏋️ Workout session tracking
+- 👋 Dynamic user greeting
+- 🎯 Weekly workout goals
+- 💪 Workout routines
+- 🏋️ Functional workout sessions
+- 📚 Exercise library with filtering
 - 📋 Routine builder
-- 📚 Exercise library
-- 📈 Progress analytics
-- 🔥 Streak tracking
-- 🏆 Personal records
-- 💾 Local storage persistence
-- ☁️ Backend synchronization
-- 👤 User accounts
+- 📖 Workout history
+- 📊 Statistics dashboard
+- 🧠 Mindset & motivation section
+- 🔐 User authentication
+- 💾 MongoDB database
+- 🌙 Dark & light themes
+- 📱 Responsive interface
+- 🎨 Custom design system
+- ⚡ Fast Vite-powered development and production builds
+
+### In Progress
+
+- 🏆 Real XP & leveling system
+- 📈 Complete progress & statistics engine
+- 🔥 Automatic streak tracking
+- 🥇 Personal records
+- ☁️ Expanded backend API
+- 👤 More user-specific data and personalization
 
 ---
 
 ## 🛠️ Tech Stack
 
-- React
-- TypeScript
-- Vite
-- Tailwind CSS
-- React Router
-- Lucide React
+### Frontend
 
-Future:
+- **React**
+- **TypeScript**
+- **Vite**
+- **Tailwind CSS**
+- **React Router**
+- **Lucide React**
 
-- Zustand
-- Node.js
-- Express
-- MongoDB
+### Backend & Data
+
+- **Node.js**
+- **MongoDB**
+- **Better Auth**
+- **Vercel**
 
 ---
 
 ## 📸 Screenshots
 
-> Coming soon
+### Dashboard
+
+![MoosclesPro Dashboard](./screenshots\MoosclesPro_Dashboard.png)
+
+### Workouts
+
+![MoosclesPro Workouts](./screenshots\MoosclesPro_Workouts.png)
+
+### Exercise Library
+
+![MoosclesPro Exercise Library](./screenshots\MoosclesPro_Exercises.png)
+
+### Mindset
+
+![MoosclesPro Mindset](./screenshots\MoosclesPro_Mindset.png)
 
 ---
 
 ## 🚀 Getting Started
 
-Clone the repository
+### Clone the repository
 
 ```bash
 git clone https://github.com/LithuanianProgrammer/MoosclesPro.git
-```
+cd MoosclesPro
 
 Install dependencies
 
-```bash
 npm install
-```
 
-Run the development server
+Start the development server
 
-```bash
 npm run dev
-```
 
 Build for production
 
-```bash
 npm run build
-```
-
----
-
-## 🎯 Project Vision
-
-MoosclesPro isn't just another workout tracker.
-
-The goal is to build a calm, premium fitness companion that encourages consistency rather than perfection.
-
-Design principles:
-
-- 🌑 Calm interface
-- ⚪ Spacious layouts
-- 🟣 One accent color
-- ✨ Purposeful animations
-- 📐 Consistent components
-- 💪 Motivation through progress
-
----
-
-## 📅 Roadmap
-
-- [x] Dashboard UI
-- [x] Sidebar navigation
-- [x] Weekly goal card
-- [x] Workout engine
-- [x] Functional workout sessions
-- [ ] Real XP & leveling
-- [ ] Statistics engine
-- [x] Database
-- [x] Authentication
-- [ ] Backend API
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License.

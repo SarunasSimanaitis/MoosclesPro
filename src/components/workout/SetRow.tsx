@@ -25,10 +25,20 @@ export default function SetRow({
         min={0}
         step={0.5}
         placeholder="0"
-        value={workoutSet.weight}
+        value={workoutSet.weight === 0 ? "" : workoutSet.weight}
         onChange={(event) => {
-          const weight = Number(event.target.value);
-          onWeightChange(Math.max(0, weight));
+          const value = event.target.value;
+
+          if (value === "") {
+            onWeightChange(0);
+            return;
+          }
+
+          const weight = Number(value);
+
+          if (Number.isFinite(weight)) {
+            onWeightChange(Math.max(0, weight));
+          }
         }}
         className="w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface)] px-3 py-2 text-center text-[var(--text)] outline-none transition focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary)]/20"
       />
@@ -38,10 +48,20 @@ export default function SetRow({
         min={0}
         step={1}
         placeholder="0"
-        value={workoutSet.reps}
+        value={workoutSet.reps === 0 ? "" : workoutSet.reps}
         onChange={(event) => {
-          const reps = Number(event.target.value);
-          onRepsChange(Math.max(0, reps));
+          const value = event.target.value;
+
+          if (value === "") {
+            onRepsChange(0);
+            return;
+          }
+
+          const reps = Number(value);
+
+          if (Number.isFinite(reps)) {
+            onRepsChange(Math.max(0, reps));
+          }
         }}
         className="w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface)] px-3 py-2 text-center text-[var(--text)] outline-none transition focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary)]/20"
       />

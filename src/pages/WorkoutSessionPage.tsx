@@ -21,6 +21,10 @@ import type { WorkoutSet } from "../types/WorkoutSet";
 import { saveWorkoutSession } from "../utils/workoutStorage";
 
 export default function WorkoutSessionPage() {
+    useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+  
   const navigate = useNavigate();
   const { routineId } = useParams();
 

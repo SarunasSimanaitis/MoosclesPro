@@ -22,9 +22,9 @@ export const dashboard = {
     duration: "55 min",
     exercises: 5,
   },
-  
+
   weeklyGoal: {
-  completed: 3,
-  target: 5,
-},
-}
+    completed: 3,
+    target: 5,
+  },
+};

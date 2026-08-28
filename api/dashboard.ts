@@ -16,6 +16,13 @@ type StoredWorkoutSession = {
   }[];
 };
 
+type StoredRoutine = {
+  id: string;
+  userId: string;
+  name: string;
+  exercises: unknown[];
+};
+
 function startOfDay(date: Date) {
   const result = new Date(date);
 
@@ -53,14 +60,18 @@ function getCurrentStreak(
 
   const today = startOfDay(new Date());
 
-  let streak = 0;
   let currentDay = today;
+  let streak = 0;
 
   /*
    * If the user hasn't trained today,
-   * allow the streak to continue from yesterday.
+   * continue the streak from yesterday.
    */
-  if (!workoutDays.has(getDateKey(currentDay))) {
+  if (
+    !workoutDays.has(
+      getDateKey(currentDay),
+    )
+  ) {
     currentDay.setDate(
       currentDay.getDate() - 1,
     );
@@ -97,6 +108,19 @@ function getWeekStart(date: Date) {
   return result;
 }
 
+function getRoutineDuration(
+  exerciseCount: number,
+) {
+  /*
+   * Temporary estimate until routines have
+   * their own duration metadata.
+   */
+  return Math.max(
+    20,
+    exerciseCount * 10,
+  );
+}
+
 export default {
   async fetch(request: Request) {
     if (request.method !== "GET") {
@@ -111,14 +135,19 @@ export default {
       );
     }
 
-    const session = await auth.api.getSession({
-      headers: request.headers,
-    });
+    const session =
+      await auth.api.getSession({
+        headers: request.headers,
+      });
 
     if (!session?.user) {
       return Response.json(
-        { error: "Unauthorized" },
-        { status: 401 },
+        {
+          error: "Unauthorized",
+        },
+        {
+          status: 401,
+        },
       );
     }
 
@@ -133,6 +162,19 @@ export default {
           })
           .sort({
             completedAt: -1,
+          })
+          .toArray();
+
+      const userRoutines =
+        await database
+          .collection<StoredRoutine>(
+            "routines",
+          )
+          .find({
+            userId: session.user.id,
+          })
+          .sort({
+            updatedAt: -1,
           })
           .toArray();
 
@@ -175,7 +217,9 @@ export default {
       }
 
       const currentStreak =
-        getCurrentStreak(workoutSessions);
+        getCurrentStreak(
+          workoutSessions,
+        );
 
       const weekStart =
         getWeekStart(new Date());
@@ -189,10 +233,68 @@ export default {
             weekStart.getTime(),
         ).length;
 
-      const trainingHours = Math.round(
-        (totalTrainingSeconds / 3600) *
-          10,
-      ) / 10;
+      const trainingHours =
+        Math.round(
+          (totalTrainingSeconds /
+            3600) *
+            10,
+        ) / 10;
+
+      /*
+       * Select today's workout.
+       *
+       * Prefer the routine from the most
+       * recently completed workout.
+       *
+       * If the user has never completed a
+       * workout, fall back to the most recently
+       * updated custom routine.
+       */
+      let todayWorkout:
+        | {
+            routineId: string;
+            title: string;
+            duration: string;
+            exercises: number;
+          }
+        | null = null;
+
+      const mostRecentWorkout =
+        workoutSessions[0];
+
+      const recentRoutine =
+        mostRecentWorkout
+          ? userRoutines.find(
+              (routine) =>
+                routine.id ===
+                mostRecentWorkout.routineId,
+            )
+          : undefined;
+
+      const selectedRoutine =
+        recentRoutine ??
+        userRoutines[0];
+
+      if (selectedRoutine) {
+        const exerciseCount =
+          selectedRoutine.exercises
+            .length;
+
+        const duration =
+          getRoutineDuration(
+            exerciseCount,
+          );
+
+        todayWorkout = {
+          routineId:
+            selectedRoutine.id,
+          title:
+            selectedRoutine.name,
+          duration: `${duration} min`,
+          exercises:
+            exerciseCount,
+        };
+      }
 
       return Response.json({
         stats: {
@@ -201,10 +303,14 @@ export default {
           volume: totalVolume,
           hours: trainingHours,
         },
+
         weeklyGoal: {
-          completed: weeklyWorkouts,
+          completed:
+            weeklyWorkouts,
           target: 5,
         },
+
+        todayWorkout,
       });
     } catch (error) {
       console.error(
@@ -215,9 +321,11 @@ export default {
       return Response.json(
         {
           error:
-            "Failed to load dashboard statistics.",
+            "Failed to load dashboard data.",
         },
-        { status: 500 },
+        {
+          status: 500,
+        },
       );
     }
   },

@@ -5,9 +5,7 @@ import {
   Target,
   TrendingUp,
 } from "lucide-react";
-import {
-  NavLink,
-} from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import {
   useEffect,
   useState,
@@ -27,26 +25,46 @@ type DashboardStats = {
   hours: number;
 };
 
+type TodayWorkout = {
+  routineId?: string;
+  title: string;
+  duration: string;
+  exercises: number;
+};
+
 type DashboardData = {
   stats: DashboardStats;
+
   weeklyGoal: {
     completed: number;
     target: number;
   };
+
+  todayWorkout: TodayWorkout | null;
 };
 
 export default function Dashboard() {
   const {
     stats: demoStats,
-    todayWorkout,
+    todayWorkout: rawDemoTodayWorkout,
     weeklyGoal: demoWeeklyGoal,
   } = dashboard;
+
+  /*
+   * Give the demo workout the exact same type
+   * as the API workout.
+   */
+  const demoTodayWorkout: TodayWorkout = {
+    routineId: undefined,
+    title: rawDemoTodayWorkout.title,
+    duration: rawDemoTodayWorkout.duration,
+    exercises: rawDemoTodayWorkout.exercises,
+  };
 
   const {
     data: session,
     isPending: isSessionPending,
-  } =
-    authClient.useSession();
+  } = authClient.useSession();
 
   const isLoggedIn = Boolean(
     session?.user,
@@ -88,12 +106,9 @@ export default function Dashboard() {
         setDashboardError(null);
 
         const response =
-          await fetch(
-            "/api/dashboard",
-            {
-              credentials: "include",
-            },
-          );
+          await fetch("/api/dashboard", {
+            credentials: "include",
+          });
 
         if (!response.ok) {
           throw new Error(
@@ -115,7 +130,7 @@ export default function Dashboard() {
 
         if (!cancelled) {
           setDashboardError(
-            "Could not load your latest statistics.",
+            "Could not load your latest dashboard data.",
           );
         }
       } finally {
@@ -135,17 +150,20 @@ export default function Dashboard() {
     isSessionPending,
   ]);
 
-  const stats =
-    isLoggedIn &&
-    dashboardData
+  const stats: DashboardStats =
+    isLoggedIn && dashboardData
       ? dashboardData.stats
       : demoStats;
 
   const currentWeeklyGoal =
-    isLoggedIn &&
-    dashboardData
+    isLoggedIn && dashboardData
       ? dashboardData.weeklyGoal
       : demoWeeklyGoal;
+
+  const todayWorkout: TodayWorkout | null =
+    isLoggedIn && dashboardData
+      ? dashboardData.todayWorkout
+      : demoTodayWorkout;
 
   const userName =
     session?.user?.name ?? "";
@@ -323,50 +341,90 @@ export default function Dashboard() {
                 : "Example Workout"}
             </p>
 
-            <h2 className="mt-4 text-3xl font-black text-[var(--text)]">
-              {todayWorkout.title}
-            </h2>
+            {isLoggedIn &&
+            isDashboardLoading ? (
+              <>
+                <div className="mt-4 h-9 w-64 animate-pulse rounded-lg bg-[var(--surface-soft)]" />
 
-            <p className="mt-3 max-w-xl leading-relaxed text-[var(--text-muted)]">
-              {isLoggedIn
-                ? "Focus on controlled reps, progressive overload, and quality movement."
-                : "Explore structured workouts, track your sets, and build consistent training habits."}
-            </p>
+                <div className="mt-4 h-12 max-w-xl animate-pulse rounded-lg bg-[var(--surface-soft)]" />
 
-            <div className="mt-8 flex flex-wrap gap-3 text-sm text-[var(--text-muted)]">
-              <WorkoutTag>
-                {todayWorkout.exercises}{" "}
-                exercises
-              </WorkoutTag>
+                <div className="mt-8 flex gap-3">
+                  <div className="h-10 w-32 animate-pulse rounded-full bg-[var(--surface-soft)]" />
 
-              <WorkoutTag>
-                ~
-                {todayWorkout.duration.replace(
-                  " min",
-                  "",
-                )}{" "}
-                min
-              </WorkoutTag>
-            </div>
+                  <div className="h-10 w-24 animate-pulse rounded-full bg-[var(--surface-soft)]" />
+                </div>
+              </>
+            ) : todayWorkout ? (
+              <>
+                <h2 className="mt-4 text-3xl font-black text-[var(--text)]">
+                  {todayWorkout.title}
+                </h2>
 
-            <NavLink
-              to={
-                isLoggedIn
-                  ? "/workouts"
-                  : "/register"
-              }
-            >
-              <Button
-                variant="secondary"
-                className="mt-8"
-              >
-                {isLoggedIn
-                  ? "Continue Workout"
-                  : "Get Started"}
+                <p className="mt-3 max-w-xl leading-relaxed text-[var(--text-muted)]">
+                  {isLoggedIn
+                    ? "Focus on controlled reps, progressive overload, and quality movement."
+                    : "Explore structured workouts, track your sets, and build consistent training habits."}
+                </p>
 
-                <ArrowRight size={17} />
-              </Button>
-            </NavLink>
+                <div className="mt-8 flex flex-wrap gap-3 text-sm text-[var(--text-muted)]">
+                  <WorkoutTag>
+                    {todayWorkout.exercises}{" "}
+                    exercises
+                  </WorkoutTag>
+
+                  <WorkoutTag>
+                    ~
+                    {todayWorkout.duration.replace(
+                      " min",
+                      "",
+                    )}{" "}
+                    min
+                  </WorkoutTag>
+                </div>
+
+                <NavLink
+                  to={
+                    isLoggedIn &&
+                    todayWorkout.routineId
+                      ? `/workout/${todayWorkout.routineId}`
+                      : "/register"
+                  }
+                >
+                  <Button
+                    variant="secondary"
+                    className="mt-8"
+                  >
+                    {isLoggedIn
+                      ? "Start Workout"
+                      : "Get Started"}
+
+                    <ArrowRight size={17} />
+                  </Button>
+                </NavLink>
+              </>
+            ) : (
+              <>
+                <h2 className="mt-4 text-3xl font-black text-[var(--text)]">
+                  No workout yet
+                </h2>
+
+                <p className="mt-3 max-w-xl leading-relaxed text-[var(--text-muted)]">
+                  Create your first routine and
+                  it will appear here on your
+                  dashboard.
+                </p>
+
+                <NavLink to="/workouts/create">
+                  <Button
+                    variant="secondary"
+                    className="mt-8"
+                  >
+                    Create Routine
+                    <ArrowRight size={17} />
+                  </Button>
+                </NavLink>
+              </>
+            )}
           </div>
         </Card>
 

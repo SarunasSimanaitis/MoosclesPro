@@ -9,8 +9,8 @@ import AppLayout from "./components/layout/AppLayout";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 
 import Dashboard from "./pages/Dashboard";
-import Exercises from "./pages/Exercises";
 import ExerciseDetails from "./pages/ExerciseDetails";
+import Exercises from "./pages/Exercises";
 import History from "./pages/History";
 import Login from "./pages/Login";
 import Mindset from "./pages/Mindset";
@@ -27,7 +27,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Public authentication pages */}
+        {/* Public authentication */}
         <Route path="/login" element={<Login />} />
 
         <Route
@@ -35,16 +35,29 @@ export default function App() {
           element={<Register />}
         />
 
-        {/* Protected application */}
+        {/* Public app pages */}
+        <Route element={<AppLayout />}>
+          <Route path="/" element={<Dashboard />} />
+
+          <Route
+            path="/exercises"
+            element={<Exercises />}
+          />
+
+          <Route
+            path="/exercises/:exerciseId"
+            element={<ExerciseDetails />}
+          />
+
+          <Route
+            path="/mindset"
+            element={<Mindset />}
+          />
+        </Route>
+
+        {/* Protected app pages */}
         <Route element={<ProtectedRoute />}>
           <Route element={<AppLayout />}>
-            <Route path="/" element={<Dashboard />} />
-
-            <Route
-              path="/workout/:routineId"
-              element={<WorkoutSessionPage />}
-            />
-
             <Route
               path="/workouts"
               element={<Workouts />}
@@ -53,6 +66,11 @@ export default function App() {
             <Route
               path="/workouts/create"
               element={<RoutineBuilder />}
+            />
+
+            <Route
+              path="/workout/:routineId"
+              element={<WorkoutSessionPage />}
             />
 
             <Route
@@ -76,28 +94,13 @@ export default function App() {
             />
 
             <Route
-              path="/exercises"
-              element={<Exercises />}
-            />
-
-            <Route
-              path="/exercises/:exerciseId"
-              element={<ExerciseDetails />}
-            />
-
-            <Route
-              path="/mindset"
-              element={<Mindset />}
-            />
-
-            <Route
               path="/settings"
               element={<Settings />}
             />
           </Route>
         </Route>
 
-        {/* Unknown route */}
+        {/* Unknown routes */}
         <Route
           path="*"
           element={<Navigate to="/" replace />}

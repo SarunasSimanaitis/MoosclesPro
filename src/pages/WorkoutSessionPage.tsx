@@ -18,13 +18,16 @@ import ExerciseCard from "../components/workout/ExerciseCard";
 import { routines } from "../data/routines";
 import { useRoutineStore } from "../stores/routineStore";
 
-import type { Routine } from "../types/Routine";
 import type { WorkoutExercise } from "../types/WorkoutExercise";
 import type { WorkoutSet } from "../types/WorkoutSet";
 
 import { saveWorkoutSession } from "../utils/workoutStorage";
 
 export default function WorkoutSessionPage() {
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   const navigate = useNavigate();
   const { routineId } = useParams();
 
@@ -32,31 +35,11 @@ export default function WorkoutSessionPage() {
     (state) => state.customRoutines,
   );
 
-  /*
-   * Always start the workout page at the top.
-   */
-  useEffect(() => {
-    window.scrollTo({
-      top: 0,
-      behavior: "instant",
-    });
-  }, []);
+  const allRoutines = [
+    ...routines,
+    ...customRoutines,
+  ];
 
-  /*
-   * Built-in + custom routines.
-   */
-  const allRoutines = useMemo(
-    () => [...routines, ...customRoutines],
-    [customRoutines],
-  );
-
-  /*
-   * Resolve the routine from the URL.
-   *
-   * Example:
-   * /workout/push
-   * /workout/custom-123
-   */
   const routine = allRoutines.find(
     (item) => item.id === routineId,
   );
@@ -74,8 +57,7 @@ export default function WorkoutSessionPage() {
           </h1>
 
           <p className="mt-3 text-[var(--text-muted)]">
-            The routine you're looking for doesn't exist or is no longer
-            available.
+            The routine you're looking for doesn't exist.
           </p>
 
           <button
@@ -92,7 +74,6 @@ export default function WorkoutSessionPage() {
 
   return (
     <WorkoutSession
-      key={routine.id}
       routine={routine}
       onBack={() => navigate("/workouts")}
     />
@@ -100,7 +81,17 @@ export default function WorkoutSessionPage() {
 }
 
 type WorkoutSessionProps = {
-  routine: Routine;
+  routine: {
+    id: string;
+    name: string;
+    exercises: {
+      exercise: WorkoutExercise["exercise"];
+      targetSets: number;
+      targetReps: string;
+      restSeconds: number;
+    }[];
+  };
+
   onBack: () => void;
 };
 
@@ -114,36 +105,43 @@ function WorkoutSession({
     () => new Date().toISOString(),
   );
 
-  /*
-   * Build the active workout from the selected routine.
-   */
   const [workoutExercises, setWorkoutExercises] =
     useState<WorkoutExercise[]>(() =>
-      routine.exercises.map((routineExercise) => {
-        const sets: WorkoutSet[] = Array.from(
-          { length: routineExercise.targetSets },
-          (_, index) => ({
-            id: crypto.randomUUID(),
-            order: index + 1,
-            weight: 0,
-            reps: 0,
-            completed: false,
-          }),
-        );
+      routine.exercises.map(
+        (routineExercise) => {
+          const sets: WorkoutSet[] =
+            Array.from(
+              {
+                length:
+                  routineExercise.targetSets,
+              },
+              (_, index) => ({
+                id: crypto.randomUUID(),
+                order: index + 1,
+                weight: 0,
+                reps: 0,
+                completed: false,
+              }),
+            );
 
-        return {
-          exercise: routineExercise.exercise,
-          targetSets: routineExercise.targetSets,
-          targetReps: routineExercise.targetReps,
-          restSeconds: routineExercise.restSeconds,
-          sets,
-        };
-      }),
+          return {
+            exercise: routineExercise.exercise,
+            targetSets:
+              routineExercise.targetSets,
+            targetReps:
+              routineExercise.targetReps,
+            restSeconds:
+              routineExercise.restSeconds,
+            sets,
+          };
+        },
+      ),
     );
 
   /*
    * Workout timer
    */
+
   const [elapsedSeconds, setElapsedSeconds] =
     useState(0);
 
@@ -159,7 +157,9 @@ function WorkoutSession({
       setElapsedSeconds(
         Math.floor(
           (Date.now() -
-            new Date(startedAt).getTime()) /
+            new Date(
+              startedAt,
+            ).getTime()) /
             1000,
         ),
       );
@@ -173,6 +173,7 @@ function WorkoutSession({
   /*
    * Rest timer
    */
+
   const [restTime, setRestTime] =
     useState<number | null>(null);
 
@@ -186,6 +187,7 @@ function WorkoutSession({
 
     if (restTime <= 0) {
       setRestTime(null);
+      setRestDuration(0);
       return;
     }
 
@@ -203,14 +205,19 @@ function WorkoutSession({
   }, [restTime]);
 
   /*
-   * Prevent duplicate saves.
+   * Saving state
    */
+
   const [isFinishing, setIsFinishing] =
     useState(false);
 
+  const [saveError, setSaveError] =
+    useState<string | null>(null);
+
   /*
-   * Workout calculations.
+   * Workout calculations
    */
+
   const completedSets =
     workoutExercises.reduce(
       (total, exercise) =>
@@ -235,34 +242,33 @@ function WorkoutSession({
 
   const totalVolume = useMemo(() => {
     return workoutExercises.reduce(
-      (total, exercise) => {
-        return (
-          total +
-          exercise.sets.reduce(
-            (exerciseTotal, set) => {
-              if (!set.completed) {
-                return exerciseTotal;
-              }
+      (total, exercise) =>
+        total +
+        exercise.sets.reduce(
+          (exerciseTotal, set) => {
+            if (!set.completed) {
+              return exerciseTotal;
+            }
 
-              return (
-                exerciseTotal +
-                set.weight * set.reps
-              );
-            },
-            0,
-          )
-        );
-      },
+            return (
+              exerciseTotal +
+              set.weight * set.reps
+            );
+          },
+          0,
+        ),
       0,
     );
   }, [workoutExercises]);
 
-  const formattedTime =
-    formatDuration(elapsedSeconds);
+  const formattedTime = formatDuration(
+    elapsedSeconds,
+  );
 
   /*
-   * Update weight.
+   * Update weight
    */
+
   function updateWeight(
     exerciseId: string,
     setId: string,
@@ -270,34 +276,39 @@ function WorkoutSession({
   ) {
     setWorkoutExercises(
       (previousExercises) =>
-        previousExercises.map((exercise) => {
-          if (
-            exercise.exercise.id !==
-            exerciseId
-          ) {
-            return exercise;
-          }
+        previousExercises.map(
+          (exercise) => {
+            if (
+              exercise.exercise.id !==
+              exerciseId
+            ) {
+              return exercise;
+            }
 
-          return {
-            ...exercise,
-            sets: exercise.sets.map((set) => {
-              if (set.id !== setId) {
-                return set;
-              }
+            return {
+              ...exercise,
+              sets: exercise.sets.map(
+                (set) => {
+                  if (set.id !== setId) {
+                    return set;
+                  }
 
-              return {
-                ...set,
-                weight: newWeight,
-              };
-            }),
-          };
-        }),
+                  return {
+                    ...set,
+                    weight: newWeight,
+                  };
+                },
+              ),
+            };
+          },
+        ),
     );
   }
 
   /*
-   * Update reps.
+   * Update reps
    */
+
   function updateReps(
     exerciseId: string,
     setId: string,
@@ -305,78 +316,86 @@ function WorkoutSession({
   ) {
     setWorkoutExercises(
       (previousExercises) =>
-        previousExercises.map((exercise) => {
-          if (
-            exercise.exercise.id !==
-            exerciseId
-          ) {
-            return exercise;
-          }
+        previousExercises.map(
+          (exercise) => {
+            if (
+              exercise.exercise.id !==
+              exerciseId
+            ) {
+              return exercise;
+            }
 
-          return {
-            ...exercise,
-            sets: exercise.sets.map((set) => {
-              if (set.id !== setId) {
-                return set;
-              }
+            return {
+              ...exercise,
+              sets: exercise.sets.map(
+                (set) => {
+                  if (set.id !== setId) {
+                    return set;
+                  }
 
-              return {
-                ...set,
-                reps: newReps,
-              };
-            }),
-          };
-        }),
+                  return {
+                    ...set,
+                    reps: newReps,
+                  };
+                },
+              ),
+            };
+          },
+        ),
     );
   }
 
   /*
-   * Toggle completed set.
+   * Toggle completed set
    */
+
   function updateCompleted(
     exerciseId: string,
     setId: string,
   ) {
     setWorkoutExercises(
       (previousExercises) =>
-        previousExercises.map((exercise) => {
-          if (
-            exercise.exercise.id !==
-            exerciseId
-          ) {
-            return exercise;
-          }
+        previousExercises.map(
+          (exercise) => {
+            if (
+              exercise.exercise.id !==
+              exerciseId
+            ) {
+              return exercise;
+            }
 
-          return {
-            ...exercise,
-            sets: exercise.sets.map((set) => {
-              if (set.id !== setId) {
-                return set;
-              }
+            return {
+              ...exercise,
+              sets: exercise.sets.map(
+                (set) => {
+                  if (set.id !== setId) {
+                    return set;
+                  }
 
-              const completed =
-                !set.completed;
+                  const completed =
+                    !set.completed;
 
-              if (completed) {
-                startRestTimer(
-                  exercise.restSeconds,
-                );
-              }
+                  if (completed) {
+                    startRestTimer(
+                      exercise.restSeconds,
+                    );
+                  }
 
-              return {
-                ...set,
-                completed,
-              };
-            }),
-          };
-        }),
+                  return {
+                    ...set,
+                    completed,
+                  };
+                },
+              ),
+            };
+          },
+        ),
     );
   }
 
-  /*
-   * Rest timer controls.
-   */
-  function startRestTimer(seconds: number) {
+  function startRestTimer(
+    seconds: number,
+  ) {
     setRestDuration(seconds);
     setRestTime(seconds);
   }
@@ -387,14 +406,16 @@ function WorkoutSession({
   }
 
   /*
-   * Finish workout.
+   * Finish workout
    */
-  function finishWorkout() {
+
+  async function finishWorkout() {
     if (isFinishing) {
       return;
     }
 
     setIsFinishing(true);
+    setSaveError(null);
 
     const completedAt =
       new Date().toISOString();
@@ -407,25 +428,42 @@ function WorkoutSession({
       exercises: workoutExercises,
     };
 
-    saveWorkoutSession(session);
+    try {
+      await saveWorkoutSession(session);
 
-    navigate("/history", {
-      replace: true,
-    });
+      navigate("/history", {
+        replace: true,
+      });
+    } catch (error) {
+      console.error(
+        "Failed to save workout:",
+        error,
+      );
+
+      setSaveError(
+        error instanceof Error
+          ? error.message
+          : "Could not save your workout. Please try again.",
+      );
+
+      setIsFinishing(false);
+    }
   }
 
   /*
-   * Leave workout.
+   * Leave workout
    */
+
   function handleBack() {
     const hasProgress =
       completedSets > 0 ||
-      workoutExercises.some((exercise) =>
-        exercise.sets.some(
-          (set) =>
-            set.weight > 0 ||
-            set.reps > 0,
-        ),
+      workoutExercises.some(
+        (exercise) =>
+          exercise.sets.some(
+            (set) =>
+              set.weight > 0 ||
+              set.reps > 0,
+          ),
       );
 
     if (!hasProgress) {
@@ -433,10 +471,9 @@ function WorkoutSession({
       return;
     }
 
-    const shouldLeave =
-      window.confirm(
-        "You have an active workout. Leave without saving it?",
-      );
+    const shouldLeave = window.confirm(
+      "You have an active workout. Leave without saving it?",
+    );
 
     if (shouldLeave) {
       onBack();
@@ -446,16 +483,19 @@ function WorkoutSession({
   return (
     <main className="mx-auto max-w-5xl space-y-6 pb-10">
       {/* Back */}
+
       <button
         type="button"
         onClick={handleBack}
         className="flex items-center gap-2 text-sm font-semibold text-[var(--text-muted)] transition hover:text-[var(--primary)]"
       >
         <ArrowLeft size={17} />
+
         Back to workouts
       </button>
 
       {/* Header */}
+
       <section className="rounded-[2rem] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-sm md:p-8">
         <div className="flex flex-col gap-6">
           <div className="flex flex-col justify-between gap-5 md:flex-row md:items-start">
@@ -471,22 +511,27 @@ function WorkoutSession({
               <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm text-[var(--text-muted)]">
                 <span className="flex items-center gap-2">
                   <Dumbbell size={16} />
-                  {workoutExercises.length} exercises
+
+                  {workoutExercises.length}{" "}
+                  exercises
                 </span>
 
                 <span className="flex items-center gap-2">
                   <CheckCircle2 size={16} />
+
                   {completedSets}/{totalSets} sets
                 </span>
 
                 <span className="flex items-center gap-2">
                   <Clock3 size={16} />
+
                   {formattedTime}
                 </span>
               </div>
             </div>
 
             {/* Timer */}
+
             <div className="flex items-center gap-2">
               <div className="rounded-2xl bg-[var(--surface-soft)] px-5 py-4 text-center">
                 <p className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
@@ -522,6 +567,7 @@ function WorkoutSession({
           </div>
 
           {/* Progress */}
+
           <div>
             <div className="mb-2 flex items-center justify-between text-sm">
               <span className="font-semibold text-[var(--text)]">
@@ -544,6 +590,7 @@ function WorkoutSession({
           </div>
 
           {/* Stats */}
+
           <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
             <div className="rounded-2xl bg-[var(--surface-soft)] p-4">
               <p className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
@@ -571,14 +618,24 @@ function WorkoutSession({
               </p>
 
               <p className="mt-1 text-xl font-black text-[var(--text)]">
-                {totalVolume.toLocaleString()} kg
+                {totalVolume.toLocaleString()}{" "}
+                kg
               </p>
             </div>
           </div>
         </div>
       </section>
 
+      {/* Save error */}
+
+      {saveError && (
+        <section className="rounded-2xl border border-[var(--danger)]/30 bg-[var(--danger)]/10 px-5 py-4 text-sm font-medium text-[var(--danger)]">
+          {saveError}
+        </section>
+      )}
+
       {/* Rest Timer */}
+
       {restTime !== null && (
         <section className="sticky top-24 z-20 rounded-[1.5rem] border border-[var(--primary)]/30 bg-[var(--primary-soft)] p-4 shadow-lg backdrop-blur">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -628,6 +685,7 @@ function WorkoutSession({
                 className="flex items-center gap-2 rounded-xl bg-[var(--primary)] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[var(--primary-hover)]"
               >
                 <RotateCcw size={15} />
+
                 Stop
               </button>
             </div>
@@ -638,15 +696,13 @@ function WorkoutSession({
               <div
                 className="h-full rounded-full bg-[var(--primary)] transition-all duration-1000"
                 style={{
-                  width: `${Math.max(
-                    0,
-                    Math.min(
-                      100,
-                      ((restTime ?? 0) /
-                        restDuration) *
-                        100,
-                    ),
-                  )}%`,
+                  width: `${
+                    restTime === null
+                      ? 0
+                      : (restTime /
+                          restDuration) *
+                        100
+                  }%`,
                 }}
               />
             </div>
@@ -655,12 +711,17 @@ function WorkoutSession({
       )}
 
       {/* Exercises */}
+
       <div className="space-y-6">
         {workoutExercises.map(
           (workoutExercise) => (
             <ExerciseCard
-              key={workoutExercise.exercise.id}
-              workoutExercise={workoutExercise}
+              key={
+                workoutExercise.exercise.id
+              }
+              workoutExercise={
+                workoutExercise
+              }
               updateWeight={updateWeight}
               updateReps={updateReps}
               updateCompleted={
@@ -672,12 +733,14 @@ function WorkoutSession({
       </div>
 
       {/* Finish */}
+
       <section className="flex flex-col gap-5 rounded-[2rem] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-sm md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-3">
           <CheckCircle2
             size={24}
             className={
-              completedSets === totalSets &&
+              completedSets ===
+                totalSets &&
               totalSets > 0
                 ? "text-[var(--success)]"
                 : "text-[var(--text-muted)]"
@@ -686,22 +749,25 @@ function WorkoutSession({
 
           <div>
             <p className="font-bold text-[var(--text)]">
-              {completedSets === totalSets &&
+              {completedSets ===
+                totalSets &&
               totalSets > 0
                 ? "Workout complete!"
                 : "Keep going!"}
             </p>
 
             <p className="text-sm text-[var(--text-muted)]">
-              {completedSets} of {totalSets} sets
-              completed
+              {completedSets} of{" "}
+              {totalSets} sets completed
             </p>
           </div>
         </div>
 
         <button
           type="button"
-          onClick={finishWorkout}
+          onClick={() =>
+            void finishWorkout()
+          }
           disabled={isFinishing}
           className="w-full rounded-xl bg-[var(--primary)] px-7 py-3.5 font-semibold text-white transition hover:bg-[var(--primary-hover)] disabled:cursor-not-allowed disabled:opacity-60 md:w-auto"
         >
@@ -714,7 +780,9 @@ function WorkoutSession({
   );
 }
 
-function formatDuration(totalSeconds: number) {
+function formatDuration(
+  totalSeconds: number,
+) {
   const minutes = Math.floor(
     totalSeconds / 60,
   );

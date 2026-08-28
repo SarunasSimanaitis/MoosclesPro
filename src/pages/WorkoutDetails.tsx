@@ -5,11 +5,20 @@ import {
   Clock3,
   Dumbbell,
 } from "lucide-react";
-import { Link, useNavigate, useParams } from "react-router-dom";
-import { useRoutineStore } from "../stores/routineStore";
+import {
+  Link,
+  useNavigate,
+  useParams,
+} from "react-router-dom";
+import { useEffect, useState } from "react";
 
+import { useRoutineStore } from "../stores/routineStore";
 import { routines } from "../data/routines";
-import { getWorkoutSessions } from "../utils/workoutStorage";
+import {
+  getWorkoutSessions,
+} from "../utils/workoutStorage";
+
+import type { WorkoutSession } from "../types/WorkoutSession";
 
 export default function WorkoutDetails() {
   const navigate = useNavigate();
@@ -19,18 +28,84 @@ export default function WorkoutDetails() {
     (state) => state.customRoutines,
   );
 
-  const sessions = getWorkoutSessions();
+  const [sessions, setSessions] =
+    useState<WorkoutSession[]>([]);
 
-  const session = sessions.find(
-    (item) => item.id === sessionId,
-  );
+  const [isLoading, setIsLoading] =
+    useState(true);
+
+  const [error, setError] =
+    useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadSessions() {
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        const data =
+          await getWorkoutSessions();
+
+        if (!cancelled) {
+          setSessions(data);
+        }
+      } catch (requestError) {
+        console.error(
+          "Failed to load workout session:",
+          requestError,
+        );
+
+        if (!cancelled) {
+          setError(
+            "Could not load this workout.",
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    void loadSessions();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const allRoutines = [
     ...routines,
     ...customRoutines,
   ];
 
-  if (!session) {
+  const session = sessions.find(
+    (item) => item.id === sessionId,
+  );
+
+  if (isLoading) {
+    return (
+      <main className="mx-auto flex min-h-[70vh] max-w-5xl items-center justify-center px-6">
+        <section className="w-full rounded-[2rem] border border-[var(--border)] bg-[var(--surface)] p-10 text-center shadow-sm">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--primary-soft)] text-[var(--primary)]">
+            <Dumbbell size={28} />
+          </div>
+
+          <h1 className="mt-6 text-2xl font-black text-[var(--text)]">
+            Loading workout...
+          </h1>
+
+          <p className="mt-3 text-[var(--text-muted)]">
+            Fetching your workout details.
+          </p>
+        </section>
+      </main>
+    );
+  }
+
+  if (error || !session) {
     return (
       <main className="mx-auto flex min-h-[70vh] max-w-3xl items-center justify-center px-6">
         <section className="w-full rounded-[2rem] border border-[var(--border)] bg-[var(--surface)] p-10 text-center shadow-sm">
@@ -43,7 +118,8 @@ export default function WorkoutDetails() {
           </h1>
 
           <p className="mt-3 text-[var(--text-muted)]">
-            This workout session could not be found.
+            {error ??
+              "This workout session could not be found."}
           </p>
 
           <button
@@ -60,43 +136,48 @@ export default function WorkoutDetails() {
 
   const routineName =
     allRoutines.find(
-      (routine) => routine.id === session.routineId,
+      (routine) =>
+        routine.id === session.routineId,
     )?.name ?? "Unknown Routine";
 
-  const completedSets = session.exercises.reduce(
-    (total, exercise) =>
-      total +
-      exercise.sets.filter(
-        (set) => set.completed,
-      ).length,
-    0,
-  );
+  const completedSets =
+    session.exercises.reduce(
+      (total, exercise) =>
+        total +
+        exercise.sets.filter(
+          (set) => set.completed,
+        ).length,
+      0,
+    );
 
-  const totalSets = session.exercises.reduce(
-    (total, exercise) =>
-      total + exercise.sets.length,
-    0,
-  );
+  const totalSets =
+    session.exercises.reduce(
+      (total, exercise) =>
+        total + exercise.sets.length,
+      0,
+    );
 
-  const totalVolume = session.exercises.reduce(
-    (total, exercise) =>
-      total +
-      exercise.sets.reduce(
-        (exerciseTotal, set) =>
-          exerciseTotal +
-          (set.completed
-            ? set.weight * set.reps
-            : 0),
-        0,
-      ),
-    0,
-  );
+  const totalVolume =
+    session.exercises.reduce(
+      (total, exercise) =>
+        total +
+        exercise.sets.reduce(
+          (exerciseTotal, set) =>
+            exerciseTotal +
+            (set.completed
+              ? set.weight * set.reps
+              : 0),
+          0,
+        ),
+      0,
+    );
 
   const duration = getDuration(session);
 
   return (
     <main className="mx-auto max-w-5xl space-y-8 pb-10">
       {/* Back */}
+
       <Link
         to="/history"
         className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--text-muted)] transition hover:text-[var(--primary)]"
@@ -106,6 +187,7 @@ export default function WorkoutDetails() {
       </Link>
 
       {/* Header */}
+
       <section className="rounded-[2rem] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-sm md:p-8">
         <div className="flex flex-col justify-between gap-6 md:flex-row md:items-start">
           <div>
@@ -121,6 +203,7 @@ export default function WorkoutDetails() {
             <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm text-[var(--text-muted)]">
               <span className="flex items-center gap-2">
                 <CalendarDays size={16} />
+
                 {new Date(
                   session.completedAt,
                 ).toLocaleDateString()}
@@ -128,6 +211,7 @@ export default function WorkoutDetails() {
 
               <span className="flex items-center gap-2">
                 <Clock3 size={16} />
+
                 {duration}
               </span>
             </div>
@@ -153,6 +237,7 @@ export default function WorkoutDetails() {
       </section>
 
       {/* Exercises */}
+
       <section>
         <div className="mb-5">
           <p className="text-sm font-semibold uppercase tracking-[0.25em] text-[var(--primary)]">
@@ -177,7 +262,8 @@ export default function WorkoutDetails() {
                   (total, set) =>
                     total +
                     (set.completed
-                      ? set.weight * set.reps
+                      ? set.weight *
+                      set.reps
                       : 0),
                   0,
                 );
@@ -194,12 +280,15 @@ export default function WorkoutDetails() {
                       </h3>
 
                       <p className="mt-1 text-sm text-[var(--text-muted)]">
-                        {exercise.exercise.muscleGroup} ·{" "}
+                        {exercise.exercise.muscleGroup}{" "}
+                        ·{" "}
                         {exercise.exercise.equipment}
                       </p>
 
                       <p className="mt-3 text-sm font-semibold text-[var(--primary)]">
-                        Target: {exercise.targetSets} sets ·{" "}
+                        Target:{" "}
+                        {exercise.targetSets}{" "}
+                        sets ·{" "}
                         {exercise.targetReps}
                       </p>
                     </div>
@@ -207,16 +296,19 @@ export default function WorkoutDetails() {
                     <div className="flex flex-wrap gap-2">
                       <span className="rounded-full bg-[var(--success-soft)] px-3 py-1.5 text-xs font-semibold text-[var(--success)]">
                         {exerciseCompletedSets}/
-                        {exercise.sets.length} complete
+                        {exercise.sets.length}{" "}
+                        complete
                       </span>
 
                       <span className="rounded-full bg-[var(--surface-soft)] px-3 py-1.5 text-xs font-semibold text-[var(--text-muted)]">
-                        {exerciseVolume.toLocaleString()} kg
+                        {exerciseVolume.toLocaleString()}{" "}
+                        kg
                       </span>
                     </div>
                   </div>
 
                   {/* Set table */}
+
                   <div className="mt-6 overflow-x-auto">
                     <table className="w-full min-w-[500px] border-collapse">
                       <thead>
@@ -321,10 +413,10 @@ function SummaryStat({
 }
 
 function getDuration(
-  session: {
-    startedAt: string;
-    completedAt: string;
-  },
+  session: Pick<
+    WorkoutSession,
+    "startedAt" | "completedAt"
+  >,
 ) {
   const start = new Date(
     session.startedAt,

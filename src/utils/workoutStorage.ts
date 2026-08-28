@@ -1,24 +1,59 @@
 import type { WorkoutSession } from "../types/WorkoutSession";
 
-const STORAGE_KEY = "mooscles-workout-sessions";
+export async function getWorkoutSessions(): Promise<
+  WorkoutSession[]
+> {
+  const response = await fetch(
+    "/api/workout-sessions",
+    {
+      credentials: "include",
+    },
+  );
 
-export function getWorkoutSessions(): WorkoutSession[] {
-  const storedSessions = localStorage.getItem(STORAGE_KEY);
-
-  if (!storedSessions) {
-    return [];
+  if (!response.ok) {
+    throw new Error(
+      "Failed to load workout sessions.",
+    );
   }
 
-  return JSON.parse(storedSessions) as WorkoutSession[];
+  return (await response.json()) as WorkoutSession[];
 }
 
-export function saveWorkoutSession(session: WorkoutSession): void {
-  const existingSessions = getWorkoutSessions();
-
-  const updatedSessions = [...existingSessions, session];
-
-  localStorage.setItem(
-    STORAGE_KEY,
-    JSON.stringify(updatedSessions),
+export async function saveWorkoutSession(
+  session: WorkoutSession,
+): Promise<WorkoutSession> {
+  const response = await fetch(
+    "/api/workout-sessions",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type":
+          "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify(session),
+    },
   );
+
+  if (!response.ok) {
+    let message =
+      "Failed to save workout session.";
+
+    try {
+      const result =
+        (await response.json()) as {
+          error?: string;
+        };
+
+      if (result.error) {
+        message = result.error;
+      }
+    } catch {
+      // Keep default error message.
+    }
+
+    throw new Error(message);
+  }
+
+  return (await response.json()) as WorkoutSession;
 }

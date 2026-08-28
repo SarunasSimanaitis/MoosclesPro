@@ -37,8 +37,8 @@ export default function Workouts() {
     (state) => state.deleteRoutine,
   );
 
-  const duplicateRoutine = useRoutineStore(
-    (state) => state.duplicateRoutine,
+  const addRoutine = useRoutineStore(
+    (state) => state.addRoutine,
   );
 
   useEffect(() => {
@@ -177,7 +177,7 @@ export default function Workouts() {
       const savedRoutine =
         (await response.json()) as Routine;
 
-      duplicateRoutine(savedRoutine);
+      addRoutine(savedRoutine);
       setOpenMenu(null);
     } catch (error) {
       console.error(
@@ -375,13 +375,13 @@ export default function Workouts() {
 
                 {routine.exercises.length >
                   4 && (
-                  <p className="px-1 text-sm text-[var(--text-muted)]">
-                    +{" "}
-                    {routine.exercises.length -
-                      4}{" "}
-                    more exercises
-                  </p>
-                )}
+                    <p className="px-1 text-sm text-[var(--text-muted)]">
+                      +{" "}
+                      {routine.exercises.length -
+                        4}{" "}
+                      more exercises
+                    </p>
+                  )}
               </div>
 
               {/* Footer */}

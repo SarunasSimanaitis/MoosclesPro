@@ -5,7 +5,13 @@ import {
   Target,
   TrendingUp,
 } from "lucide-react";
-import { NavLink } from "react-router-dom";
+import {
+  NavLink,
+} from "react-router-dom";
+import {
+  useEffect,
+  useState,
+} from "react";
 
 import { dashboard } from "../data/dashboard";
 import { authClient } from "../lib/auth-client";
@@ -14,47 +20,170 @@ import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import ProgressBar from "../components/ui/ProgressBar";
 
+type DashboardStats = {
+  streak: number;
+  workouts: number;
+  volume: number;
+  hours: number;
+};
+
+type DashboardData = {
+  stats: DashboardStats;
+  weeklyGoal: {
+    completed: number;
+    target: number;
+  };
+};
+
 export default function Dashboard() {
   const {
-    stats,
+    stats: demoStats,
     todayWorkout,
-    weeklyGoal,
+    weeklyGoal: demoWeeklyGoal,
   } = dashboard;
 
   const {
     data: session,
-    isPending,
-  } = authClient.useSession();
+    isPending: isSessionPending,
+  } =
+    authClient.useSession();
 
-  const isLoggedIn = Boolean(session?.user);
+  const isLoggedIn = Boolean(
+    session?.user,
+  );
+
+  const [
+    dashboardData,
+    setDashboardData,
+  ] = useState<DashboardData | null>(
+    null,
+  );
+
+  const [
+    isDashboardLoading,
+    setIsDashboardLoading,
+  ] = useState(false);
+
+  const [
+    dashboardError,
+    setDashboardError,
+  ] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (
+      isSessionPending ||
+      !isLoggedIn
+    ) {
+      setDashboardData(null);
+      setDashboardError(null);
+      setIsDashboardLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+
+    async function loadDashboard() {
+      try {
+        setIsDashboardLoading(true);
+        setDashboardError(null);
+
+        const response =
+          await fetch(
+            "/api/dashboard",
+            {
+              credentials: "include",
+            },
+          );
+
+        if (!response.ok) {
+          throw new Error(
+            "Failed to load dashboard.",
+          );
+        }
+
+        const data =
+          (await response.json()) as DashboardData;
+
+        if (!cancelled) {
+          setDashboardData(data);
+        }
+      } catch (error) {
+        console.error(
+          "Failed to load dashboard:",
+          error,
+        );
+
+        if (!cancelled) {
+          setDashboardError(
+            "Could not load your latest statistics.",
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setIsDashboardLoading(false);
+        }
+      }
+    }
+
+    void loadDashboard();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    isLoggedIn,
+    isSessionPending,
+  ]);
+
+  const stats =
+    isLoggedIn &&
+    dashboardData
+      ? dashboardData.stats
+      : demoStats;
+
+  const currentWeeklyGoal =
+    isLoggedIn &&
+    dashboardData
+      ? dashboardData.weeklyGoal
+      : demoWeeklyGoal;
 
   const userName =
     session?.user?.name ?? "";
 
+  const greetingTitle =
+    isSessionPending
+      ? "MoosclesPro."
+      : isLoggedIn
+        ? `Welcome back, ${userName}.`
+        : "Start your journey.";
+
+  const greetingSubtitle =
+    isSessionPending
+      ? "Your training journey starts here."
+      : isLoggedIn
+        ? "Stay consistent, keep progressing, and let the results follow."
+        : "Track workouts, build routines, and see how MoosclesPro can help you train smarter.";
+
   const weeklyPercentage =
-    weeklyGoal.target > 0
-      ? Math.round(
-          (weeklyGoal.completed /
-            weeklyGoal.target) *
-            100,
+    currentWeeklyGoal.target > 0
+      ? Math.min(
+          100,
+          Math.round(
+            (currentWeeklyGoal.completed /
+              currentWeeklyGoal.target) *
+              100,
+          ),
         )
       : 0;
 
-  const greetingTitle = isPending
-    ? "MoosclesPro."
-    : isLoggedIn
-      ? `Welcome back, ${userName}.`
-      : "Start your journey.";
-
-  const greetingSubtitle = isPending
-    ? "Your training journey starts here."
-    : isLoggedIn
-      ? "Stay consistent, keep progressing, and let the results follow."
-      : "Track workouts, build routines, and see how MoosclesPro can help you train smarter.";
+  const isStatsReady =
+    !isLoggedIn ||
+    !isDashboardLoading;
 
   return (
     <div className="space-y-10">
       {/* Header */}
+
       <section>
         <p className="text-sm font-semibold uppercase tracking-[0.25em] text-[var(--primary)]">
           Dashboard
@@ -90,19 +219,33 @@ export default function Dashboard() {
       </section>
 
       {/* Demo notice */}
-      {!isLoggedIn && !isPending && (
-        <section className="rounded-2xl border border-[var(--primary)]/20 bg-[var(--primary-soft)] px-5 py-4">
-          <p className="text-sm leading-relaxed text-[var(--text)]">
-            <span className="font-bold">
-              You're viewing a demo dashboard.
-            </span>{" "}
-            Create an account to track your own workouts,
-            routines, progress, and training history.
+
+      {!isLoggedIn &&
+        !isSessionPending && (
+          <section className="rounded-2xl border border-[var(--primary)]/20 bg-[var(--primary-soft)] px-5 py-4">
+            <p className="text-sm leading-relaxed text-[var(--text)]">
+              <span className="font-bold">
+                You're viewing a demo dashboard.
+              </span>{" "}
+              Create an account to track your own
+              workouts, routines, progress, and
+              training history.
+            </p>
+          </section>
+        )}
+
+      {/* Dashboard error */}
+
+      {dashboardError && (
+        <section className="rounded-2xl border border-[var(--danger)]/30 bg-[var(--danger)]/10 px-5 py-4">
+          <p className="text-sm font-medium text-[var(--danger)]">
+            {dashboardError}
           </p>
         </section>
       )}
 
       {/* Stats */}
+
       <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
         <StatCard
           icon={<Flame size={20} />}
@@ -111,7 +254,11 @@ export default function Dashboard() {
               ? "Current Streak"
               : "Example Streak"
           }
-          value={stats.streak.toString()}
+          value={
+            isStatsReady
+              ? stats.streak.toString()
+              : "..."
+          }
           suffix="days"
         />
 
@@ -122,7 +269,11 @@ export default function Dashboard() {
               ? "Workouts"
               : "Example Workouts"
           }
-          value={stats.workouts.toString()}
+          value={
+            isStatsReady
+              ? stats.workouts.toString()
+              : "..."
+          }
           suffix="completed"
         />
 
@@ -133,7 +284,11 @@ export default function Dashboard() {
               ? "Total Volume"
               : "Example Volume"
           }
-          value={stats.volume.toLocaleString()}
+          value={
+            isStatsReady
+              ? stats.volume.toLocaleString()
+              : "..."
+          }
           suffix="kg"
         />
 
@@ -144,14 +299,20 @@ export default function Dashboard() {
               ? "Training Hours"
               : "Example Hours"
           }
-          value={stats.hours.toString()}
+          value={
+            isStatsReady
+              ? stats.hours.toString()
+              : "..."
+          }
           suffix="hours"
         />
       </section>
 
       {/* Main Content */}
+
       <section className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
         {/* Today's Workout */}
+
         <Card className="relative overflow-hidden p-8 md:p-10">
           <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[var(--primary)]/10 blur-3xl" />
 
@@ -174,7 +335,8 @@ export default function Dashboard() {
 
             <div className="mt-8 flex flex-wrap gap-3 text-sm text-[var(--text-muted)]">
               <WorkoutTag>
-                {todayWorkout.exercises} exercises
+                {todayWorkout.exercises}{" "}
+                exercises
               </WorkoutTag>
 
               <WorkoutTag>
@@ -209,6 +371,7 @@ export default function Dashboard() {
         </Card>
 
         {/* Weekly Goal */}
+
         <Card className="p-8">
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--primary)]">
             {isLoggedIn
@@ -225,8 +388,8 @@ export default function Dashboard() {
           <div className="mt-8">
             <div className="flex items-end justify-between">
               <span className="text-4xl font-black text-[var(--text)]">
-                {weeklyGoal.completed}/
-                {weeklyGoal.target}
+                {currentWeeklyGoal.completed}/
+                {currentWeeklyGoal.target}
               </span>
 
               <span className="text-sm text-[var(--text-muted)]">
@@ -235,22 +398,26 @@ export default function Dashboard() {
             </div>
 
             <ProgressBar
-              value={weeklyGoal.completed}
-              max={weeklyGoal.target}
+              value={
+                currentWeeklyGoal.completed
+              }
+              max={
+                currentWeeklyGoal.target
+              }
               className="mt-4"
             />
 
             <p className="mt-4 text-sm leading-relaxed text-[var(--text-muted)]">
               {isLoggedIn
-                ? weeklyGoal.completed >=
-                  weeklyGoal.target
+                ? currentWeeklyGoal.completed >=
+                  currentWeeklyGoal.target
                   ? "You've hit your goal this week. Great work."
                   : `${
-                      weeklyGoal.target -
-                      weeklyGoal.completed
+                      currentWeeklyGoal.target -
+                      currentWeeklyGoal.completed
                     } more workout${
-                      weeklyGoal.target -
-                        weeklyGoal.completed ===
+                      currentWeeklyGoal.target -
+                        currentWeeklyGoal.completed ===
                       1
                         ? ""
                         : "s"
@@ -262,6 +429,7 @@ export default function Dashboard() {
       </section>
 
       {/* Mindset */}
+
       <section className="rounded-[var(--radius-xl)] bg-[var(--text)] p-8 text-[var(--surface)] shadow-[var(--shadow-md)] md:p-10">
         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--primary)]">
           Mindset

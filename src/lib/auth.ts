@@ -10,20 +10,9 @@ if (!mongodbUri) {
 }
 
 const mongoClient = new MongoClient(mongodbUri);
-
 const database = mongoClient.db("moosclespro");
 
 export const auth = betterAuth({
-  appName: "MoosclesPro",
-
-  baseURL: {
-    allowedHosts: [
-      "localhost:5173",
-      "localhost:3000",
-      "*.vercel.app",
-    ],
-  },
-
   database: mongodbAdapter(database, {
     client: mongoClient,
   }),

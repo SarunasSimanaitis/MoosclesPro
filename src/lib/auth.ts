@@ -9,16 +9,20 @@ type RuntimeEnv = {
 
 const env = (
   globalThis as typeof globalThis & {
-    process: {
+    process?: {
       env: RuntimeEnv;
     };
   }
-).process.env;
+).process?.env ?? {};
 
 const mongodbUri = env.MONGODB_URI;
 
 if (!mongodbUri) {
   throw new Error("MONGODB_URI is not configured.");
+}
+
+if (!env.BETTER_AUTH_SECRET) {
+  throw new Error("BETTER_AUTH_SECRET is not configured.");
 }
 
 const mongoClient = new MongoClient(mongodbUri);
@@ -28,7 +32,15 @@ const database = mongoClient.db("moosclespro");
 export const auth = betterAuth({
   appName: "MoosclesPro",
 
-  baseURL: "https://mooscles-pro.vercel.app",
+  baseURL: {
+    allowedHosts: [
+      "localhost:5173",
+      "localhost:3000",
+      "mooscles-pro.vercel.app",
+      "*.vercel.app",
+    ],
+    protocol: "auto",
+  },
 
   secret: env.BETTER_AUTH_SECRET,
 

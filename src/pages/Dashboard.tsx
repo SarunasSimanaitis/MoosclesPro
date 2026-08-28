@@ -8,23 +8,43 @@ import {
 import { NavLink } from "react-router-dom";
 
 import { dashboard } from "../data/dashboard";
+import { authClient } from "../lib/auth-client";
+
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import ProgressBar from "../components/ui/ProgressBar";
 
 export default function Dashboard() {
   const {
-    user,
     stats,
     todayWorkout,
     weeklyGoal,
   } = dashboard;
 
+  const {
+    data: session,
+    isPending,
+  } = authClient.useSession();
+
+  const isLoggedIn = Boolean(session?.user);
+
+  const userName = session?.user?.name ?? "";
+
+  const greetingTitle = isLoggedIn
+    ? `Welcome back, ${userName}.`
+    : "Start your journey.";
+
+  const greetingSubtitle = isLoggedIn
+    ? "Stay consistent, keep progressing, and let the results follow."
+    : "Track your workouts, build better habits, and see your progress over time.";
+
   const weeklyPercentage =
     weeklyGoal.target > 0
       ? Math.round(
-          (weeklyGoal.completed / weeklyGoal.target) * 100,
-        )
+        (weeklyGoal.completed /
+          weeklyGoal.target) *
+        100,
+      )
       : 0;
 
   return (
@@ -38,17 +58,26 @@ export default function Dashboard() {
         <div className="mt-3 flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
           <div>
             <h1 className="text-4xl font-black tracking-tight text-[var(--text)] md:text-5xl">
-              Welcome back, {user.name}.
+              {isPending
+                ? "MoosclesPro."
+                : greetingTitle}
             </h1>
 
             <p className="mt-3 max-w-2xl text-lg text-[var(--text-muted)]">
-              Stay consistent, keep progressing, and let the results follow.
+              {isPending
+                ? "Your training journey starts here."
+                : greetingSubtitle}
             </p>
           </div>
 
-          <NavLink to="/workout">
+          <NavLink
+            to={isLoggedIn ? "/workouts" : "/register"}
+          >
             <Button>
-              Start Workout
+              {isLoggedIn
+                ? "Start Workout"
+                : "Create Account"}
+
               <ArrowRight size={18} />
             </Button>
           </NavLink>
@@ -116,12 +145,21 @@ export default function Dashboard() {
               </WorkoutTag>
             </div>
 
-            <NavLink to="/workout">
+            <NavLink
+              to={
+                isLoggedIn
+                  ? "/workouts"
+                  : "/register"
+              }
+            >
               <Button
                 variant="secondary"
                 className="mt-8"
               >
-                Continue Workout
+                {isLoggedIn
+                  ? "Continue Workout"
+                  : "Get Started"}
+
                 <ArrowRight size={17} />
               </Button>
             </NavLink>
@@ -141,7 +179,8 @@ export default function Dashboard() {
           <div className="mt-8">
             <div className="flex items-end justify-between">
               <span className="text-4xl font-black text-[var(--text)]">
-                {weeklyGoal.completed}/{weeklyGoal.target}
+                {weeklyGoal.completed}/
+                {weeklyGoal.target}
               </span>
 
               <span className="text-sm text-[var(--text-muted)]">
@@ -156,13 +195,15 @@ export default function Dashboard() {
             />
 
             <p className="mt-4 text-sm leading-relaxed text-[var(--text-muted)]">
-              {weeklyGoal.completed >= weeklyGoal.target
+              {weeklyGoal.completed >=
+                weeklyGoal.target
                 ? "You've hit your goal this week. Great work."
-                : `${weeklyGoal.target - weeklyGoal.completed} more workout${
-                    weeklyGoal.target - weeklyGoal.completed === 1
-                      ? ""
-                      : "s"
-                  } to reach your goal.`}
+                : `${weeklyGoal.target - weeklyGoal.completed} more workout${weeklyGoal.target -
+                  weeklyGoal.completed ===
+                  1
+                  ? ""
+                  : "s"
+                } to reach your goal.`}
             </p>
           </div>
         </Card>

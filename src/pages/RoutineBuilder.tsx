@@ -6,7 +6,7 @@ import {
   Trash2,
 } from "lucide-react";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   useNavigate,
   useSearchParams,
@@ -14,6 +14,8 @@ import {
 
 import { exercises } from "../data/exercises";
 import { useRoutineStore } from "../stores/routineStore";
+
+import type { Routine } from "../types/Routine";
 import type { RoutineExercise } from "../types/RoutineExercise";
 
 export default function RoutineBuilder() {
@@ -36,25 +38,136 @@ export default function RoutineBuilder() {
     (state) => state.updateRoutine,
   );
 
+  const setCustomRoutines = useRoutineStore(
+    (state) => state.setCustomRoutines,
+  );
+
   const editingRoutine = editRoutineId
     ? customRoutines.find(
-        (routine) => routine.id === editRoutineId,
+        (routine) =>
+          routine.id === editRoutineId,
       )
     : undefined;
 
-  const [name, setName] = useState(
-    editingRoutine?.name ?? "",
-  );
-
+  const [name, setName] = useState("");
   const [routineExercises, setRoutineExercises] =
-    useState<RoutineExercise[]>(
-      editingRoutine?.exercises ?? [],
-    );
+    useState<RoutineExercise[]>([]);
 
   const [showExercisePicker, setShowExercisePicker] =
     useState(false);
 
   const [search, setSearch] = useState("");
+
+  const [isLoadingRoutine, setIsLoadingRoutine] =
+    useState(Boolean(editRoutineId));
+
+  const [isSaving, setIsSaving] =
+    useState(false);
+
+  const [error, setError] =
+    useState<string | null>(null);
+
+  /*
+   * Load the routine when editing.
+   *
+   * The routine will normally already exist in Zustand
+   * because the Workouts page loads the user's routines
+   * from MongoDB. The API fallback also makes direct
+   * refreshes of /workouts/create?edit=... work.
+   */
+  useEffect(() => {
+    if (!editRoutineId) {
+      setName("");
+      setRoutineExercises([]);
+      setIsLoadingRoutine(false);
+      return;
+    }
+
+    if (editingRoutine) {
+      setName(editingRoutine.name);
+      setRoutineExercises(
+        editingRoutine.exercises,
+      );
+      setIsLoadingRoutine(false);
+      return;
+    }
+
+    let cancelled = false;
+
+    async function loadRoutine() {
+      try {
+        setIsLoadingRoutine(true);
+        setError(null);
+
+        const response = await fetch(
+          "/api/routines",
+          {
+            credentials: "include",
+          },
+        );
+
+        if (!response.ok) {
+          throw new Error(
+            "Failed to load your routines.",
+          );
+        }
+
+        const data =
+          (await response.json()) as Routine[];
+
+        if (cancelled) {
+          return;
+        }
+
+        setCustomRoutines(data);
+
+        const routine = data.find(
+          (item) =>
+            item.id === editRoutineId,
+        );
+
+        if (!routine) {
+          setError(
+            "The routine you're trying to edit could not be found.",
+          );
+          setIsLoadingRoutine(false);
+          return;
+        }
+
+        setName(routine.name);
+        setRoutineExercises(
+          routine.exercises,
+        );
+      } catch (requestError) {
+        if (cancelled) {
+          return;
+        }
+
+        console.error(
+          "Failed to load routine:",
+          requestError,
+        );
+
+        setError(
+          "Could not load this routine. Please try again.",
+        );
+      } finally {
+        if (!cancelled) {
+          setIsLoadingRoutine(false);
+        }
+      }
+    }
+
+    void loadRoutine();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    editRoutineId,
+    editingRoutine,
+    setCustomRoutines,
+  ]);
 
   const availableExercises = useMemo(() => {
     const normalizedSearch =
@@ -87,10 +200,11 @@ export default function RoutineBuilder() {
       return;
     }
 
-    const alreadyAdded = routineExercises.some(
-      (item) =>
-        item.exercise.id === exercise.id,
-    );
+    const alreadyAdded =
+      routineExercises.some(
+        (item) =>
+          item.exercise.id === exercise.id,
+      );
 
     if (alreadyAdded) {
       return;
@@ -131,78 +245,153 @@ export default function RoutineBuilder() {
       current.map((item) =>
         item.exercise.id === exerciseId
           ? {
-            ...item,
-            ...changes,
-          }
+              ...item,
+              ...changes,
+            }
           : item,
       ),
     );
   }
 
-  function saveRoutine() {
+  async function saveRoutine() {
     const trimmedName = name.trim();
 
     if (!trimmedName) {
+      setError("Please enter a routine name.");
       return;
     }
 
     if (routineExercises.length === 0) {
+      setError(
+        "Add at least one exercise to your routine.",
+      );
       return;
     }
 
-    const routine = {
-      id:
-        editingRoutine?.id ??
-        `custom-${crypto.randomUUID()}`,
-      name: trimmedName,
-      exercises: routineExercises,
-    };
+    setError(null);
+    setIsSaving(true);
 
-    if (editingRoutine) {
-      updateRoutine(routine);
-    } else {
-      addRoutine(routine);
+    const routineId =
+      editingRoutine?.id ??
+      editRoutineId ??
+      `custom-${crypto.randomUUID()}`;
+
+    try {
+      const response = await fetch(
+        "/api/routines",
+        {
+          method: editingRoutine ||
+            editRoutineId
+            ? "PATCH"
+            : "POST",
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            id: routineId,
+            name: trimmedName,
+            exercises: routineExercises,
+          }),
+        },
+      );
+
+      if (!response.ok) {
+        let message =
+          "Failed to save routine.";
+
+        try {
+          const result =
+            (await response.json()) as {
+              error?: string;
+            };
+
+          if (result.error) {
+            message = result.error;
+          }
+        } catch {
+          // Keep the default error message.
+        }
+
+        throw new Error(message);
+      }
+
+      const savedRoutine =
+        (await response.json()) as Routine;
+
+      if (editingRoutine || editRoutineId) {
+        updateRoutine(savedRoutine);
+      } else {
+        addRoutine(savedRoutine);
+      }
+
+      navigate("/workouts");
+    } catch (requestError) {
+      console.error(
+        "Failed to save routine:",
+        requestError,
+      );
+
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : "Could not save the routine. Please try again.",
+      );
+    } finally {
+      setIsSaving(false);
     }
+  }
 
-    navigate("/workouts");
+  if (isLoadingRoutine) {
+    return (
+      <main className="mx-auto flex min-h-[60vh] max-w-5xl items-center justify-center">
+        <p className="text-sm font-medium text-[var(--text-muted)]">
+          Loading routine...
+        </p>
+      </main>
+    );
   }
 
   return (
     <main className="mx-auto max-w-5xl space-y-8">
       {/* Back */}
-
       <button
         type="button"
         onClick={() => navigate("/workouts")}
         className="flex items-center gap-2 text-sm font-semibold text-[var(--text-muted)] transition hover:text-[var(--primary)]"
       >
         <ArrowLeft size={17} />
-
         Back to workouts
       </button>
 
       {/* Header */}
-
       <section>
         <p className="text-sm font-semibold uppercase tracking-[0.25em] text-[var(--primary)]">
           Routine Builder
         </p>
 
         <h1 className="mt-3 text-4xl font-black tracking-tight text-[var(--text)]">
-          {editingRoutine
+          {editingRoutine || editRoutineId
             ? "Edit your routine"
             : "Create your routine"}
         </h1>
 
         <p className="mt-3 text-lg text-[var(--text-muted)]">
-          {editingRoutine
-  ? "Fine-tune your exercises, sets, reps, and rest."
-  : "Build a workout around your own training goals."}
+          {editingRoutine || editRoutineId
+            ? "Fine-tune your exercises, sets, reps, and rest."
+            : "Build a workout around your own training goals."}
         </p>
       </section>
 
-      {/* Routine name */}
+      {/* Error */}
+      {error && (
+        <div className="rounded-2xl border border-[var(--danger)]/30 bg-[var(--danger)]/10 px-5 py-4 text-sm font-medium text-[var(--danger)]">
+          {error}
+        </div>
+      )}
 
+      {/* Routine name */}
       <section className="rounded-[2rem] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-sm md:p-8">
         <label
           htmlFor="routine-name"
@@ -224,7 +413,6 @@ export default function RoutineBuilder() {
       </section>
 
       {/* Exercises */}
-
       <section className="rounded-[2rem] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-sm md:p-8">
         <div className="flex items-center justify-between gap-4">
           <div>
@@ -247,13 +435,11 @@ export default function RoutineBuilder() {
             className="flex items-center gap-2 rounded-xl bg-[var(--primary)] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[var(--primary-hover)]"
           >
             <Plus size={17} />
-
             Add Exercise
           </button>
         </div>
 
         {/* Exercise picker */}
-
         {showExercisePicker && (
           <div className="mt-6 rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-5">
             <input
@@ -321,7 +507,6 @@ export default function RoutineBuilder() {
         )}
 
         {/* Selected exercises */}
-
         {routineExercises.length > 0 ? (
           <div className="mt-6 space-y-4">
             {routineExercises.map(
@@ -349,12 +534,14 @@ export default function RoutineBuilder() {
                         <p className="mt-1 text-xs text-[var(--text-muted)]">
                           {
                             routineExercise
-                              .exercise.muscleGroup
+                              .exercise
+                              .muscleGroup
                           }{" "}
                           ·{" "}
                           {
                             routineExercise
-                              .exercise.equipment
+                              .exercise
+                              .equipment
                           }
                         </p>
                       </div>
@@ -393,13 +580,14 @@ export default function RoutineBuilder() {
                             routineExercise
                               .exercise.id,
                             {
-                              targetSets: Math.max(
-                                1,
-                                Number(
-                                  event.target
-                                    .value,
+                              targetSets:
+                                Math.max(
+                                  1,
+                                  Number(
+                                    event.target
+                                      .value,
+                                  ),
                                 ),
-                              ),
                             },
                           )
                         }
@@ -451,16 +639,19 @@ export default function RoutineBuilder() {
                                 type="button"
                                 onClick={() =>
                                   updateExercise(
-                                    routineExercise.exercise.id,
+                                    routineExercise
+                                      .exercise.id,
                                     {
-                                      restSeconds: seconds,
+                                      restSeconds:
+                                        seconds,
                                     },
                                   )
                                 }
-                                className={`rounded-xl border px-3 py-2.5 text-sm font-semibold transition ${isSelected
-                                  ? "border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary)]"
-                                  : "border-[var(--border-strong)] bg-[var(--surface)] text-[var(--text-muted)] hover:border-[var(--primary)] hover:text-[var(--primary)]"
-                                  }`}
+                                className={`rounded-xl border px-3 py-2.5 text-sm font-semibold transition ${
+                                  isSelected
+                                    ? "border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary)]"
+                                    : "border-[var(--border-strong)] bg-[var(--surface)] text-[var(--text-muted)] hover:border-[var(--primary)] hover:text-[var(--primary)]"
+                                }`}
                               >
                                 {seconds}s
                               </button>
@@ -474,15 +665,22 @@ export default function RoutineBuilder() {
                           type="number"
                           min={0}
                           step={5}
-                          value={routineExercise.restSeconds}
+                          value={
+                            routineExercise.restSeconds
+                          }
                           onChange={(event) =>
                             updateExercise(
-                              routineExercise.exercise.id,
+                              routineExercise
+                                .exercise.id,
                               {
-                                restSeconds: Math.max(
-                                  0,
-                                  Number(event.target.value),
-                                ),
+                                restSeconds:
+                                  Math.max(
+                                    0,
+                                    Number(
+                                      event.target
+                                        .value,
+                                    ),
+                                  ),
                               },
                             )
                           }
@@ -519,20 +717,22 @@ export default function RoutineBuilder() {
       </section>
 
       {/* Save */}
-
       <div className="flex justify-end">
         <button
           type="button"
-          onClick={saveRoutine}
+          onClick={() => void saveRoutine()}
           disabled={
+            isSaving ||
             !name.trim() ||
             routineExercises.length === 0
           }
           className="rounded-xl bg-[var(--primary)] px-7 py-3.5 font-semibold text-white transition hover:bg-[var(--primary-hover)] disabled:cursor-not-allowed disabled:opacity-40"
         >
-          {editingRoutine
-  ? "Save Changes"
-  : "Save Routine"}
+          {isSaving
+            ? "Saving..."
+            : editingRoutine || editRoutineId
+              ? "Save Changes"
+              : "Save Routine"}
         </button>
       </div>
     </main>

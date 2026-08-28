@@ -8,21 +8,29 @@ import {
   Plus,
   Trash2,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { routines } from "../data/routines";
 import { useRoutineStore } from "../stores/routineStore";
 
+import type { Routine } from "../types/Routine";
+
 export default function Workouts() {
   const navigate = useNavigate();
 
-  const [openMenu, setOpenMenu] = useState<string | null>(
-    null,
-  );
+  const [openMenu, setOpenMenu] =
+    useState<string | null>(null);
+
+  const [isLoading, setIsLoading] =
+    useState(true);
 
   const customRoutines = useRoutineStore(
     (state) => state.customRoutines,
+  );
+
+  const setCustomRoutines = useRoutineStore(
+    (state) => state.setCustomRoutines,
   );
 
   const deleteRoutine = useRoutineStore(
@@ -33,12 +41,45 @@ export default function Workouts() {
     (state) => state.duplicateRoutine,
   );
 
+  useEffect(() => {
+    async function loadRoutines() {
+      try {
+        const response = await fetch(
+          "/api/routines",
+          {
+            credentials: "include",
+          },
+        );
+
+        if (!response.ok) {
+          throw new Error(
+            "Failed to load routines.",
+          );
+        }
+
+        const data =
+          (await response.json()) as Routine[];
+
+        setCustomRoutines(data);
+      } catch (error) {
+        console.error(
+          "Failed to load routines:",
+          error,
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    void loadRoutines();
+  }, [setCustomRoutines]);
+
   const allRoutines = [
     ...routines,
     ...customRoutines,
   ];
 
-  function handleDelete(
+  async function handleDelete(
     routineId: string,
     routineName: string,
   ) {
@@ -50,11 +91,38 @@ export default function Workouts() {
       return;
     }
 
-    deleteRoutine(routineId);
-    setOpenMenu(null);
+    try {
+      const response = await fetch(
+        `/api/routines?id=${encodeURIComponent(
+          routineId,
+        )}`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error(
+          "Failed to delete routine.",
+        );
+      }
+
+      deleteRoutine(routineId);
+      setOpenMenu(null);
+    } catch (error) {
+      console.error(
+        "Failed to delete routine:",
+        error,
+      );
+
+      window.alert(
+        "Could not delete the routine. Please try again.",
+      );
+    }
   }
 
-  function handleDuplicate(
+  async function handleDuplicate(
     routineId: string,
   ) {
     const routine = allRoutines.find(
@@ -65,8 +133,74 @@ export default function Workouts() {
       return;
     }
 
-    duplicateRoutine(routine);
-    setOpenMenu(null);
+    if (!routine.id.startsWith("custom-")) {
+      setOpenMenu(null);
+      return;
+    }
+
+    const duplicatedRoutine: Routine = {
+      ...routine,
+      id: `custom-${crypto.randomUUID()}`,
+      name: `${routine.name} Copy`,
+      exercises: routine.exercises.map(
+        (routineExercise) => ({
+          ...routineExercise,
+        }),
+      ),
+    };
+
+    try {
+      const response = await fetch(
+        "/api/routines",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            id: duplicatedRoutine.id,
+            name: duplicatedRoutine.name,
+            exercises:
+              duplicatedRoutine.exercises,
+          }),
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error(
+          "Failed to duplicate routine.",
+        );
+      }
+
+      const savedRoutine =
+        (await response.json()) as Routine;
+
+      duplicateRoutine(savedRoutine);
+      setOpenMenu(null);
+    } catch (error) {
+      console.error(
+        "Failed to duplicate routine:",
+        error,
+      );
+
+      window.alert(
+        "Could not duplicate the routine. Please try again.",
+      );
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <main className="mx-auto max-w-6xl">
+        <section className="flex min-h-[50vh] items-center justify-center">
+          <p className="text-sm font-medium text-[var(--text-muted)]">
+            Loading your routines...
+          </p>
+        </section>
+      </main>
+    );
   }
 
   return (
@@ -157,25 +291,41 @@ export default function Workouts() {
                   {menuOpen && (
                     <div className="absolute right-0 top-11 z-20 w-48 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-1.5 shadow-xl">
                       {isCustom && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            navigate(
-                              `/workouts/create?edit=${routine.id}`,
-                            );
-                            setOpenMenu(null);
-                          }}
-                          className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-[var(--text)] transition hover:bg-[var(--surface-soft)]"
-                        >
-                          <Pencil size={16} />
-                          Edit routine
-                        </button>
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigate(
+                                `/workouts/create?edit=${routine.id}`,
+                              );
+                              setOpenMenu(null);
+                            }}
+                            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-[var(--text)] transition hover:bg-[var(--surface-soft)]"
+                          >
+                            <Pencil size={16} />
+                            Edit routine
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              void handleDelete(
+                                routine.id,
+                                routine.name,
+                              )
+                            }
+                            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-[var(--danger)] transition hover:bg-[var(--danger)]/10"
+                          >
+                            <Trash2 size={16} />
+                            Delete routine
+                          </button>
+                        </>
                       )}
 
                       <button
                         type="button"
                         onClick={() =>
-                          handleDuplicate(
+                          void handleDuplicate(
                             routine.id,
                           )
                         }
@@ -184,22 +334,6 @@ export default function Workouts() {
                         <Copy size={16} />
                         Duplicate
                       </button>
-
-                      {isCustom && (
-                        <button
-                          type="button"
-                          onClick={() =>
-                            handleDelete(
-                              routine.id,
-                              routine.name,
-                            )
-                          }
-                          className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-[var(--danger)] transition hover:bg-[var(--danger)]/10"
-                        >
-                          <Trash2 size={16} />
-                          Delete routine
-                        </button>
-                      )}
                     </div>
                   )}
                 </div>
@@ -210,30 +344,37 @@ export default function Workouts() {
               <div className="mt-7 space-y-3">
                 {routine.exercises
                   .slice(0, 4)
-                  .map((routineExercise) => (
-                    <div
-                      key={
-                        routineExercise.exercise.id
-                      }
-                      className="flex items-center justify-between rounded-xl bg-[var(--surface-soft)] px-4 py-3"
-                    >
-                      <span className="font-medium text-[var(--text)]">
-                        {
-                          routineExercise.exercise
-                            .name
+                  .map(
+                    (routineExercise) => (
+                      <div
+                        key={
+                          routineExercise
+                            .exercise.id
                         }
-                      </span>
+                        className="flex items-center justify-between rounded-xl bg-[var(--surface-soft)] px-4 py-3"
+                      >
+                        <span className="font-medium text-[var(--text)]">
+                          {
+                            routineExercise
+                              .exercise.name
+                          }
+                        </span>
 
-                      <span className="text-sm text-[var(--text-muted)]">
-                        {routineExercise.targetSets} ×{" "}
-                        {
-                          routineExercise.targetReps
-                        }
-                      </span>
-                    </div>
-                  ))}
+                        <span className="text-sm text-[var(--text-muted)]">
+                          {
+                            routineExercise.targetSets
+                          }{" "}
+                          ×{" "}
+                          {
+                            routineExercise.targetReps
+                          }
+                        </span>
+                      </div>
+                    ),
+                  )}
 
-                {routine.exercises.length > 4 && (
+                {routine.exercises.length >
+                  4 && (
                   <p className="px-1 text-sm text-[var(--text-muted)]">
                     +{" "}
                     {routine.exercises.length -

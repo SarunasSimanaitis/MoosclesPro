@@ -28,24 +28,29 @@ export default function Dashboard() {
 
   const isLoggedIn = Boolean(session?.user);
 
-  const userName = session?.user?.name ?? "";
-
-  const greetingTitle = isLoggedIn
-    ? `Welcome back, ${userName}.`
-    : "Start your journey.";
-
-  const greetingSubtitle = isLoggedIn
-    ? "Stay consistent, keep progressing, and let the results follow."
-    : "Track your workouts, build better habits, and see your progress over time.";
+  const userName =
+    session?.user?.name ?? "";
 
   const weeklyPercentage =
     weeklyGoal.target > 0
       ? Math.round(
-        (weeklyGoal.completed /
-          weeklyGoal.target) *
-        100,
-      )
+          (weeklyGoal.completed /
+            weeklyGoal.target) *
+            100,
+        )
       : 0;
+
+  const greetingTitle = isPending
+    ? "MoosclesPro."
+    : isLoggedIn
+      ? `Welcome back, ${userName}.`
+      : "Start your journey.";
+
+  const greetingSubtitle = isPending
+    ? "Your training journey starts here."
+    : isLoggedIn
+      ? "Stay consistent, keep progressing, and let the results follow."
+      : "Track workouts, build routines, and see how MoosclesPro can help you train smarter.";
 
   return (
     <div className="space-y-10">
@@ -58,20 +63,20 @@ export default function Dashboard() {
         <div className="mt-3 flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
           <div>
             <h1 className="text-4xl font-black tracking-tight text-[var(--text)] md:text-5xl">
-              {isPending
-                ? "MoosclesPro."
-                : greetingTitle}
+              {greetingTitle}
             </h1>
 
             <p className="mt-3 max-w-2xl text-lg text-[var(--text-muted)]">
-              {isPending
-                ? "Your training journey starts here."
-                : greetingSubtitle}
+              {greetingSubtitle}
             </p>
           </div>
 
           <NavLink
-            to={isLoggedIn ? "/workouts" : "/register"}
+            to={
+              isLoggedIn
+                ? "/workouts"
+                : "/register"
+            }
           >
             <Button>
               {isLoggedIn
@@ -84,32 +89,61 @@ export default function Dashboard() {
         </div>
       </section>
 
+      {/* Demo notice */}
+      {!isLoggedIn && !isPending && (
+        <section className="rounded-2xl border border-[var(--primary)]/20 bg-[var(--primary-soft)] px-5 py-4">
+          <p className="text-sm leading-relaxed text-[var(--text)]">
+            <span className="font-bold">
+              You're viewing a demo dashboard.
+            </span>{" "}
+            Create an account to track your own workouts,
+            routines, progress, and training history.
+          </p>
+        </section>
+      )}
+
       {/* Stats */}
       <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
         <StatCard
           icon={<Flame size={20} />}
-          label="Current Streak"
+          label={
+            isLoggedIn
+              ? "Current Streak"
+              : "Example Streak"
+          }
           value={stats.streak.toString()}
           suffix="days"
         />
 
         <StatCard
           icon={<Dumbbell size={20} />}
-          label="Workouts"
+          label={
+            isLoggedIn
+              ? "Workouts"
+              : "Example Workouts"
+          }
           value={stats.workouts.toString()}
           suffix="completed"
         />
 
         <StatCard
           icon={<TrendingUp size={20} />}
-          label="Total Volume"
+          label={
+            isLoggedIn
+              ? "Total Volume"
+              : "Example Volume"
+          }
           value={stats.volume.toLocaleString()}
           suffix="kg"
         />
 
         <StatCard
           icon={<Target size={20} />}
-          label="Training Hours"
+          label={
+            isLoggedIn
+              ? "Training Hours"
+              : "Example Hours"
+          }
           value={stats.hours.toString()}
           suffix="hours"
         />
@@ -123,7 +157,9 @@ export default function Dashboard() {
 
           <div className="relative">
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--primary)]">
-              Today's Workout
+              {isLoggedIn
+                ? "Today's Workout"
+                : "Example Workout"}
             </p>
 
             <h2 className="mt-4 text-3xl font-black text-[var(--text)]">
@@ -131,8 +167,9 @@ export default function Dashboard() {
             </h2>
 
             <p className="mt-3 max-w-xl leading-relaxed text-[var(--text-muted)]">
-              Focus on controlled reps, progressive overload, and quality
-              movement. You've got this.
+              {isLoggedIn
+                ? "Focus on controlled reps, progressive overload, and quality movement."
+                : "Explore structured workouts, track your sets, and build consistent training habits."}
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3 text-sm text-[var(--text-muted)]">
@@ -141,7 +178,12 @@ export default function Dashboard() {
               </WorkoutTag>
 
               <WorkoutTag>
-                ~{todayWorkout.duration.replace(" min", "")} min
+                ~
+                {todayWorkout.duration.replace(
+                  " min",
+                  "",
+                )}{" "}
+                min
               </WorkoutTag>
             </div>
 
@@ -169,11 +211,15 @@ export default function Dashboard() {
         {/* Weekly Goal */}
         <Card className="p-8">
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--primary)]">
-            Weekly Goal
+            {isLoggedIn
+              ? "Weekly Goal"
+              : "Example Weekly Goal"}
           </p>
 
           <h2 className="mt-3 text-2xl font-bold text-[var(--text)]">
-            Keep the streak alive.
+            {isLoggedIn
+              ? "Keep the streak alive."
+              : "Build a consistent routine."}
           </h2>
 
           <div className="mt-8">
@@ -195,15 +241,21 @@ export default function Dashboard() {
             />
 
             <p className="mt-4 text-sm leading-relaxed text-[var(--text-muted)]">
-              {weeklyGoal.completed >=
-                weeklyGoal.target
-                ? "You've hit your goal this week. Great work."
-                : `${weeklyGoal.target - weeklyGoal.completed} more workout${weeklyGoal.target -
-                  weeklyGoal.completed ===
-                  1
-                  ? ""
-                  : "s"
-                } to reach your goal.`}
+              {isLoggedIn
+                ? weeklyGoal.completed >=
+                  weeklyGoal.target
+                  ? "You've hit your goal this week. Great work."
+                  : `${
+                      weeklyGoal.target -
+                      weeklyGoal.completed
+                    } more workout${
+                      weeklyGoal.target -
+                        weeklyGoal.completed ===
+                      1
+                        ? ""
+                        : "s"
+                    } to reach your goal.`
+                : "Create an account to set goals and track your weekly progress."}
             </p>
           </div>
         </Card>

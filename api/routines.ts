@@ -1,5 +1,11 @@
-import { auth } from "../src/lib/auth.js";
 import { database } from "../src/lib/mongodb.js";
+
+import {
+  internalServerErrorResponse,
+  methodNotAllowedResponse,
+  requireSession,
+  unauthorizedResponse,
+} from "../src/lib/api.js";
 
 type RoutineRequestBody = {
   id?: string;
@@ -7,177 +13,295 @@ type RoutineRequestBody = {
   exercises?: unknown[];
 };
 
+type StoredRoutine = {
+  id: string;
+  userId: string;
+  name: string;
+  exercises: unknown[];
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+const ALLOWED_METHODS = [
+  "GET",
+  "POST",
+  "PATCH",
+  "DELETE",
+];
+
 export default {
   async fetch(request: Request) {
-    const session = await auth.api.getSession({
-      headers: request.headers,
-    });
+    const authResult =
+      await requireSession(request);
 
-    if (!session?.user) {
-      return Response.json(
-        { error: "Unauthorized" },
-        { status: 401 },
-      );
+    if (!authResult) {
+      return unauthorizedResponse();
     }
 
-    const routinesCollection =
-      database.collection("routines");
+    const { user } = authResult;
 
     try {
-      if (request.method === "GET") {
-        const routines =
-          await routinesCollection
-            .find({
-              userId: session.user.id,
-            })
-            .sort({ createdAt: -1 })
-            .toArray();
-
-        return Response.json(routines);
-      }
-
-      if (request.method === "POST") {
-        const body =
-          (await request.json()) as RoutineRequestBody;
-
-        if (
-          !body.name?.trim() ||
-          !Array.isArray(body.exercises) ||
-          body.exercises.length === 0
-        ) {
-          return Response.json(
-            {
-              error:
-                "A routine name and at least one exercise are required.",
-            },
-            { status: 400 },
-          );
-        }
-
-        const routine = {
-          id:
-            body.id ??
-            `custom-${crypto.randomUUID()}`,
-          userId: session.user.id,
-          name: body.name.trim(),
-          exercises: body.exercises,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        };
-
-        await routinesCollection.insertOne(
-          routine,
+      const routinesCollection =
+        database.collection<StoredRoutine>(
+          "routines",
         );
 
-        return Response.json(routine, {
-          status: 201,
-        });
-      }
+      switch (request.method) {
+        case "GET": {
+          const routines =
+            await routinesCollection
+              .find({
+                userId: user.id,
+              })
+              .sort({
+                updatedAt: -1,
+              })
+              .toArray();
 
-      if (request.method === "PATCH") {
-        const body =
-          (await request.json()) as RoutineRequestBody;
-
-        if (!body.id) {
           return Response.json(
-            { error: "Routine id is required." },
-            { status: 400 },
+            routines,
           );
         }
 
-        const update: {
-          name?: string;
-          exercises?: unknown[];
-          updatedAt: Date;
-        } = {
-          updatedAt: new Date(),
-        };
+        case "POST": {
+          const body =
+            (await request.json()) as RoutineRequestBody;
 
-        if (typeof body.name === "string") {
-          update.name = body.name.trim();
-        }
+          const name =
+            body.name?.trim();
 
-        if (Array.isArray(body.exercises)) {
-          update.exercises =
-            body.exercises;
-        }
+          if (
+            !name ||
+            !Array.isArray(
+              body.exercises,
+            ) ||
+            body.exercises.length ===
+              0
+          ) {
+            return Response.json(
+              {
+                error:
+                  "A routine name and at least one exercise are required.",
+              },
+              {
+                status: 400,
+              },
+            );
+          }
 
-        const result =
-          await routinesCollection.updateOne(
+          const now = new Date();
+
+          const routine: StoredRoutine = {
+            id:
+              body.id ??
+              `custom-${crypto.randomUUID()}`,
+
+            userId: user.id,
+
+            name,
+
+            exercises:
+              body.exercises,
+
+            createdAt: now,
+            updatedAt: now,
+          };
+
+          await routinesCollection.insertOne(
+            routine,
+          );
+
+          return Response.json(
+            routine,
             {
-              id: body.id,
-              userId: session.user.id,
-            },
-            {
-              $set: update,
+              status: 201,
             },
           );
+        }
 
-        if (result.matchedCount === 0) {
+        case "PATCH": {
+          const body =
+            (await request.json()) as RoutineRequestBody;
+
+          if (!body.id) {
+            return Response.json(
+              {
+                error:
+                  "Routine id is required.",
+              },
+              {
+                status: 400,
+              },
+            );
+          }
+
+          const update: {
+            updatedAt: Date;
+            name?: string;
+            exercises?: unknown[];
+          } = {
+            updatedAt: new Date(),
+          };
+
+          if (
+            typeof body.name ===
+            "string"
+          ) {
+            const name =
+              body.name.trim();
+
+            if (!name) {
+              return Response.json(
+                {
+                  error:
+                    "Routine name cannot be empty.",
+                },
+                {
+                  status: 400,
+                },
+              );
+            }
+
+            update.name = name;
+          }
+
+          if (
+            Array.isArray(
+              body.exercises,
+            )
+          ) {
+            if (
+              body.exercises.length ===
+              0
+            ) {
+              return Response.json(
+                {
+                  error:
+                    "A routine must contain at least one exercise.",
+                },
+                {
+                  status: 400,
+                },
+              );
+            }
+
+            update.exercises =
+              body.exercises;
+          }
+
+          const result =
+            await routinesCollection.updateOne(
+              {
+                id: body.id,
+                userId: user.id,
+              },
+              {
+                $set: update,
+              },
+            );
+
+          if (
+            result.matchedCount ===
+            0
+          ) {
+            return Response.json(
+              {
+                error:
+                  "Routine not found.",
+              },
+              {
+                status: 404,
+              },
+            );
+          }
+
+          const updatedRoutine =
+            await routinesCollection.findOne(
+              {
+                id: body.id,
+                userId: user.id,
+              },
+            );
+
+          if (!updatedRoutine) {
+            return Response.json(
+              {
+                error:
+                  "Routine could not be loaded after update.",
+              },
+              {
+                status: 500,
+              },
+            );
+          }
+
           return Response.json(
-            { error: "Routine not found." },
-            { status: 404 },
+            updatedRoutine,
           );
         }
 
-        const updatedRoutine =
-          await routinesCollection.findOne({
-            id: body.id,
-            userId: session.user.id,
+        case "DELETE": {
+          const url = new URL(
+            request.url,
+          );
+
+          const routineId =
+            url.searchParams.get(
+              "id",
+            );
+
+          if (!routineId) {
+            return Response.json(
+              {
+                error:
+                  "Routine id is required.",
+              },
+              {
+                status: 400,
+              },
+            );
+          }
+
+          const result =
+            await routinesCollection.deleteOne(
+              {
+                id: routineId,
+                userId: user.id,
+              },
+            );
+
+          if (
+            result.deletedCount ===
+            0
+          ) {
+            return Response.json(
+              {
+                error:
+                  "Routine not found.",
+              },
+              {
+                status: 404,
+              },
+            );
+          }
+
+          return Response.json({
+            success: true,
           });
-
-        return Response.json(updatedRoutine);
-      }
-
-      if (request.method === "DELETE") {
-        const url = new URL(request.url);
-        const routineId =
-          url.searchParams.get("id");
-
-        if (!routineId) {
-          return Response.json(
-            { error: "Routine id is required." },
-            { status: 400 },
-          );
         }
 
-        const result =
-          await routinesCollection.deleteOne({
-            id: routineId,
-            userId: session.user.id,
-          });
-
-        if (result.deletedCount === 0) {
-          return Response.json(
-            { error: "Routine not found." },
-            { status: 404 },
+        default:
+          return methodNotAllowedResponse(
+            ALLOWED_METHODS,
           );
-        }
-
-        return Response.json({
-          success: true,
-        });
       }
-
-      return new Response(
-        "Method Not Allowed",
-        {
-          status: 405,
-          headers: {
-            Allow: "GET, POST, PATCH, DELETE",
-          },
-        },
-      );
     } catch (error) {
       console.error(
         "Routine API error:",
         error,
       );
 
-      return Response.json(
-        { error: "Internal server error." },
-        { status: 500 },
-      );
+      return internalServerErrorResponse();
     }
   },
 };

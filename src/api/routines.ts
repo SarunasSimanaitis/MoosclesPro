@@ -2,8 +2,7 @@ import type { Routine } from "../types/Routine";
 
 import { apiRequest } from "./client";
 
-const ENDPOINT =
-  "/api/routines";
+const ENDPOINT = "/api/routines";
 
 export const routinesApi = {
   list(): Promise<Routine[]> {

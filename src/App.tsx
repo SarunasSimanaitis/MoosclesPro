@@ -13,6 +13,7 @@ import Dashboard from "./pages/Dashboard";
 import ExerciseDetails from "./pages/ExerciseDetails";
 import Exercises from "./pages/Exercises";
 import History from "./pages/History";
+import LandingPage from "./pages/LandingPage";
 import Login from "./pages/Login";
 import Mindset from "./pages/Mindset";
 import Register from "./pages/Register";
@@ -42,12 +43,12 @@ export default function App() {
           element={<Register />}
         />
 
-        {/* Public app pages */}
+        {/* Public product pages */}
 
         <Route element={<AppLayout />}>
           <Route
             path="/"
-            element={<Dashboard />}
+            element={<LandingPage />}
           />
 
           <Route
@@ -66,10 +67,15 @@ export default function App() {
           />
         </Route>
 
-        {/* Protected app pages */}
+        {/* Authenticated application */}
 
         <Route element={<ProtectedRoute />}>
           <Route element={<AppLayout />}>
+            <Route
+              path="/dashboard"
+              element={<Dashboard />}
+            />
+
             <Route
               path="/workouts"
               element={<Workouts />}

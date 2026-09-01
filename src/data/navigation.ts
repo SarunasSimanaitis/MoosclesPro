@@ -1,18 +1,37 @@
 import {
-  House,
-  Dumbbell,
-  PlayCircle,
-  History,
   ChartColumn,
+  Dumbbell,
+  History,
+  House,
   NotebookTabs,
+  PlayCircle,
   Settings,
   Sparkles,
 } from "lucide-react";
 
-export const navigation = [
+export type NavigationItem = {
+  label: string;
+  path: string;
+  icon: typeof House;
+};
+
+export const publicNavigation: NavigationItem[] = [
+  {
+    label: "Exercises",
+    path: "/exercises",
+    icon: NotebookTabs,
+  },
+  {
+    label: "Mindset",
+    path: "/mindset",
+    icon: Sparkles,
+  },
+];
+
+export const authenticatedNavigation: NavigationItem[] = [
   {
     label: "Dashboard",
-    path: "/",
+    path: "/dashboard",
     icon: House,
   },
   {
@@ -35,16 +54,7 @@ export const navigation = [
     path: "/statistics",
     icon: ChartColumn,
   },
-  {
-    label: "Exercises",
-    path: "/exercises",
-    icon: NotebookTabs,
-  },
-  {
-    label: "Mindset",
-    path: "/mindset",
-    icon: Sparkles,
-  },
+  ...publicNavigation,
   {
     label: "Settings",
     path: "/settings",

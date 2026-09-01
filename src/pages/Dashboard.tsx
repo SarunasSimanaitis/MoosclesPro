@@ -14,11 +14,8 @@ import {
 import {
   dashboardApi,
   type DashboardData,
-  type DashboardStats,
-  type DashboardTodayWorkout,
 } from "../api/dashboard";
 
-import { dashboard } from "../data/dashboard";
 import { authClient } from "../lib/auth-client";
 
 import Button from "../components/ui/Button";
@@ -27,44 +24,32 @@ import ProgressBar from "../components/ui/ProgressBar";
 
 export default function Dashboard() {
   const {
-    stats: demoStats,
-    todayWorkout: demoTodayWorkout,
-    weeklyGoal: demoWeeklyGoal,
-  } = dashboard;
-
-  const {
     data: session,
     isPending: isSessionPending,
   } = authClient.useSession();
 
-  const isLoggedIn = Boolean(
-    session?.user,
-  );
-
   const [
     dashboardData,
     setDashboardData,
-  ] = useState<DashboardData | null>(null);
+  ] = useState<DashboardData | null>(
+    null,
+  );
 
   const [
-    isDashboardLoading,
-    setIsDashboardLoading,
+    isLoading,
+    setIsLoading,
   ] = useState(false);
 
   const [
-    dashboardError,
-    setDashboardError,
+    error,
+    setError,
   ] = useState<string | null>(null);
 
   useEffect(() => {
     if (
       isSessionPending ||
-      !isLoggedIn
+      !session?.user
     ) {
-      setDashboardData(null);
-      setDashboardError(null);
-      setIsDashboardLoading(false);
-
       return;
     }
 
@@ -72,8 +57,8 @@ export default function Dashboard() {
 
     async function loadDashboard() {
       try {
-        setIsDashboardLoading(true);
-        setDashboardError(null);
+        setIsLoading(true);
+        setError(null);
 
         const data =
           await dashboardApi.get();
@@ -81,20 +66,20 @@ export default function Dashboard() {
         if (!cancelled) {
           setDashboardData(data);
         }
-      } catch (error) {
+      } catch (requestError) {
         console.error(
           "Failed to load dashboard:",
-          error,
+          requestError,
         );
 
         if (!cancelled) {
-          setDashboardError(
-            "Could not load your latest dashboard data.",
+          setError(
+            "Could not load your dashboard data. Please try again.",
           );
         }
       } finally {
         if (!cancelled) {
-          setIsDashboardLoading(false);
+          setIsLoading(false);
         }
       }
     }
@@ -105,64 +90,52 @@ export default function Dashboard() {
       cancelled = true;
     };
   }, [
-    isLoggedIn,
     isSessionPending,
+    session?.user,
   ]);
 
-  const stats: DashboardStats =
-    isLoggedIn && dashboardData
-      ? dashboardData.stats
-      : demoStats;
+  if (isSessionPending || isLoading) {
+    return (
+      <DashboardSkeleton />
+    );
+  }
 
-  const currentWeeklyGoal =
-    isLoggedIn && dashboardData
-      ? dashboardData.weeklyGoal
-      : demoWeeklyGoal;
+  if (error || !dashboardData) {
+    return (
+      <DashboardError
+        message={
+          error ??
+          "Your dashboard could not be loaded."
+        }
+      />
+    );
+  }
 
-  const todayWorkout: DashboardTodayWorkout | null =
-    isLoggedIn && dashboardData
-      ? dashboardData.todayWorkout
-      : {
-          title: demoTodayWorkout.title,
-          duration:
-            demoTodayWorkout.duration,
-          exercises:
-            demoTodayWorkout.exercises,
-          routineId: "",
-        };
+  const {
+    stats,
+    todayWorkout,
+    weeklyGoal,
+  } = dashboardData;
 
-  const userName =
-    session?.user?.name ?? "";
+const userName =
+  session?.user?.name?.trim() ??
+  "";
 
-  const greetingTitle =
-    isSessionPending
-      ? "MoosclesPro."
-      : isLoggedIn
-        ? `Welcome back, ${userName}.`
-        : "Start your journey.";
-
-  const greetingSubtitle =
-    isSessionPending
-      ? "Your training journey starts here."
-      : isLoggedIn
-        ? "Stay consistent, keep progressing, and let the results follow."
-        : "Track workouts, build routines, and see how MoosclesPro can help you train smarter.";
+const firstName =
+  userName.split(/\s+/)[0] ||
+  "there";
 
   const weeklyPercentage =
-    currentWeeklyGoal.target > 0
+    weeklyGoal.target > 0
       ? Math.min(
           100,
           Math.round(
-            (currentWeeklyGoal.completed /
-              currentWeeklyGoal.target) *
+            (weeklyGoal.completed /
+              weeklyGoal.target) *
               100,
           ),
         )
       : 0;
-
-  const isStatsReady =
-    !isLoggedIn ||
-    !isDashboardLoading;
 
   return (
     <div className="space-y-10">
@@ -176,160 +149,79 @@ export default function Dashboard() {
         <div className="mt-3 flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
           <div>
             <h1 className="text-4xl font-black tracking-tight text-[var(--text)] md:text-5xl">
-              {greetingTitle}
+              Welcome back,{" "}
+              {firstName}.
             </h1>
 
             <p className="mt-3 max-w-2xl text-lg text-[var(--text-muted)]">
-              {greetingSubtitle}
+              Stay consistent, keep progressing, and
+              let the results follow.
             </p>
           </div>
 
-          <NavLink
-            to={
-              isLoggedIn
-                ? "/workouts"
-                : "/register"
-            }
-          >
+          <NavLink to="/workouts">
             <Button>
-              {isLoggedIn
-                ? "Start Workout"
-                : "Create Account"}
-
+              Start Workout
               <ArrowRight size={18} />
             </Button>
           </NavLink>
         </div>
       </section>
 
-      {/* Demo notice */}
-
-      {!isLoggedIn &&
-        !isSessionPending && (
-          <section className="rounded-2xl border border-[var(--primary)]/20 bg-[var(--primary-soft)] px-5 py-4">
-            <p className="text-sm leading-relaxed text-[var(--text)]">
-              <span className="font-bold">
-                You're viewing a demo dashboard.
-              </span>{" "}
-              Create an account to track your own
-              workouts, routines, progress, and
-              training history.
-            </p>
-          </section>
-        )}
-
-      {/* Dashboard error */}
-
-      {dashboardError && (
-        <section className="rounded-2xl border border-[var(--danger)]/30 bg-[var(--danger)]/10 px-5 py-4">
-          <p className="text-sm font-medium text-[var(--danger)]">
-            {dashboardError}
-          </p>
-        </section>
-      )}
-
       {/* Stats */}
 
       <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
         <StatCard
           icon={<Flame size={20} />}
-          label={
-            isLoggedIn
-              ? "Current Streak"
-              : "Example Streak"
-          }
-          value={
-            isStatsReady
-              ? stats.streak.toString()
-              : "..."
-          }
+          label="Current Streak"
+          value={stats.streak.toString()}
           suffix="days"
         />
 
         <StatCard
           icon={<Dumbbell size={20} />}
-          label={
-            isLoggedIn
-              ? "Workouts"
-              : "Example Workouts"
-          }
-          value={
-            isStatsReady
-              ? stats.workouts.toString()
-              : "..."
-          }
+          label="Workouts"
+          value={stats.workouts.toString()}
           suffix="completed"
         />
 
         <StatCard
           icon={<TrendingUp size={20} />}
-          label={
-            isLoggedIn
-              ? "Total Volume"
-              : "Example Volume"
-          }
-          value={
-            isStatsReady
-              ? stats.volume.toLocaleString()
-              : "..."
-          }
+          label="Total Volume"
+          value={stats.volume.toLocaleString()}
           suffix="kg"
         />
 
         <StatCard
           icon={<Target size={20} />}
-          label={
-            isLoggedIn
-              ? "Training Hours"
-              : "Example Hours"
-          }
-          value={
-            isStatsReady
-              ? stats.hours.toString()
-              : "..."
-          }
+          label="Training Hours"
+          value={stats.hours.toString()}
           suffix="hours"
         />
       </section>
 
-      {/* Main Content */}
+      {/* Main content */}
 
       <section className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
-        {/* Today's Workout */}
+        {/* Today's workout */}
 
         <Card className="relative overflow-hidden p-8 md:p-10">
           <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[var(--primary)]/10 blur-3xl" />
 
           <div className="relative">
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--primary)]">
-              {isLoggedIn
-                ? "Today's Workout"
-                : "Example Workout"}
+              Today's Workout
             </p>
 
-            {isLoggedIn &&
-            isDashboardLoading ? (
-              <>
-                <div className="mt-4 h-9 w-64 animate-pulse rounded-lg bg-[var(--surface-soft)]" />
-
-                <div className="mt-4 h-12 max-w-xl animate-pulse rounded-lg bg-[var(--surface-soft)]" />
-
-                <div className="mt-8 flex gap-3">
-                  <div className="h-10 w-32 animate-pulse rounded-full bg-[var(--surface-soft)]" />
-
-                  <div className="h-10 w-24 animate-pulse rounded-full bg-[var(--surface-soft)]" />
-                </div>
-              </>
-            ) : todayWorkout ? (
+            {todayWorkout ? (
               <>
                 <h2 className="mt-4 text-3xl font-black text-[var(--text)]">
                   {todayWorkout.title}
                 </h2>
 
                 <p className="mt-3 max-w-xl leading-relaxed text-[var(--text-muted)]">
-                  {isLoggedIn
-                    ? "Focus on controlled reps, progressive overload, and quality movement."
-                    : "Explore structured workouts, track your sets, and build consistent training habits."}
+                  Focus on controlled reps, progressive
+                  overload, and quality movement.
                 </p>
 
                 <div className="mt-8 flex flex-wrap gap-3 text-sm text-[var(--text-muted)]">
@@ -349,21 +241,13 @@ export default function Dashboard() {
                 </div>
 
                 <NavLink
-                  to={
-                    isLoggedIn &&
-                    todayWorkout.routineId
-                      ? `/workout/${todayWorkout.routineId}`
-                      : "/register"
-                  }
+                  to={`/workout/${todayWorkout.routineId}`}
                 >
                   <Button
                     variant="secondary"
                     className="mt-8"
                   >
-                    {isLoggedIn
-                      ? "Start Workout"
-                      : "Get Started"}
-
+                    Start Workout
                     <ArrowRight size={17} />
                   </Button>
                 </NavLink>
@@ -371,13 +255,12 @@ export default function Dashboard() {
             ) : (
               <>
                 <h2 className="mt-4 text-3xl font-black text-[var(--text)]">
-                  No workout yet
+                  Create your first routine
                 </h2>
 
                 <p className="mt-3 max-w-xl leading-relaxed text-[var(--text-muted)]">
-                  Create your first routine and
-                  it will appear here on your
-                  dashboard.
+                  Build a routine and it will become
+                  available from your dashboard.
                 </p>
 
                 <NavLink to="/workouts/create">
@@ -394,26 +277,22 @@ export default function Dashboard() {
           </div>
         </Card>
 
-        {/* Weekly Goal */}
+        {/* Weekly goal */}
 
         <Card className="p-8">
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--primary)]">
-            {isLoggedIn
-              ? "Weekly Goal"
-              : "Example Weekly Goal"}
+            Weekly Goal
           </p>
 
           <h2 className="mt-3 text-2xl font-bold text-[var(--text)]">
-            {isLoggedIn
-              ? "Keep the streak alive."
-              : "Build a consistent routine."}
+            Keep the streak alive.
           </h2>
 
           <div className="mt-8">
             <div className="flex items-end justify-between">
               <span className="text-4xl font-black text-[var(--text)]">
-                {currentWeeklyGoal.completed}/
-                {currentWeeklyGoal.target}
+                {weeklyGoal.completed}/
+                {weeklyGoal.target}
               </span>
 
               <span className="text-sm text-[var(--text-muted)]">
@@ -423,30 +302,28 @@ export default function Dashboard() {
 
             <ProgressBar
               value={
-                currentWeeklyGoal.completed
+                weeklyGoal.completed
               }
               max={
-                currentWeeklyGoal.target
+                weeklyGoal.target
               }
               className="mt-4"
             />
 
             <p className="mt-4 text-sm leading-relaxed text-[var(--text-muted)]">
-              {isLoggedIn
-                ? currentWeeklyGoal.completed >=
-                  currentWeeklyGoal.target
-                  ? "You've hit your goal this week. Great work."
-                  : `${
-                      currentWeeklyGoal.target -
-                      currentWeeklyGoal.completed
-                    } more workout${
-                      currentWeeklyGoal.target -
-                        currentWeeklyGoal.completed ===
-                      1
-                        ? ""
-                        : "s"
-                    } to reach your goal.`
-                : "Create an account to set goals and track your weekly progress."}
+              {weeklyGoal.completed >=
+              weeklyGoal.target
+                ? "You've hit your goal this week. Great work."
+                : `${
+                    weeklyGoal.target -
+                    weeklyGoal.completed
+                  } more workout${
+                    weeklyGoal.target -
+                      weeklyGoal.completed ===
+                    1
+                      ? ""
+                      : "s"
+                  } to reach your goal.`}
             </p>
           </div>
         </Card>
@@ -460,8 +337,8 @@ export default function Dashboard() {
         </p>
 
         <blockquote className="mt-4 max-w-4xl text-2xl font-bold leading-relaxed md:text-3xl">
-          “You don't need to be motivated every day. You just need to keep
-          showing up.”
+          “You don't need to be motivated every day. You
+          just need to keep showing up.”
         </blockquote>
 
         <NavLink to="/mindset">
@@ -478,19 +355,17 @@ export default function Dashboard() {
   );
 }
 
-type StatCardProps = {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  suffix: string;
-};
-
 function StatCard({
   icon,
   label,
   value,
   suffix,
-}: StatCardProps) {
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  suffix: string;
+}) {
   return (
     <Card className="p-6">
       <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--primary-soft)] text-[var(--primary)]">
@@ -523,5 +398,97 @@ function WorkoutTag({
     <span className="rounded-full border border-[var(--border)] bg-[var(--surface-soft)] px-4 py-2">
       {children}
     </span>
+  );
+}
+
+function DashboardSkeleton() {
+  return (
+    <div
+      role="status"
+      aria-label="Loading dashboard"
+      className="space-y-10"
+    >
+      <div>
+        <div className="h-4 w-28 animate-pulse rounded bg-[var(--surface-soft)]" />
+
+        <div className="mt-4 h-12 w-full max-w-2xl animate-pulse rounded-xl bg-[var(--surface-soft)]" />
+
+        <div className="mt-4 h-6 w-full max-w-xl animate-pulse rounded-lg bg-[var(--surface-soft)]" />
+      </div>
+
+      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+        {Array.from({
+          length: 4,
+        }).map(
+          (_, index) => (
+            <Card
+              key={index}
+              className="p-6"
+            >
+              <div className="h-10 w-10 animate-pulse rounded-xl bg-[var(--surface-soft)]" />
+
+              <div className="mt-6 h-4 w-24 animate-pulse rounded bg-[var(--surface-soft)]" />
+
+              <div className="mt-2 h-9 w-28 animate-pulse rounded-lg bg-[var(--surface-soft)]" />
+            </Card>
+          ),
+        )}
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
+        <Card className="p-8 md:p-10">
+          <div className="h-4 w-36 animate-pulse rounded bg-[var(--surface-soft)]" />
+
+          <div className="mt-5 h-10 w-64 animate-pulse rounded-lg bg-[var(--surface-soft)]" />
+
+          <div className="mt-4 h-5 w-full max-w-xl animate-pulse rounded-lg bg-[var(--surface-soft)]" />
+        </Card>
+
+        <Card className="p-8">
+          <div className="h-4 w-32 animate-pulse rounded bg-[var(--surface-soft)]" />
+
+          <div className="mt-4 h-8 w-56 animate-pulse rounded-lg bg-[var(--surface-soft)]" />
+
+          <div className="mt-8 h-4 w-full animate-pulse rounded-full bg-[var(--surface-soft)]" />
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+function DashboardError({
+  message,
+}: {
+  message: string;
+}) {
+  return (
+    <main className="mx-auto flex min-h-[60vh] max-w-3xl items-center justify-center">
+      <section
+        role="alert"
+        className="w-full rounded-[2rem] border border-[var(--border)] bg-[var(--surface)] p-10 text-center shadow-sm"
+      >
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--primary-soft)] text-[var(--primary)]">
+          <TrendingUp size={28} />
+        </div>
+
+        <h1 className="mt-6 text-2xl font-black text-[var(--text)]">
+          Dashboard unavailable
+        </h1>
+
+        <p className="mt-3 text-[var(--text-muted)]">
+          {message}
+        </p>
+
+        <button
+          type="button"
+          onClick={() =>
+            window.location.reload()
+          }
+          className="mt-6 rounded-xl bg-[var(--primary)] px-6 py-3 font-semibold text-white transition hover:bg-[var(--primary-hover)]"
+        >
+          Try Again
+        </button>
+      </section>
+    </main>
   );
 }

@@ -7,13 +7,10 @@ import {
   unauthorizedResponse,
 } from "../src/lib/api.js";
 
-type WorkoutSessionBody = {
-  id?: string;
-  routineId?: string;
-  startedAt?: string;
-  completedAt?: string;
-  exercises?: unknown[];
-};
+import {
+  parseWorkoutSessionRequestBody,
+  validateWorkoutSessionPayload,
+} from "../src/lib/validation.js";
 
 type StoredWorkoutSession = {
   id: string;
@@ -33,7 +30,9 @@ const ALLOWED_METHODS = [
 export default {
   async fetch(request: Request) {
     const authResult =
-      await requireSession(request);
+      await requireSession(
+        request,
+      );
 
     if (!authResult) {
       return unauthorizedResponse();
@@ -51,9 +50,23 @@ export default {
         case "GET": {
           const sessions =
             await collection
-              .find({
-                userId: user.id,
-              })
+              .find(
+                {
+                  userId: user.id,
+                },
+                {
+                  projection: {
+                    _id: 0,
+                    id: 1,
+                    userId: 1,
+                    routineId: 1,
+                    startedAt: 1,
+                    completedAt: 1,
+                    exercises: 1,
+                    createdAt: 1,
+                  },
+                },
+              )
               .sort({
                 completedAt: -1,
               })
@@ -65,21 +78,44 @@ export default {
         }
 
         case "POST": {
-          const body =
-            (await request.json()) as WorkoutSessionBody;
+          const rawBody =
+            await request.json();
+
+          const parsed =
+            parseWorkoutSessionRequestBody(
+              rawBody,
+            );
+
+          if (!parsed.success) {
+            return Response.json(
+              {
+                error: parsed.error,
+              },
+              {
+                status: 400,
+              },
+            );
+          }
+
+          const {
+            routineId,
+            startedAt,
+            completedAt,
+            exercises,
+          } = parsed.data;
 
           if (
-            !body.routineId ||
-            !body.startedAt ||
-            !body.completedAt ||
+            !routineId ||
+            !startedAt ||
+            !completedAt ||
             !Array.isArray(
-              body.exercises,
+              exercises,
             )
           ) {
             return Response.json(
               {
                 error:
-                  "Invalid workout session.",
+                  "Routine, timestamps, and exercises are required.",
               },
               {
                 status: 400,
@@ -87,36 +123,19 @@ export default {
             );
           }
 
-          const startedAt =
-            new Date(body.startedAt);
-
-          const completedAt =
+          const startTime =
             new Date(
-              body.completedAt,
-            );
+              startedAt,
+            ).getTime();
+
+          const endTime =
+            new Date(
+              completedAt,
+            ).getTime();
 
           if (
-            !Number.isFinite(
-              startedAt.getTime(),
-            ) ||
-            !Number.isFinite(
-              completedAt.getTime(),
-            )
-          ) {
-            return Response.json(
-              {
-                error:
-                  "Workout timestamps are invalid.",
-              },
-              {
-                status: 400,
-              },
-            );
-          }
-
-          if (
-            completedAt.getTime() <
-            startedAt.getTime()
+            endTime <
+            startTime
           ) {
             return Response.json(
               {
@@ -129,25 +148,42 @@ export default {
             );
           }
 
+          const candidate = {
+            id:
+              parsed.data.id ??
+              crypto.randomUUID(),
+
+            routineId,
+
+            startedAt,
+
+            completedAt,
+
+            exercises,
+          };
+
+          const validation =
+            validateWorkoutSessionPayload(
+              candidate,
+            );
+
+          if (!validation.success) {
+            return Response.json(
+              {
+                error:
+                  validation.error,
+              },
+              {
+                status: 400,
+              },
+            );
+          }
+
           const workoutSession: StoredWorkoutSession =
             {
-              id:
-                body.id ??
-                crypto.randomUUID(),
+              ...validation.data,
 
               userId: user.id,
-
-              routineId:
-                body.routineId,
-
-              startedAt:
-                body.startedAt,
-
-              completedAt:
-                body.completedAt,
-
-              exercises:
-                body.exercises,
 
               createdAt:
                 new Date(),

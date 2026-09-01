@@ -1,264 +1,123 @@
-import { auth } from "../src/lib/auth.js";
+import {
+  requireSession,
+  unauthorizedResponse,
+  methodNotAllowedResponse,
+  internalServerErrorResponse,
+} from "../src/lib/api.js";
+
 import { database } from "../src/lib/mongodb.js";
 
-type StoredWorkoutSession = {
-  id: string;
-  userId: string;
-  routineId: string;
-  startedAt: string;
-  completedAt: string;
-  exercises: {
-    sets: {
-      weight: number;
-      reps: number;
-      completed: boolean;
-    }[];
-  }[];
-};
+import {
+  calculateOverview,
+  getRoutineDuration,
+  type StoredWorkoutSession,
+} from "../src/lib/workoutStats.js";
 
 type StoredRoutine = {
   id: string;
   userId: string;
   name: string;
   exercises: unknown[];
+  updatedAt: Date;
 };
 
-function startOfDay(date: Date) {
-  const result = new Date(date);
-
-  result.setHours(0, 0, 0, 0);
-
-  return result;
-}
-
-function getDateKey(date: Date) {
-  const year = date.getFullYear();
-  const month = String(
-    date.getMonth() + 1,
-  ).padStart(2, "0");
-  const day = String(
-    date.getDate(),
-  ).padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
-}
-
-function getCurrentStreak(
-  sessions: StoredWorkoutSession[],
-) {
-  if (sessions.length === 0) {
-    return 0;
-  }
-
-  const workoutDays = new Set(
-    sessions.map((session) =>
-      getDateKey(
-        new Date(session.completedAt),
-      ),
-    ),
-  );
-
-  const today = startOfDay(new Date());
-
-  let currentDay = today;
-  let streak = 0;
-
-  /*
-   * If the user hasn't trained today,
-   * continue the streak from yesterday.
-   */
-  if (
-    !workoutDays.has(
-      getDateKey(currentDay),
-    )
-  ) {
-    currentDay.setDate(
-      currentDay.getDate() - 1,
-    );
-  }
-
-  while (
-    workoutDays.has(
-      getDateKey(currentDay),
-    )
-  ) {
-    streak += 1;
-
-    currentDay.setDate(
-      currentDay.getDate() - 1,
-    );
-  }
-
-  return streak;
-}
-
-function getWeekStart(date: Date) {
-  const result = startOfDay(date);
-
-  const day = result.getDay();
-
-  const daysSinceMonday =
-    day === 0 ? 6 : day - 1;
-
-  result.setDate(
-    result.getDate() -
-      daysSinceMonday,
-  );
-
-  return result;
-}
-
-function getRoutineDuration(
-  exerciseCount: number,
-) {
-  /*
-   * Temporary estimate until routines have
-   * their own duration metadata.
-   */
-  return Math.max(
-    20,
-    exerciseCount * 10,
-  );
-}
+const ALLOWED_METHODS = [
+  "GET",
+];
 
 export default {
   async fetch(request: Request) {
     if (request.method !== "GET") {
-      return new Response(
-        "Method Not Allowed",
-        {
-          status: 405,
-          headers: {
-            Allow: "GET",
-          },
-        },
+      return methodNotAllowedResponse(
+        ALLOWED_METHODS,
       );
     }
 
-    const session =
-      await auth.api.getSession({
-        headers: request.headers,
-      });
-
-    if (!session?.user) {
-      return Response.json(
-        {
-          error: "Unauthorized",
-        },
-        {
-          status: 401,
-        },
+    const authResult =
+      await requireSession(
+        request,
       );
+
+    if (!authResult) {
+      return unauthorizedResponse();
     }
+
+    const { user } = authResult;
 
     try {
-      const workoutSessions =
-        await database
-          .collection<StoredWorkoutSession>(
-            "workoutSessions",
+      const sessionsCollection =
+        database.collection<StoredWorkoutSession>(
+          "workoutSessions",
+        );
+
+      const routinesCollection =
+        database.collection<StoredRoutine>(
+          "routines",
+        );
+
+      /*
+       * These queries are independent,
+       * so don't wait for them sequentially.
+       */
+      const [
+        workoutSessions,
+        userRoutines,
+      ] = await Promise.all([
+        sessionsCollection
+          .find(
+            {
+              userId: user.id,
+            },
+            {
+              projection: {
+                _id: 0,
+                id: 1,
+                userId: 1,
+                routineId: 1,
+                startedAt: 1,
+                completedAt: 1,
+                exercises: 1,
+              },
+            },
           )
-          .find({
-            userId: session.user.id,
-          })
           .sort({
             completedAt: -1,
           })
-          .toArray();
+          .toArray(),
 
-      const userRoutines =
-        await database
-          .collection<StoredRoutine>(
-            "routines",
+        routinesCollection
+          .find(
+            {
+              userId: user.id,
+            },
+            {
+              projection: {
+                _id: 0,
+                id: 1,
+                userId: 1,
+                name: 1,
+                exercises: 1,
+                updatedAt: 1,
+              },
+            },
           )
-          .find({
-            userId: session.user.id,
-          })
           .sort({
             updatedAt: -1,
           })
-          .toArray();
+          .toArray(),
+      ]);
 
-      const workouts =
-        workoutSessions.length;
-
-      let totalVolume = 0;
-      let totalTrainingSeconds = 0;
-
-      for (const workout of workoutSessions) {
-        const start = new Date(
-          workout.startedAt,
-        ).getTime();
-
-        const end = new Date(
-          workout.completedAt,
-        ).getTime();
-
-        if (
-          Number.isFinite(start) &&
-          Number.isFinite(end) &&
-          end >= start
-        ) {
-          totalTrainingSeconds +=
-            Math.floor(
-              (end - start) / 1000,
-            );
-        }
-
-        for (const exercise of workout.exercises) {
-          for (const set of exercise.sets) {
-            if (!set.completed) {
-              continue;
-            }
-
-            totalVolume +=
-              set.weight * set.reps;
-          }
-        }
-      }
-
-      const currentStreak =
-        getCurrentStreak(
+      const overview =
+        calculateOverview(
           workoutSessions,
         );
 
-      const weekStart =
-        getWeekStart(new Date());
-
-      const weeklyWorkouts =
-        workoutSessions.filter(
-          (workout) =>
-            new Date(
-              workout.completedAt,
-            ).getTime() >=
-            weekStart.getTime(),
-        ).length;
-
-      const trainingHours =
-        Math.round(
-          (totalTrainingSeconds /
-            3600) *
-            10,
-        ) / 10;
-
       /*
-       * Select today's workout.
-       *
        * Prefer the routine from the most
        * recently completed workout.
-       *
-       * If the user has never completed a
-       * workout, fall back to the most recently
-       * updated custom routine.
+       * Otherwise use the user's most
+       * recently updated custom routine.
        */
-      let todayWorkout:
-        | {
-            routineId: string;
-            title: string;
-            duration: string;
-            exercises: number;
-          }
-        | null = null;
-
       const mostRecentWorkout =
         workoutSessions[0];
 
@@ -275,38 +134,66 @@ export default {
         recentRoutine ??
         userRoutines[0];
 
-      if (selectedRoutine) {
-        const exerciseCount =
-          selectedRoutine.exercises
-            .length;
+      const todayWorkout =
+        selectedRoutine
+          ? {
+              routineId:
+                selectedRoutine.id,
 
-        const duration =
-          getRoutineDuration(
-            exerciseCount,
-          );
+              title:
+                selectedRoutine.name,
 
-        todayWorkout = {
-          routineId:
-            selectedRoutine.id,
-          title:
-            selectedRoutine.name,
-          duration: `${duration} min`,
-          exercises:
-            exerciseCount,
-        };
-      }
+              duration: `${getRoutineDuration(
+                selectedRoutine
+                  .exercises.length,
+              )} min`,
+
+              exercises:
+                selectedRoutine
+                  .exercises.length,
+            }
+          : null;
+
+      const weekStart =
+        getMondayStart(new Date());
+
+      const weeklyWorkouts =
+        workoutSessions.filter(
+          (workout) => {
+            const completedAt =
+              new Date(
+                workout.completedAt,
+              ).getTime();
+
+            return (
+              Number.isFinite(
+                completedAt,
+              ) &&
+              completedAt >=
+                weekStart.getTime()
+            );
+          },
+        ).length;
 
       return Response.json({
         stats: {
-          streak: currentStreak,
-          workouts,
-          volume: totalVolume,
-          hours: trainingHours,
+          streak:
+            overview.streak,
+
+          workouts:
+            overview.workouts,
+
+          volume:
+            overview.volume,
+
+          hours:
+            overview.trainingHours,
         },
 
         weeklyGoal: {
           completed:
             weeklyWorkouts,
+
           target: 5,
         },
 
@@ -318,15 +205,36 @@ export default {
         error,
       );
 
-      return Response.json(
-        {
-          error:
-            "Failed to load dashboard data.",
-        },
-        {
-          status: 500,
-        },
+      return internalServerErrorResponse(
+        "Failed to load dashboard data.",
       );
     }
   },
 };
+
+function getMondayStart(
+  date: Date,
+): Date {
+  const result =
+    new Date(date);
+
+  result.setHours(
+    0,
+    0,
+    0,
+    0,
+  );
+
+  const day =
+    result.getDay();
+
+  const daysSinceMonday =
+    day === 0 ? 6 : day - 1;
+
+  result.setDate(
+    result.getDate() -
+      daysSinceMonday,
+  );
+
+  return result;
+}

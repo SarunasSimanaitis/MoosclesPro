@@ -7,11 +7,10 @@ import {
   unauthorizedResponse,
 } from "../src/lib/api.js";
 
-type RoutineRequestBody = {
-  id?: string;
-  name?: string;
-  exercises?: unknown[];
-};
+import {
+  parseRoutineRequestBody,
+  validateRoutinePayload,
+} from "../src/lib/validation.js";
 
 type StoredRoutine = {
   id: string;
@@ -32,7 +31,9 @@ const ALLOWED_METHODS = [
 export default {
   async fetch(request: Request) {
     const authResult =
-      await requireSession(request);
+      await requireSession(
+        request,
+      );
 
     if (!authResult) {
       return unauthorizedResponse();
@@ -41,7 +42,7 @@ export default {
     const { user } = authResult;
 
     try {
-      const routinesCollection =
+      const collection =
         database.collection<StoredRoutine>(
           "routines",
         );
@@ -49,10 +50,23 @@ export default {
       switch (request.method) {
         case "GET": {
           const routines =
-            await routinesCollection
-              .find({
-                userId: user.id,
-              })
+            await collection
+              .find(
+                {
+                  userId: user.id,
+                },
+                {
+                  projection: {
+                    _id: 0,
+                    id: 1,
+                    userId: 1,
+                    name: 1,
+                    exercises: 1,
+                    createdAt: 1,
+                    updatedAt: 1,
+                  },
+                },
+              )
               .sort({
                 updatedAt: -1,
               })
@@ -64,24 +78,18 @@ export default {
         }
 
         case "POST": {
-          const body =
-            (await request.json()) as RoutineRequestBody;
+          const rawBody =
+            await request.json();
 
-          const name =
-            body.name?.trim();
+          const parsed =
+            parseRoutineRequestBody(
+              rawBody,
+            );
 
-          if (
-            !name ||
-            !Array.isArray(
-              body.exercises,
-            ) ||
-            body.exercises.length ===
-              0
-          ) {
+          if (!parsed.success) {
             return Response.json(
               {
-                error:
-                  "A routine name and at least one exercise are required.",
+                error: parsed.error,
               },
               {
                 status: 400,
@@ -89,25 +97,79 @@ export default {
             );
           }
 
-          const now = new Date();
+          const name =
+            parsed.data.name?.trim();
 
-          const routine: StoredRoutine = {
+          if (!name) {
+            return Response.json(
+              {
+                error:
+                  "A routine name is required.",
+              },
+              {
+                status: 400,
+              },
+            );
+          }
+
+          if (
+            !Array.isArray(
+              parsed.data.exercises,
+            ) ||
+            parsed.data.exercises.length ===
+              0
+          ) {
+            return Response.json(
+              {
+                error:
+                  "A routine must contain at least one exercise.",
+              },
+              {
+                status: 400,
+              },
+            );
+          }
+
+          const candidate = {
             id:
-              body.id ??
+              parsed.data.id ??
               `custom-${crypto.randomUUID()}`,
-
-            userId: user.id,
 
             name,
 
             exercises:
-              body.exercises,
-
-            createdAt: now,
-            updatedAt: now,
+              parsed.data.exercises,
           };
 
-          await routinesCollection.insertOne(
+          const validation =
+            validateRoutinePayload(
+              candidate,
+            );
+
+          if (!validation.success) {
+            return Response.json(
+              {
+                error:
+                  validation.error,
+              },
+              {
+                status: 400,
+              },
+            );
+          }
+
+          const now =
+            new Date();
+
+          const routine: StoredRoutine =
+            {
+              ...validation.data,
+              userId: user.id,
+              createdAt: now,
+              updatedAt: now,
+            };
+
+          await collection.insertOne(
             routine,
           );
 
@@ -120,10 +182,26 @@ export default {
         }
 
         case "PATCH": {
-          const body =
-            (await request.json()) as RoutineRequestBody;
+          const rawBody =
+            await request.json();
 
-          if (!body.id) {
+          const parsed =
+            parseRoutineRequestBody(
+              rawBody,
+            );
+
+          if (!parsed.success) {
+            return Response.json(
+              {
+                error: parsed.error,
+              },
+              {
+                status: 400,
+              },
+            );
+          }
+
+          if (!parsed.data.id) {
             return Response.json(
               {
                 error:
@@ -144,11 +222,11 @@ export default {
           };
 
           if (
-            typeof body.name ===
-            "string"
+            parsed.data.name !==
+            undefined
           ) {
             const name =
-              body.name.trim();
+              parsed.data.name.trim();
 
             if (!name) {
               return Response.json(
@@ -166,12 +244,11 @@ export default {
           }
 
           if (
-            Array.isArray(
-              body.exercises,
-            )
+            parsed.data.exercises !==
+            undefined
           ) {
             if (
-              body.exercises.length ===
+              parsed.data.exercises.length ===
               0
             ) {
               return Response.json(
@@ -185,14 +262,67 @@ export default {
               );
             }
 
+            const candidate: RoutineCandidate =
+              {
+                id:
+                  parsed.data.id,
+                name:
+                  update.name ??
+                  "existing",
+                exercises:
+                  parsed.data.exercises,
+              };
+
+            /*
+             * For PATCH we validate the
+             * incoming exercise collection
+             * itself, while keeping the
+             * existing name when name was
+             * not part of the request.
+             */
+            const exercisesValid =
+              validateRoutinePayload(
+                candidate,
+              );
+
+            if (
+              !exercisesValid.success
+            ) {
+              return Response.json(
+                {
+                  error:
+                    exercisesValid.error,
+                },
+                {
+                  status: 400,
+                },
+              );
+            }
+
             update.exercises =
-              body.exercises;
+              exercisesValid.data
+                .exercises;
+          }
+
+          if (
+            !update.name &&
+            !update.exercises
+          ) {
+            return Response.json(
+              {
+                error:
+                  "At least one routine field must be provided.",
+              },
+              {
+                status: 400,
+              },
+            );
           }
 
           const result =
-            await routinesCollection.updateOne(
+            await collection.updateOne(
               {
-                id: body.id,
+                id: parsed.data.id,
                 userId: user.id,
               },
               {
@@ -216,22 +346,16 @@ export default {
           }
 
           const updatedRoutine =
-            await routinesCollection.findOne(
+            await collection.findOne(
               {
-                id: body.id,
+                id: parsed.data.id,
                 userId: user.id,
               },
             );
 
           if (!updatedRoutine) {
-            return Response.json(
-              {
-                error:
-                  "Routine could not be loaded after update.",
-              },
-              {
-                status: 500,
-              },
+            return internalServerErrorResponse(
+              "Routine could not be loaded after update.",
             );
           }
 
@@ -241,9 +365,10 @@ export default {
         }
 
         case "DELETE": {
-          const url = new URL(
-            request.url,
-          );
+          const url =
+            new URL(
+              request.url,
+            );
 
           const routineId =
             url.searchParams.get(
@@ -263,7 +388,7 @@ export default {
           }
 
           const result =
-            await routinesCollection.deleteOne(
+            await collection.deleteOne(
               {
                 id: routineId,
                 userId: user.id,
@@ -304,4 +429,10 @@ export default {
       return internalServerErrorResponse();
     }
   },
+};
+
+type RoutineCandidate = {
+  id: string;
+  name: string;
+  exercises: unknown[];
 };

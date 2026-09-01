@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
 
 import type { Routine } from "../types/Routine";
 import type { RoutineExercise } from "../types/RoutineExercise";
@@ -7,15 +6,21 @@ import type { RoutineExercise } from "../types/RoutineExercise";
 type RoutineState = {
   customRoutines: Routine[];
 
-  setCustomRoutines: (routines: Routine[]) => void;
+  setCustomRoutines: (
+    routines: Routine[],
+  ) => void;
 
-  addRoutine: (routine: Routine) => void;
+  addRoutine: (
+    routine: Routine,
+  ) => void;
 
-  updateRoutine: (routine: Routine) => void;
+  updateRoutine: (
+    routine: Routine,
+  ) => void;
 
-  deleteRoutine: (routineId: string) => void;
-
-  duplicateRoutine: (routine: Routine) => void;
+  deleteRoutine: (
+    routineId: string,
+  ) => void;
 
   addExerciseToRoutine: (
     routineId: string,
@@ -29,128 +34,100 @@ type RoutineState = {
 };
 
 export const useRoutineStore =
-  create<RoutineState>()(
-    persist(
-      (set) => ({
-        customRoutines: [],
+  create<RoutineState>((set) => ({
+    customRoutines: [],
 
-        setCustomRoutines: (routines) => {
-          set({
-            customRoutines: routines,
-          });
-        },
+    setCustomRoutines: (routines) => {
+      set({
+        customRoutines: routines,
+      });
+    },
 
-        addRoutine: (routine) => {
-          set((state) => ({
-            customRoutines: [
-              ...state.customRoutines,
-              routine,
-            ],
-          }));
-        },
+    addRoutine: (routine) => {
+      set((state) => ({
+        customRoutines: [
+          ...state.customRoutines,
+          routine,
+        ],
+      }));
+    },
 
-        updateRoutine: (routine) => {
-          set((state) => ({
-            customRoutines:
-              state.customRoutines.map(
-                (existingRoutine) =>
-                  existingRoutine.id ===
-                  routine.id
-                    ? routine
-                    : existingRoutine,
-              ),
-          }));
-        },
+    updateRoutine: (routine) => {
+      set((state) => ({
+        customRoutines:
+          state.customRoutines.map(
+            (existingRoutine) =>
+              existingRoutine.id ===
+              routine.id
+                ? routine
+                : existingRoutine,
+          ),
+      }));
+    },
 
-        deleteRoutine: (routineId) => {
-          set((state) => ({
-            customRoutines:
-              state.customRoutines.filter(
-                (routine) =>
-                  routine.id !== routineId,
-              ),
-          }));
-        },
+    deleteRoutine: (routineId) => {
+      set((state) => ({
+        customRoutines:
+          state.customRoutines.filter(
+            (routine) =>
+              routine.id !== routineId,
+          ),
+      }));
+    },
 
-        duplicateRoutine: (routine) => {
-          const duplicatedRoutine: Routine = {
-            ...routine,
-            id: `custom-${crypto.randomUUID()}`,
-            name: `${routine.name} Copy`,
-            exercises: routine.exercises.map(
-              (routineExercise) => ({
-                ...routineExercise,
-              }),
-            ),
-          };
+    addExerciseToRoutine: (
+      routineId,
+      exercise,
+    ) => {
+      set((state) => ({
+        customRoutines:
+          state.customRoutines.map(
+            (routine) => {
+              if (
+                routine.id !==
+                routineId
+              ) {
+                return routine;
+              }
 
-          set((state) => ({
-            customRoutines: [
-              ...state.customRoutines,
-              duplicatedRoutine,
-            ],
-          }));
-        },
+              return {
+                ...routine,
+                exercises: [
+                  ...routine.exercises,
+                  exercise,
+                ],
+              };
+            },
+          ),
+      }));
+    },
 
-        addExerciseToRoutine: (
-          routineId,
-          exercise,
-        ) => {
-          set((state) => ({
-            customRoutines:
-              state.customRoutines.map(
-                (routine) => {
-                  if (
-                    routine.id !==
-                    routineId
-                  ) {
-                    return routine;
-                  }
+    removeExerciseFromRoutine: (
+      routineId,
+      exerciseId,
+    ) => {
+      set((state) => ({
+        customRoutines:
+          state.customRoutines.map(
+            (routine) => {
+              if (
+                routine.id !==
+                routineId
+              ) {
+                return routine;
+              }
 
-                  return {
-                    ...routine,
-                    exercises: [
-                      ...routine.exercises,
-                      exercise,
-                    ],
-                  };
-                },
-              ),
-          }));
-        },
-
-        removeExerciseFromRoutine: (
-          routineId,
-          exerciseId,
-        ) => {
-          set((state) => ({
-            customRoutines:
-              state.customRoutines.map(
-                (routine) => {
-                  if (
-                    routine.id !==
-                    routineId
-                  ) {
-                    return routine;
-                  }
-
-                  return {
-                    ...routine,
-                    exercises:
-                      routine.exercises.filter(
-                        (routineExercise) =>
-                          routineExercise
-                            .exercise.id !==
-                          exerciseId,
-                      ),
-                  };
-                },
-              ),
-          }));
-        },
-      }),
-      {
-        name: "moosclespro-routines",
-      },
-    ),
-  );
+              return {
+                ...routine,
+                exercises:
+                  routine.exercises.filter(
+                    (routineExercise) =>
+                      routineExercise.exercise.id !==
+                      exerciseId,
+                  ),
+              };
+            },
+          ),
+      }));
+    },
+  }));

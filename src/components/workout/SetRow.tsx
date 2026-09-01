@@ -1,4 +1,7 @@
 import { Check } from "lucide-react";
+
+import NumberStepper from "../ui/NumberStepper";
+
 import type { WorkoutSet } from "../../types/WorkoutSet";
 
 type SetRowProps = {
@@ -15,73 +18,80 @@ export default function SetRow({
   onRepsChange,
 }: SetRowProps) {
   return (
-    <div className="grid grid-cols-[48px_1fr_1fr_58px] items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] px-3 py-3 md:grid-cols-[60px_1fr_1fr_70px] md:gap-4 md:px-4">
+    <div
+      className="
+        grid
+        grid-cols-[48px_1fr_1fr_58px]
+        items-center
+        gap-3
+        rounded-2xl
+        border
+        border-[var(--border)]
+        bg-[var(--surface-soft)]
+        px-3
+        py-3
+        md:grid-cols-[60px_1fr_1fr_70px]
+        md:gap-4
+        md:px-4
+      "
+    >
+      {/* Set number */}
+
       <div className="text-center font-semibold text-[var(--text-muted)]">
         {workoutSet.order}
       </div>
 
-      <input
-        type="number"
+      {/* Weight */}
+
+      <NumberStepper
+        value={workoutSet.weight}
+        onChange={onWeightChange}
         min={0}
         step={0.5}
-        placeholder="0"
-        value={workoutSet.weight === 0 ? "" : workoutSet.weight}
-        onChange={(event) => {
-          const value = event.target.value;
-
-          if (value === "") {
-            onWeightChange(0);
-            return;
-          }
-
-          const weight = Number(value);
-
-          if (Number.isFinite(weight)) {
-            onWeightChange(Math.max(0, weight));
-          }
-        }}
-        className="w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface)] px-3 py-2 text-center text-[var(--text)] outline-none transition focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary)]/20"
+        ariaLabel={`Weight for set ${workoutSet.order}`}
       />
 
-      <input
-        type="number"
+      {/* Reps */}
+
+      <NumberStepper
+        value={workoutSet.reps}
+        onChange={onRepsChange}
         min={0}
         step={1}
-        placeholder="0"
-        value={workoutSet.reps === 0 ? "" : workoutSet.reps}
-        onChange={(event) => {
-          const value = event.target.value;
-
-          if (value === "") {
-            onRepsChange(0);
-            return;
-          }
-
-          const reps = Number(value);
-
-          if (Number.isFinite(reps)) {
-            onRepsChange(Math.max(0, reps));
-          }
-        }}
-        className="w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface)] px-3 py-2 text-center text-[var(--text)] outline-none transition focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary)]/20"
+        ariaLabel={`Reps for set ${workoutSet.order}`}
       />
+
+      {/* Complete */}
 
       <button
         type="button"
         onClick={onToggle}
         aria-label={
           workoutSet.completed
-            ? "Mark set incomplete"
-            : "Mark set complete"
+            ? `Mark set ${workoutSet.order} incomplete`
+            : `Mark set ${workoutSet.order} complete`
         }
-        className={`mx-auto flex h-10 w-10 items-center justify-center rounded-xl transition ${
-          workoutSet.completed
-            ? "bg-[var(--success)] text-white"
-            : "border border-[var(--border-strong)] bg-[var(--surface)] text-[var(--text-muted)] hover:border-[var(--primary)] hover:text-[var(--primary)]"
-        }`}
+        className={`
+          mx-auto
+          flex
+          h-10
+          w-10
+          items-center
+          justify-center
+          rounded-xl
+          transition
+          ${
+            workoutSet.completed
+              ? "bg-[var(--success)] text-white"
+              : "border border-[var(--border-strong)] bg-[var(--surface)] text-[var(--text-muted)] hover:border-[var(--primary)] hover:text-[var(--primary)]"
+          }
+        `}
       >
         {workoutSet.completed ? (
-          <Check size={18} strokeWidth={3} />
+          <Check
+            size={18}
+            strokeWidth={3}
+          />
         ) : (
           "○"
         )}

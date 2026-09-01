@@ -1,4 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   ArrowLeft,
   CheckCircle2,
@@ -24,10 +29,6 @@ import type { WorkoutSet } from "../types/WorkoutSet";
 import { saveWorkoutSession } from "../utils/workoutStorage";
 
 export default function WorkoutSessionPage() {
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
-
   const navigate = useNavigate();
   const { routineId } = useParams();
 
@@ -57,7 +58,8 @@ export default function WorkoutSessionPage() {
           </h1>
 
           <p className="mt-3 text-[var(--text-muted)]">
-            The routine you're looking for doesn't exist.
+            The routine you're looking for doesn't
+            exist.
           </p>
 
           <button
@@ -91,7 +93,6 @@ type WorkoutSessionProps = {
       restSeconds: number;
     }[];
   };
-
   onBack: () => void;
 };
 
@@ -101,77 +102,155 @@ function WorkoutSession({
 }: WorkoutSessionProps) {
   const navigate = useNavigate();
 
+  /*
+   * ---------------------------------------------------
+   * Workout start / timer
+   * ---------------------------------------------------
+   */
+
   const [startedAt] = useState(
     () => new Date().toISOString(),
   );
 
-  const [workoutExercises, setWorkoutExercises] =
-    useState<WorkoutExercise[]>(() =>
-      routine.exercises.map(
-        (routineExercise) => {
-          const sets: WorkoutSet[] =
-            Array.from(
-              {
-                length:
-                  routineExercise.targetSets,
-              },
-              (_, index) => ({
-                id: crypto.randomUUID(),
-                order: index + 1,
-                weight: 0,
-                reps: 0,
-                completed: false,
-              }),
-            );
+  const workoutStartMs = useMemo(
+    () => new Date(startedAt).getTime(),
+    [startedAt],
+  );
 
-          return {
-            exercise: routineExercise.exercise,
-            targetSets:
-              routineExercise.targetSets,
-            targetReps:
-              routineExercise.targetReps,
-            restSeconds:
-              routineExercise.restSeconds,
-            sets,
-          };
-        },
-      ),
-    );
-
-  /*
-   * Workout timer
-   */
-
-  const [elapsedSeconds, setElapsedSeconds] =
-    useState(0);
+  const [
+    elapsedSeconds,
+    setElapsedSeconds,
+  ] = useState(0);
 
   const [isPaused, setIsPaused] =
     useState(false);
+
+  const pauseStartedAtRef =
+    useRef<number | null>(null);
+
+  const totalPausedMsRef =
+    useRef(0);
 
   useEffect(() => {
     if (isPaused) {
       return;
     }
 
-    const interval = window.setInterval(() => {
-      setElapsedSeconds(
-        Math.floor(
-          (Date.now() -
-            new Date(
-              startedAt,
-            ).getTime()) /
-            1000,
-        ),
+    const updateElapsedTime = () => {
+      const now = Date.now();
+
+      const currentPausedMs =
+        pauseStartedAtRef.current !== null
+          ? now -
+            pauseStartedAtRef.current
+          : 0;
+
+      const activeMs = Math.max(
+        0,
+        now -
+          workoutStartMs -
+          totalPausedMsRef.current -
+          currentPausedMs,
       );
-    }, 1000);
+
+      setElapsedSeconds(
+        Math.floor(activeMs / 1000),
+      );
+    };
+
+    updateElapsedTime();
+
+    const interval = window.setInterval(
+      updateElapsedTime,
+      1000,
+    );
 
     return () => {
       window.clearInterval(interval);
     };
-  }, [startedAt, isPaused]);
+  }, [isPaused, workoutStartMs]);
+
+  function togglePause() {
+    if (isPaused) {
+      if (
+        pauseStartedAtRef.current !==
+        null
+      ) {
+        totalPausedMsRef.current +=
+          Date.now() -
+          pauseStartedAtRef.current;
+      }
+
+      pauseStartedAtRef.current = null;
+      setIsPaused(false);
+      return;
+    }
+
+    pauseStartedAtRef.current =
+      Date.now();
+
+    setIsPaused(true);
+  }
 
   /*
+   * ---------------------------------------------------
+   * Workout exercises
+   * ---------------------------------------------------
+   */
+
+  const [
+    workoutExercises,
+    setWorkoutExercises,
+  ] = useState<WorkoutExercise[]>(() =>
+    routine.exercises.map(
+      (routineExercise) => {
+        const sets: WorkoutSet[] =
+          Array.from(
+            {
+              length:
+                routineExercise.targetSets,
+            },
+            (_, index) => ({
+              id: crypto.randomUUID(),
+              order: index + 1,
+              weight: 0,
+              reps: 0,
+              completed: false,
+            }),
+          );
+
+        return {
+          exercise:
+            routineExercise.exercise,
+          targetSets:
+            routineExercise.targetSets,
+          targetReps:
+            routineExercise.targetReps,
+          restSeconds:
+            routineExercise.restSeconds,
+          sets,
+        };
+      },
+    ),
+  );
+
+  /*
+   * Track whether weight/reps have already
+   * been auto-filled for each exercise.
+   *
+   * Once auto-fill happens, later changes
+   * affect only the selected set.
+   */
+  const autoFilledWeightExercises =
+    useRef(new Set<string>());
+
+  const autoFilledRepExercises =
+    useRef(new Set<string>());
+
+  /*
+   * ---------------------------------------------------
    * Rest timer
+   * ---------------------------------------------------
    */
 
   const [restTime, setRestTime] =
@@ -191,21 +270,43 @@ function WorkoutSession({
       return;
     }
 
-    const interval = window.setInterval(() => {
-      setRestTime((current) =>
-        current === null
-          ? null
-          : Math.max(0, current - 1),
-      );
-    }, 1000);
+    const interval =
+      window.setInterval(() => {
+        setRestTime((current) =>
+          current === null
+            ? null
+            : Math.max(
+                0,
+                current - 1,
+              ),
+        );
+      }, 1000);
 
     return () => {
       window.clearInterval(interval);
     };
   }, [restTime]);
 
+  function startRestTimer(
+    seconds: number,
+  ) {
+    if (seconds <= 0) {
+      return;
+    }
+
+    setRestDuration(seconds);
+    setRestTime(seconds);
+  }
+
+  function resetRestTimer() {
+    setRestTime(null);
+    setRestDuration(0);
+  }
+
   /*
-   * Saving state
+   * ---------------------------------------------------
+   * Saving
+   * ---------------------------------------------------
    */
 
   const [isFinishing, setIsFinishing] =
@@ -215,7 +316,9 @@ function WorkoutSession({
     useState<string | null>(null);
 
   /*
+   * ---------------------------------------------------
    * Workout calculations
+   * ---------------------------------------------------
    */
 
   const completedSets =
@@ -237,7 +340,8 @@ function WorkoutSession({
 
   const progress =
     totalSets > 0
-      ? (completedSets / totalSets) * 100
+      ? (completedSets / totalSets) *
+        100
       : 0;
 
   const totalVolume = useMemo(() => {
@@ -261,12 +365,26 @@ function WorkoutSession({
     );
   }, [workoutExercises]);
 
-  const formattedTime = formatDuration(
-    elapsedSeconds,
-  );
+  const formattedTime =
+    formatDuration(elapsedSeconds);
 
   /*
+   * ---------------------------------------------------
    * Update weight
+   * ---------------------------------------------------
+   *
+   * First non-zero weight entry:
+   *
+   * Set 1  → 60
+   *
+   * becomes:
+   *
+   * Set 1  → 60
+   * Set 2  → 60
+   * Set 3  → 60
+   *
+   * BUT only empty sets are filled.
+   * Existing values are never overwritten.
    */
 
   function updateWeight(
@@ -285,18 +403,49 @@ function WorkoutSession({
               return exercise;
             }
 
+            const currentSet =
+              exercise.sets.find(
+                (set) =>
+                  set.id === setId,
+              );
+
+            const shouldAutoFill =
+              newWeight > 0 &&
+              currentSet?.weight === 0 &&
+              !autoFilledWeightExercises.current.has(
+                exerciseId,
+              );
+
+            if (shouldAutoFill) {
+              autoFilledWeightExercises.current.add(
+                exerciseId,
+              );
+            }
+
             return {
               ...exercise,
               sets: exercise.sets.map(
                 (set) => {
-                  if (set.id !== setId) {
-                    return set;
+                  if (
+                    set.id === setId
+                  ) {
+                    return {
+                      ...set,
+                      weight: newWeight,
+                    };
                   }
 
-                  return {
-                    ...set,
-                    weight: newWeight,
-                  };
+                  if (
+                    shouldAutoFill &&
+                    set.weight === 0
+                  ) {
+                    return {
+                      ...set,
+                      weight: newWeight,
+                    };
+                  }
+
+                  return set;
                 },
               ),
             };
@@ -306,7 +455,12 @@ function WorkoutSession({
   }
 
   /*
+   * ---------------------------------------------------
    * Update reps
+   * ---------------------------------------------------
+   *
+   * Same behavior as weight:
+   * first value fills empty sets only.
    */
 
   function updateReps(
@@ -325,18 +479,49 @@ function WorkoutSession({
               return exercise;
             }
 
+            const currentSet =
+              exercise.sets.find(
+                (set) =>
+                  set.id === setId,
+              );
+
+            const shouldAutoFill =
+              newReps > 0 &&
+              currentSet?.reps === 0 &&
+              !autoFilledRepExercises.current.has(
+                exerciseId,
+              );
+
+            if (shouldAutoFill) {
+              autoFilledRepExercises.current.add(
+                exerciseId,
+              );
+            }
+
             return {
               ...exercise,
               sets: exercise.sets.map(
                 (set) => {
-                  if (set.id !== setId) {
-                    return set;
+                  if (
+                    set.id === setId
+                  ) {
+                    return {
+                      ...set,
+                      reps: newReps,
+                    };
                   }
 
-                  return {
-                    ...set,
-                    reps: newReps,
-                  };
+                  if (
+                    shouldAutoFill &&
+                    set.reps === 0
+                  ) {
+                    return {
+                      ...set,
+                      reps: newReps,
+                    };
+                  }
+
+                  return set;
                 },
               ),
             };
@@ -346,7 +531,9 @@ function WorkoutSession({
   }
 
   /*
+   * ---------------------------------------------------
    * Toggle completed set
+   * ---------------------------------------------------
    */
 
   function updateCompleted(
@@ -368,7 +555,9 @@ function WorkoutSession({
               ...exercise,
               sets: exercise.sets.map(
                 (set) => {
-                  if (set.id !== setId) {
+                  if (
+                    set.id !== setId
+                  ) {
                     return set;
                   }
 
@@ -393,20 +582,10 @@ function WorkoutSession({
     );
   }
 
-  function startRestTimer(
-    seconds: number,
-  ) {
-    setRestDuration(seconds);
-    setRestTime(seconds);
-  }
-
-  function resetRestTimer() {
-    setRestTime(null);
-    setRestDuration(0);
-  }
-
   /*
+   * ---------------------------------------------------
    * Finish workout
+   * ---------------------------------------------------
    */
 
   async function finishWorkout() {
@@ -416,6 +595,22 @@ function WorkoutSession({
 
     setIsFinishing(true);
     setSaveError(null);
+
+    /*
+     * If the workout is currently paused,
+     * close the pause period before calculating
+     * the final active duration.
+     */
+    if (
+      pauseStartedAtRef.current !==
+      null
+    ) {
+      totalPausedMsRef.current +=
+        Date.now() -
+        pauseStartedAtRef.current;
+
+      pauseStartedAtRef.current = null;
+    }
 
     const completedAt =
       new Date().toISOString();
@@ -429,7 +624,9 @@ function WorkoutSession({
     };
 
     try {
-      await saveWorkoutSession(session);
+      await saveWorkoutSession(
+        session,
+      );
 
       navigate("/history", {
         replace: true,
@@ -451,7 +648,9 @@ function WorkoutSession({
   }
 
   /*
+   * ---------------------------------------------------
    * Leave workout
+   * ---------------------------------------------------
    */
 
   function handleBack() {
@@ -471,9 +670,10 @@ function WorkoutSession({
       return;
     }
 
-    const shouldLeave = window.confirm(
-      "You have an active workout. Leave without saving it?",
-    );
+    const shouldLeave =
+      window.confirm(
+        "You have an active workout. Leave without saving it?",
+      );
 
     if (shouldLeave) {
       onBack();
@@ -490,7 +690,6 @@ function WorkoutSession({
         className="flex items-center gap-2 text-sm font-semibold text-[var(--text-muted)] transition hover:text-[var(--primary)]"
       >
         <ArrowLeft size={17} />
-
         Back to workouts
       </button>
 
@@ -511,20 +710,18 @@ function WorkoutSession({
               <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm text-[var(--text-muted)]">
                 <span className="flex items-center gap-2">
                   <Dumbbell size={16} />
-
                   {workoutExercises.length}{" "}
                   exercises
                 </span>
 
                 <span className="flex items-center gap-2">
                   <CheckCircle2 size={16} />
-
-                  {completedSets}/{totalSets} sets
+                  {completedSets}/
+                  {totalSets} sets
                 </span>
 
                 <span className="flex items-center gap-2">
                   <Clock3 size={16} />
-
                   {formattedTime}
                 </span>
               </div>
@@ -545,13 +742,14 @@ function WorkoutSession({
 
               <button
                 type="button"
-                onClick={() =>
-                  setIsPaused(
-                    (current) => !current,
-                  )
-                }
+                onClick={togglePause}
                 className="flex h-14 w-14 items-center justify-center rounded-2xl border border-[var(--border-strong)] bg-[var(--surface-soft)] text-[var(--text-muted)] transition hover:border-[var(--primary)] hover:text-[var(--primary)]"
                 aria-label={
+                  isPaused
+                    ? "Resume workout"
+                    : "Pause workout"
+                }
+                title={
                   isPaused
                     ? "Resume workout"
                     : "Pause workout"
@@ -565,6 +763,15 @@ function WorkoutSession({
               </button>
             </div>
           </div>
+
+          {/* Paused indicator */}
+
+          {isPaused && (
+            <div className="rounded-2xl border border-[var(--primary)]/20 bg-[var(--primary-soft)] px-4 py-3 text-sm font-semibold text-[var(--primary)]">
+              Workout paused. Your active workout
+              time is not increasing.
+            </div>
+          )}
 
           {/* Progress */}
 
@@ -645,7 +852,9 @@ function WorkoutSession({
               </p>
 
               <p className="mt-1 text-2xl font-black text-[var(--text)]">
-                {formatDuration(restTime)}
+                {formatDuration(
+                  restTime,
+                )}
               </p>
             </div>
 
@@ -685,7 +894,6 @@ function WorkoutSession({
                 className="flex items-center gap-2 rounded-xl bg-[var(--primary)] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[var(--primary-hover)]"
               >
                 <RotateCcw size={15} />
-
                 Stop
               </button>
             </div>
@@ -699,9 +907,12 @@ function WorkoutSession({
                   width: `${
                     restTime === null
                       ? 0
-                      : (restTime /
-                          restDuration) *
-                        100
+                      : Math.min(
+                          100,
+                          (restTime /
+                            restDuration) *
+                            100,
+                        )
                   }%`,
                 }}
               />

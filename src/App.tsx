@@ -7,6 +7,7 @@ import {
 
 import AppLayout from "./components/layout/AppLayout";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import ScrollToTop from "./components/layout/ScrollToTop";
 
 import Dashboard from "./pages/Dashboard";
 import ExerciseDetails from "./pages/ExerciseDetails";
@@ -26,9 +27,15 @@ import Workouts from "./pages/Workouts";
 export default function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
+
       <Routes>
         {/* Public authentication */}
-        <Route path="/login" element={<Login />} />
+
+        <Route
+          path="/login"
+          element={<Login />}
+        />
 
         <Route
           path="/register"
@@ -36,8 +43,12 @@ export default function App() {
         />
 
         {/* Public app pages */}
+
         <Route element={<AppLayout />}>
-          <Route path="/" element={<Dashboard />} />
+          <Route
+            path="/"
+            element={<Dashboard />}
+          />
 
           <Route
             path="/exercises"
@@ -56,6 +67,7 @@ export default function App() {
         </Route>
 
         {/* Protected app pages */}
+
         <Route element={<ProtectedRoute />}>
           <Route element={<AppLayout />}>
             <Route
@@ -101,9 +113,15 @@ export default function App() {
         </Route>
 
         {/* Unknown routes */}
+
         <Route
           path="*"
-          element={<Navigate to="/" replace />}
+          element={
+            <Navigate
+              to="/"
+              replace
+            />
+          }
         />
       </Routes>
     </BrowserRouter>

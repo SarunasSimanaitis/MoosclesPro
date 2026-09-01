@@ -48,7 +48,7 @@ function ProgramCard({
         hover:shadow-[var(--shadow-md)]
       "
     >
-      <div className="relative overflow-hidden bg-[var(--text)] p-7 md:p-8">
+      <div className="relative overflow-hidden bg-[#2f261d] p-7 md:p-8">
         <div className="absolute -right-16 -top-16 h-40 w-40 rounded-full bg-[var(--primary)]/15 blur-2xl" />
 
         <div className="relative">
@@ -57,16 +57,16 @@ function ProgramCard({
               <Dumbbell size={23} />
             </div>
 
-            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-bold text-white/70">
+            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-bold text-[#fffaf0]/70">
               FREE
             </span>
           </div>
 
-          <h2 className="mt-7 text-2xl font-black tracking-tight text-white">
+          <h2 className="mt-7 text-2xl font-black tracking-tight text-[#fffaf0]">
             {program.name}
           </h2>
 
-          <p className="mt-3 text-sm leading-relaxed text-white/60">
+          <p className="mt-3 text-sm leading-relaxed text-[#fffaf0]/65">
             {program.description}
           </p>
         </div>
@@ -926,7 +926,7 @@ export default function Workouts() {
         className="
           overflow-hidden
           rounded-[2.5rem]
-          bg-[var(--text)]
+          bg-[#2f261d]
           px-7
           py-10
           md:px-10
@@ -941,7 +941,7 @@ export default function Workouts() {
             Coming later
           </p>
 
-          <h2 className="mt-4 text-3xl font-black tracking-tight text-[var(--surface)] md:text-4xl">
+          <h2 className="mt-4 text-3xl font-black tracking-tight text-[#fffaf0] md:text-4xl">
             Your training shouldn't look like
             everyone else's.
           </h2>
@@ -963,7 +963,7 @@ export default function Workouts() {
             ].map((item) => (
               <span
                 key={item}
-                className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-white/70"
+                className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-[#fffaf0]/70"
               >
                 {item}
               </span>
@@ -983,7 +983,7 @@ export default function Workouts() {
               px-5
               py-3
               font-semibold
-              text-white/50
+              text-[#fffaf0]/50
               cursor-not-allowed
             "
           >

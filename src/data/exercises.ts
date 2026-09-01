@@ -360,6 +360,23 @@ export const exercises: Exercise[] = [
   },
 
   {
+    id: "dumbbell-tricep-extension",
+    name: "Dumbbell Tricep Extension",
+    muscleGroup: "Triceps",
+    equipment: "Dumbbell",
+    category: "Hypertrophy",
+    primaryMuscles: ["Triceps"],
+    secondaryMuscles: [],
+    instructions: [
+      "Hold a dumbbell securely with both hands.",
+      "Raise the dumbbell overhead with your arms extended.",
+      "Lower the dumbbell behind your head under control.",
+      "Keep your upper arms relatively still.",
+      "Extend your elbows to return the dumbbell to the starting position.",
+    ],
+  },
+
+  {
     id: "overhead-dumbbell-tricep-extension",
     name: "Overhead Dumbbell Tricep Extension",
     muscleGroup: "Triceps",
@@ -618,7 +635,7 @@ export const exercises: Exercise[] = [
       "Lower them under control.",
     ],
   },
-    // ─────────────────────────────
+  // ─────────────────────────────
   // CHEST — ADDITIONAL
   // ─────────────────────────────
 
@@ -992,6 +1009,54 @@ export const exercises: Exercise[] = [
 
   // ─────────────────────────────
   // QUADRICEPS — ADDITIONAL
+
+  {
+    id: "bodyweight-squat",
+    name: "Bodyweight Squat",
+    muscleGroup: "Quadriceps",
+    equipment: "Bodyweight",
+    category: "Strength",
+    primaryMuscles: ["Quadriceps", "Gluteus Maximus"],
+    secondaryMuscles: ["Hamstrings", "Adductors", "Core"],
+    instructions: [
+      "Stand with your feet around shoulder width apart.",
+      "Brace your core and keep your chest controlled.",
+      "Bend your knees and hips to lower into a squat.",
+      "Drive through your feet to return to standing.",
+    ],
+  },
+
+  {
+    id: "reverse-lunge",
+    name: "Reverse Lunge",
+    muscleGroup: "Quadriceps",
+    equipment: "Bodyweight",
+    category: "Strength",
+    primaryMuscles: ["Quadriceps", "Gluteus Maximus"],
+    secondaryMuscles: ["Hamstrings", "Calves", "Core"],
+    instructions: [
+      "Stand tall with your feet about hip width apart.",
+      "Step one foot backward and lower into a controlled lunge.",
+      "Keep your front foot stable and your torso controlled.",
+      "Drive through the front foot to return to standing.",
+    ],
+  },
+
+  {
+    id: "split-squat",
+    name: "Split Squat",
+    muscleGroup: "Quadriceps",
+    equipment: "Bodyweight",
+    category: "Strength",
+    primaryMuscles: ["Quadriceps", "Gluteus Maximus"],
+    secondaryMuscles: ["Hamstrings", "Adductors", "Core"],
+    instructions: [
+      "Stand in a staggered stance with one foot in front.",
+      "Brace your core and keep your torso controlled.",
+      "Lower your body by bending both knees.",
+      "Drive through the front foot to return to the starting position.",
+    ],
+  },
   // ─────────────────────────────
 
   {
@@ -1128,6 +1193,22 @@ export const exercises: Exercise[] = [
 
   // ─────────────────────────────
   // GLUTES — ADDITIONAL
+
+  {
+    id: "single-leg-glute-bridge",
+    name: "Single-Leg Glute Bridge",
+    muscleGroup: "Glutes",
+    equipment: "Bodyweight",
+    category: "Strength",
+    primaryMuscles: ["Gluteus Maximus"],
+    secondaryMuscles: ["Hamstrings", "Core"],
+    instructions: [
+      "Lie on your back with one knee bent and the other leg extended.",
+      "Brace your core and keep your pelvis controlled.",
+      "Drive through the planted foot to raise your hips.",
+      "Squeeze your glutes at the top and lower slowly.",
+    ],
+  },
   // ─────────────────────────────
 
   {

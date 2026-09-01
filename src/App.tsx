@@ -24,6 +24,7 @@ import Statistics from "./pages/Statistics";
 import WorkoutDetails from "./pages/WorkoutDetails";
 import WorkoutSessionPage from "./pages/WorkoutSessionPage";
 import Workouts from "./pages/Workouts";
+import ProgramDetails from "./pages/ProgramDetails";
 
 export default function App() {
   return (
@@ -79,6 +80,11 @@ export default function App() {
             <Route
               path="/workouts"
               element={<Workouts />}
+            />
+
+            <Route
+              path="/program/:programId"
+              element={<ProgramDetails />}
             />
 
             <Route

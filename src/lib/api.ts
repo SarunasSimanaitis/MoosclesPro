@@ -1,4 +1,4 @@
-import { auth } from "./auth";
+import { auth } from "./auth.js";
 
 type AuthResult = NonNullable<
   Awaited<

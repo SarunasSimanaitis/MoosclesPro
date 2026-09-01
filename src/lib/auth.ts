@@ -4,7 +4,7 @@ import { mongodbAdapter } from "better-auth/adapters/mongodb";
 import {
   database,
   mongoClient,
-} from "./mongodb";
+} from "./mongodb.js";
 
 type RuntimeEnv = {
   BETTER_AUTH_SECRET?: string;

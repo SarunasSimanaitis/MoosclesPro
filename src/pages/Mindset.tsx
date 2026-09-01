@@ -192,18 +192,18 @@ export default function Mindset() {
             return (
               <article
                 key={post.id}
-                className="group overflow-hidden rounded-[2rem] border border-[var(--border)] bg-[var(--surface)] shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl"
-              >
+                className="group overflow-hidden rounded-[2rem] border border-[var(--border)] bg-[var(--surface)] shadow-sm transition-shadow duration-300 hover:shadow-xl">
                 {/* Image */}
-                <div className="relative isolate min-h-[330px] overflow-hidden rounded-t-[2rem]">
+                <div className="relative h-[330px] overflow-hidden rounded-t-[2rem] bg-black">
                   <img
                     src={post.imageUrl}
                     alt=""
-                    className="absolute inset-[-1px] h-[calc(100%+2px)] w-[calc(100%+2px)] object-cover transition-transform duration-700 ease-out will-change-transform group-hover:scale-105"
+                    draggable={false}
+                    className="absolute inset-0 block h-full w-full object-cover transition-[filter] duration-500 ease-out group-hover:brightness-110"
                   />
 
                   {/* Dark gradient */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/5" />
+                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/5" />
 
                   {/* Post type */}
                   <div className="absolute left-6 top-6">

@@ -11,35 +11,12 @@ import {
   useState,
 } from "react";
 
+import {
+  statisticsApi,
+  type StatisticsData,
+} from "../api/statistics";
+
 import Card from "../components/ui/Card";
-
-type Overview = {
-  workouts: number;
-  volume: number;
-  trainingHours: number;
-  streak: number;
-};
-
-type WeeklyActivity = {
-  label: string;
-  start: string;
-  workouts: number;
-};
-
-type ExerciseStatistic = {
-  exerciseId: string;
-  name: string;
-  workouts: number;
-  sets: number;
-  volume: number;
-};
-
-type StatisticsData = {
-  overview: Overview;
-  weeklyActivity: WeeklyActivity[];
-  topExercises: ExerciseStatistic[];
-  topVolumeExercises: ExerciseStatistic[];
-};
 
 export default function Statistics() {
   const [
@@ -67,22 +44,8 @@ export default function Statistics() {
         setIsLoading(true);
         setError(null);
 
-        const response =
-          await fetch(
-            "/api/statistics",
-            {
-              credentials: "include",
-            },
-          );
-
-        if (!response.ok) {
-          throw new Error(
-            "Failed to load statistics.",
-          );
-        }
-
         const data =
-          (await response.json()) as StatisticsData;
+          await statisticsApi.get();
 
         if (!cancelled) {
           setStatistics(data);
@@ -275,7 +238,7 @@ export default function Statistics() {
         </div>
       </Card>
 
-      {/* Exercise Stats */}
+      {/* Exercise Statistics */}
 
       <section className="grid gap-6 lg:grid-cols-2">
         {/* Most trained */}
@@ -329,8 +292,8 @@ export default function Statistics() {
             </h2>
           </div>
 
-          {statistics.topVolumeExercises
-            .length === 0 ? (
+          {statistics.topVolumeExercises.length ===
+          0 ? (
             <EmptyStatistics />
           ) : (
             <div className="mt-7 space-y-3">

@@ -11,6 +11,13 @@ import {
   useState,
 } from "react";
 
+import {
+  dashboardApi,
+  type DashboardData,
+  type DashboardStats,
+  type DashboardTodayWorkout,
+} from "../api/dashboard";
+
 import { dashboard } from "../data/dashboard";
 import { authClient } from "../lib/auth-client";
 
@@ -18,48 +25,12 @@ import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import ProgressBar from "../components/ui/ProgressBar";
 
-type DashboardStats = {
-  streak: number;
-  workouts: number;
-  volume: number;
-  hours: number;
-};
-
-type TodayWorkout = {
-  routineId?: string;
-  title: string;
-  duration: string;
-  exercises: number;
-};
-
-type DashboardData = {
-  stats: DashboardStats;
-
-  weeklyGoal: {
-    completed: number;
-    target: number;
-  };
-
-  todayWorkout: TodayWorkout | null;
-};
-
 export default function Dashboard() {
   const {
     stats: demoStats,
-    todayWorkout: rawDemoTodayWorkout,
+    todayWorkout: demoTodayWorkout,
     weeklyGoal: demoWeeklyGoal,
   } = dashboard;
-
-  /*
-   * Give the demo workout the exact same type
-   * as the API workout.
-   */
-  const demoTodayWorkout: TodayWorkout = {
-    routineId: undefined,
-    title: rawDemoTodayWorkout.title,
-    duration: rawDemoTodayWorkout.duration,
-    exercises: rawDemoTodayWorkout.exercises,
-  };
 
   const {
     data: session,
@@ -73,9 +44,7 @@ export default function Dashboard() {
   const [
     dashboardData,
     setDashboardData,
-  ] = useState<DashboardData | null>(
-    null,
-  );
+  ] = useState<DashboardData | null>(null);
 
   const [
     isDashboardLoading,
@@ -95,6 +64,7 @@ export default function Dashboard() {
       setDashboardData(null);
       setDashboardError(null);
       setIsDashboardLoading(false);
+
       return;
     }
 
@@ -105,19 +75,8 @@ export default function Dashboard() {
         setIsDashboardLoading(true);
         setDashboardError(null);
 
-        const response =
-          await fetch("/api/dashboard", {
-            credentials: "include",
-          });
-
-        if (!response.ok) {
-          throw new Error(
-            "Failed to load dashboard.",
-          );
-        }
-
         const data =
-          (await response.json()) as DashboardData;
+          await dashboardApi.get();
 
         if (!cancelled) {
           setDashboardData(data);
@@ -160,10 +119,17 @@ export default function Dashboard() {
       ? dashboardData.weeklyGoal
       : demoWeeklyGoal;
 
-  const todayWorkout: TodayWorkout | null =
+  const todayWorkout: DashboardTodayWorkout | null =
     isLoggedIn && dashboardData
       ? dashboardData.todayWorkout
-      : demoTodayWorkout;
+      : {
+          title: demoTodayWorkout.title,
+          duration:
+            demoTodayWorkout.duration,
+          exercises:
+            demoTodayWorkout.exercises,
+          routineId: "",
+        };
 
   const userName =
     session?.user?.name ?? "";

@@ -1,21 +1,42 @@
 import { MongoClient } from "mongodb";
 
-const uri = process.env.MONGODB_URI;
-
-if (!uri) {
-  throw new Error("MONGODB_URI is not configured.");
-}
-
-const globalForMongo = globalThis as typeof globalThis & {
-  mongoClient?: MongoClient;
+type RuntimeEnv = {
+  MONGODB_URI?: string;
 };
 
-export const mongoClient =
-  globalForMongo.mongoClient ??
-  new MongoClient(uri);
+const env = (
+  globalThis as typeof globalThis & {
+    process?: {
+      env: RuntimeEnv;
+    };
+  }
+).process?.env ?? {};
 
-if (process.env.NODE_ENV !== "production") {
-  globalForMongo.mongoClient = mongoClient;
+const mongodbUri = env.MONGODB_URI;
+
+if (!mongodbUri) {
+  throw new Error(
+    "MONGODB_URI is not configured.",
+  );
+}
+
+type GlobalMongo = typeof globalThis & {
+  __moosclesMongoClient?: MongoClient;
+};
+
+const globalMongo =
+  globalThis as GlobalMongo;
+
+export const mongoClient =
+  globalMongo.__moosclesMongoClient ??
+  new MongoClient(mongodbUri);
+
+if (
+  process.env.NODE_ENV !==
+  "production"
+) {
+  globalMongo.__moosclesMongoClient =
+    mongoClient;
 }
 
 export const database =

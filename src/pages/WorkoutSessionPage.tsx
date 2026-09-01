@@ -1,9 +1,4 @@
-import {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useEffect, useState } from "react";
 import {
   ArrowLeft,
   CheckCircle2,
@@ -23,10 +18,13 @@ import ExerciseCard from "../components/workout/ExerciseCard";
 import { routines } from "../data/routines";
 import { useRoutineStore } from "../stores/routineStore";
 
-import type { WorkoutExercise } from "../types/WorkoutExercise";
-import type { WorkoutSet } from "../types/WorkoutSet";
+import { useRestTimer } from "../hooks/useRestTimer";
+import { useWorkoutSession } from "../hooks/useWorkoutSession";
+import { useWorkoutTimer } from "../hooks/useWorkoutTimer";
 
 import { saveWorkoutSession } from "../utils/workoutStorage";
+
+import type { Routine } from "../types/Routine";
 
 export default function WorkoutSessionPage() {
   const navigate = useNavigate();
@@ -44,6 +42,14 @@ export default function WorkoutSessionPage() {
   const routine = allRoutines.find(
     (item) => item.id === routineId,
   );
+
+  useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: "auto",
+    });
+  }, []);
 
   if (!routine) {
     return (
@@ -83,16 +89,7 @@ export default function WorkoutSessionPage() {
 }
 
 type WorkoutSessionProps = {
-  routine: {
-    id: string;
-    name: string;
-    exercises: {
-      exercise: WorkoutExercise["exercise"];
-      targetSets: number;
-      targetReps: string;
-      restSeconds: number;
-    }[];
-  };
+  routine: Routine;
   onBack: () => void;
 };
 
@@ -102,491 +99,81 @@ function WorkoutSession({
 }: WorkoutSessionProps) {
   const navigate = useNavigate();
 
-  /*
-   * ---------------------------------------------------
-   * Workout start / timer
-   * ---------------------------------------------------
-   */
-
-  const [startedAt] = useState(
-    () => new Date().toISOString(),
-  );
-
-  const workoutStartMs = useMemo(
-    () => new Date(startedAt).getTime(),
-    [startedAt],
-  );
-
-  const [
-    elapsedSeconds,
-    setElapsedSeconds,
-  ] = useState(0);
-
-  const [isPaused, setIsPaused] =
-    useState(false);
-
-  const pauseStartedAtRef =
-    useRef<number | null>(null);
-
-  const totalPausedMsRef =
-    useRef(0);
-
-  useEffect(() => {
-    if (isPaused) {
-      return;
-    }
-
-    const updateElapsedTime = () => {
-      const now = Date.now();
-
-      const currentPausedMs =
-        pauseStartedAtRef.current !== null
-          ? now -
-            pauseStartedAtRef.current
-          : 0;
-
-      const activeMs = Math.max(
-        0,
-        now -
-          workoutStartMs -
-          totalPausedMsRef.current -
-          currentPausedMs,
-      );
-
-      setElapsedSeconds(
-        Math.floor(activeMs / 1000),
-      );
-    };
-
-    updateElapsedTime();
-
-    const interval = window.setInterval(
-      updateElapsedTime,
-      1000,
-    );
-
-    return () => {
-      window.clearInterval(interval);
-    };
-  }, [isPaused, workoutStartMs]);
-
-  function togglePause() {
-    if (isPaused) {
-      if (
-        pauseStartedAtRef.current !==
-        null
-      ) {
-        totalPausedMsRef.current +=
-          Date.now() -
-          pauseStartedAtRef.current;
-      }
-
-      pauseStartedAtRef.current = null;
-      setIsPaused(false);
-      return;
-    }
-
-    pauseStartedAtRef.current =
-      Date.now();
-
-    setIsPaused(true);
-  }
-
-  /*
-   * ---------------------------------------------------
-   * Workout exercises
-   * ---------------------------------------------------
-   */
-
-  const [
+  const {
+    startedAt,
     workoutExercises,
-    setWorkoutExercises,
-  ] = useState<WorkoutExercise[]>(() =>
-    routine.exercises.map(
-      (routineExercise) => {
-        const sets: WorkoutSet[] =
-          Array.from(
-            {
-              length:
-                routineExercise.targetSets,
-            },
-            (_, index) => ({
-              id: crypto.randomUUID(),
-              order: index + 1,
-              weight: 0,
-              reps: 0,
-              completed: false,
-            }),
-          );
+    completedSets,
+    totalSets,
+    progress,
+    totalVolume,
+    updateWeight,
+    commitWeight,
+    updateReps,
+    commitReps,
+    toggleSet,
+    createSession,
+  } = useWorkoutSession(routine);
 
-        return {
-          exercise:
-            routineExercise.exercise,
-          targetSets:
-            routineExercise.targetSets,
-          targetReps:
-            routineExercise.targetReps,
-          restSeconds:
-            routineExercise.restSeconds,
-          sets,
-        };
-      },
-    ),
-  );
+  const {
+    isPaused,
+    formattedTime,
+    togglePause,
+  } = useWorkoutTimer(startedAt);
 
-  /*
-   * Track whether weight/reps have already
-   * been auto-filled for each exercise.
-   *
-   * Once auto-fill happens, later changes
-   * affect only the selected set.
-   */
-  const autoFilledWeightExercises =
-    useRef(new Set<string>());
+  const {
+    restTime,
+    restDuration,
+    start: startRestTimer,
+    stop: stopRestTimer,
+    addTime,
+    removeTime,
+  } = useRestTimer();
 
-  const autoFilledRepExercises =
-    useRef(new Set<string>());
+  const [
+    isFinishing,
+    setIsFinishing,
+  ] = useState(false);
 
-  /*
-   * ---------------------------------------------------
-   * Rest timer
-   * ---------------------------------------------------
-   */
+  const [
+    saveError,
+    setSaveError,
+  ] = useState<string | null>(null);
 
-  const [restTime, setRestTime] =
-    useState<number | null>(null);
-
-  const [restDuration, setRestDuration] =
-    useState(0);
-
-  useEffect(() => {
-    if (restTime === null) {
-      return;
-    }
-
-    if (restTime <= 0) {
-      setRestTime(null);
-      setRestDuration(0);
-      return;
-    }
-
-    const interval =
-      window.setInterval(() => {
-        setRestTime((current) =>
-          current === null
-            ? null
-            : Math.max(
-                0,
-                current - 1,
-              ),
-        );
-      }, 1000);
-
-    return () => {
-      window.clearInterval(interval);
-    };
-  }, [restTime]);
-
-  function startRestTimer(
-    seconds: number,
-  ) {
-    if (seconds <= 0) {
-      return;
-    }
-
-    setRestDuration(seconds);
-    setRestTime(seconds);
-  }
-
-  function resetRestTimer() {
-    setRestTime(null);
-    setRestDuration(0);
-  }
-
-  /*
-   * ---------------------------------------------------
-   * Saving
-   * ---------------------------------------------------
-   */
-
-  const [isFinishing, setIsFinishing] =
-    useState(false);
-
-  const [saveError, setSaveError] =
-    useState<string | null>(null);
-
-  /*
-   * ---------------------------------------------------
-   * Workout calculations
-   * ---------------------------------------------------
-   */
-
-  const completedSets =
-    workoutExercises.reduce(
-      (total, exercise) =>
-        total +
-        exercise.sets.filter(
-          (set) => set.completed,
-        ).length,
-      0,
-    );
-
-  const totalSets =
-    workoutExercises.reduce(
-      (total, exercise) =>
-        total + exercise.sets.length,
-      0,
-    );
-
-  const progress =
-    totalSets > 0
-      ? (completedSets / totalSets) *
-        100
-      : 0;
-
-  const totalVolume = useMemo(() => {
-    return workoutExercises.reduce(
-      (total, exercise) =>
-        total +
-        exercise.sets.reduce(
-          (exerciseTotal, set) => {
-            if (!set.completed) {
-              return exerciseTotal;
-            }
-
-            return (
-              exerciseTotal +
-              set.weight * set.reps
-            );
-          },
-          0,
-        ),
-      0,
-    );
-  }, [workoutExercises]);
-
-  const formattedTime =
-    formatDuration(elapsedSeconds);
-
-  /*
-   * ---------------------------------------------------
-   * Update weight
-   * ---------------------------------------------------
-   *
-   * First non-zero weight entry:
-   *
-   * Set 1  → 60
-   *
-   * becomes:
-   *
-   * Set 1  → 60
-   * Set 2  → 60
-   * Set 3  → 60
-   *
-   * BUT only empty sets are filled.
-   * Existing values are never overwritten.
-   */
-
-  function updateWeight(
-    exerciseId: string,
-    setId: string,
-    newWeight: number,
-  ) {
-    setWorkoutExercises(
-      (previousExercises) =>
-        previousExercises.map(
-          (exercise) => {
-            if (
-              exercise.exercise.id !==
-              exerciseId
-            ) {
-              return exercise;
-            }
-
-            const currentSet =
-              exercise.sets.find(
-                (set) =>
-                  set.id === setId,
-              );
-
-            const shouldAutoFill =
-              newWeight > 0 &&
-              currentSet?.weight === 0 &&
-              !autoFilledWeightExercises.current.has(
-                exerciseId,
-              );
-
-            if (shouldAutoFill) {
-              autoFilledWeightExercises.current.add(
-                exerciseId,
-              );
-            }
-
-            return {
-              ...exercise,
-              sets: exercise.sets.map(
-                (set) => {
-                  if (
-                    set.id === setId
-                  ) {
-                    return {
-                      ...set,
-                      weight: newWeight,
-                    };
-                  }
-
-                  if (
-                    shouldAutoFill &&
-                    set.weight === 0
-                  ) {
-                    return {
-                      ...set,
-                      weight: newWeight,
-                    };
-                  }
-
-                  return set;
-                },
-              ),
-            };
-          },
-        ),
-    );
-  }
-
-  /*
-   * ---------------------------------------------------
-   * Update reps
-   * ---------------------------------------------------
-   *
-   * Same behavior as weight:
-   * first value fills empty sets only.
-   */
-
-  function updateReps(
-    exerciseId: string,
-    setId: string,
-    newReps: number,
-  ) {
-    setWorkoutExercises(
-      (previousExercises) =>
-        previousExercises.map(
-          (exercise) => {
-            if (
-              exercise.exercise.id !==
-              exerciseId
-            ) {
-              return exercise;
-            }
-
-            const currentSet =
-              exercise.sets.find(
-                (set) =>
-                  set.id === setId,
-              );
-
-            const shouldAutoFill =
-              newReps > 0 &&
-              currentSet?.reps === 0 &&
-              !autoFilledRepExercises.current.has(
-                exerciseId,
-              );
-
-            if (shouldAutoFill) {
-              autoFilledRepExercises.current.add(
-                exerciseId,
-              );
-            }
-
-            return {
-              ...exercise,
-              sets: exercise.sets.map(
-                (set) => {
-                  if (
-                    set.id === setId
-                  ) {
-                    return {
-                      ...set,
-                      reps: newReps,
-                    };
-                  }
-
-                  if (
-                    shouldAutoFill &&
-                    set.reps === 0
-                  ) {
-                    return {
-                      ...set,
-                      reps: newReps,
-                    };
-                  }
-
-                  return set;
-                },
-              ),
-            };
-          },
-        ),
-    );
-  }
-
-  /*
-   * ---------------------------------------------------
-   * Toggle completed set
-   * ---------------------------------------------------
-   */
-
-  function updateCompleted(
+  function handleToggleSet(
     exerciseId: string,
     setId: string,
   ) {
-    setWorkoutExercises(
-      (previousExercises) =>
-        previousExercises.map(
-          (exercise) => {
-            if (
-              exercise.exercise.id !==
-              exerciseId
-            ) {
-              return exercise;
-            }
+    const exercise =
+      workoutExercises.find(
+        (item) =>
+          item.exercise.id ===
+          exerciseId,
+      );
 
-            return {
-              ...exercise,
-              sets: exercise.sets.map(
-                (set) => {
-                  if (
-                    set.id !== setId
-                  ) {
-                    return set;
-                  }
+    if (!exercise) {
+      return;
+    }
 
-                  const completed =
-                    !set.completed;
-
-                  if (completed) {
-                    startRestTimer(
-                      exercise.restSeconds,
-                    );
-                  }
-
-                  return {
-                    ...set,
-                    completed,
-                  };
-                },
-              ),
-            };
-          },
-        ),
+    const set = exercise.sets.find(
+      (item) =>
+        item.id === setId,
     );
-  }
 
-  /*
-   * ---------------------------------------------------
-   * Finish workout
-   * ---------------------------------------------------
-   */
+    if (!set) {
+      return;
+    }
+
+    toggleSet(
+      exerciseId,
+      setId,
+    );
+
+    if (!set.completed) {
+      startRestTimer(
+        exercise.restSeconds,
+      );
+    }
+  }
 
   async function finishWorkout() {
     if (isFinishing) {
@@ -596,32 +183,8 @@ function WorkoutSession({
     setIsFinishing(true);
     setSaveError(null);
 
-    /*
-     * If the workout is currently paused,
-     * close the pause period before calculating
-     * the final active duration.
-     */
-    if (
-      pauseStartedAtRef.current !==
-      null
-    ) {
-      totalPausedMsRef.current +=
-        Date.now() -
-        pauseStartedAtRef.current;
-
-      pauseStartedAtRef.current = null;
-    }
-
-    const completedAt =
-      new Date().toISOString();
-
-    const session = {
-      id: crypto.randomUUID(),
-      routineId: routine.id,
-      startedAt,
-      completedAt,
-      exercises: workoutExercises,
-    };
+    const session =
+      createSession();
 
     try {
       await saveWorkoutSession(
@@ -646,12 +209,6 @@ function WorkoutSession({
       setIsFinishing(false);
     }
   }
-
-  /*
-   * ---------------------------------------------------
-   * Leave workout
-   * ---------------------------------------------------
-   */
 
   function handleBack() {
     const hasProgress =
@@ -727,8 +284,6 @@ function WorkoutSession({
               </div>
             </div>
 
-            {/* Timer */}
-
             <div className="flex items-center gap-2">
               <div className="rounded-2xl bg-[var(--surface-soft)] px-5 py-4 text-center">
                 <p className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
@@ -749,11 +304,6 @@ function WorkoutSession({
                     ? "Resume workout"
                     : "Pause workout"
                 }
-                title={
-                  isPaused
-                    ? "Resume workout"
-                    : "Pause workout"
-                }
               >
                 {isPaused ? (
                   <Play size={20} />
@@ -764,11 +314,9 @@ function WorkoutSession({
             </div>
           </div>
 
-          {/* Paused indicator */}
-
           {isPaused && (
             <div className="rounded-2xl border border-[var(--primary)]/20 bg-[var(--primary-soft)] px-4 py-3 text-sm font-semibold text-[var(--primary)]">
-              Workout paused. Your active workout
+              Workout paused. Active workout
               time is not increasing.
             </div>
           )}
@@ -799,36 +347,21 @@ function WorkoutSession({
           {/* Stats */}
 
           <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-            <div className="rounded-2xl bg-[var(--surface-soft)] p-4">
-              <p className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
-                Exercises
-              </p>
+            <WorkoutStat
+              label="Exercises"
+              value={workoutExercises.length}
+            />
 
-              <p className="mt-1 text-xl font-black text-[var(--text)]">
-                {workoutExercises.length}
-              </p>
-            </div>
+            <WorkoutStat
+              label="Completed sets"
+              value={completedSets}
+            />
 
-            <div className="rounded-2xl bg-[var(--surface-soft)] p-4">
-              <p className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
-                Completed sets
-              </p>
-
-              <p className="mt-1 text-xl font-black text-[var(--text)]">
-                {completedSets}
-              </p>
-            </div>
-
-            <div className="col-span-2 rounded-2xl bg-[var(--surface-soft)] p-4 md:col-span-1">
-              <p className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
-                Volume
-              </p>
-
-              <p className="mt-1 text-xl font-black text-[var(--text)]">
-                {totalVolume.toLocaleString()}{" "}
-                kg
-              </p>
-            </div>
+            <WorkoutStat
+              label="Volume"
+              value={`${totalVolume.toLocaleString()} kg`}
+              wide
+            />
           </div>
         </div>
       </section>
@@ -852,9 +385,7 @@ function WorkoutSession({
               </p>
 
               <p className="mt-1 text-2xl font-black text-[var(--text)]">
-                {formatDuration(
-                  restTime,
-                )}
+                {formatRestTime(restTime)}
               </p>
             </div>
 
@@ -862,14 +393,7 @@ function WorkoutSession({
               <button
                 type="button"
                 onClick={() =>
-                  setRestTime((current) =>
-                    current === null
-                      ? null
-                      : Math.max(
-                          0,
-                          current - 15,
-                        ),
-                  )
+                  removeTime(15)
                 }
                 className="rounded-xl border border-[var(--border-strong)] bg-[var(--surface)] px-4 py-2 text-sm font-semibold text-[var(--text)] transition hover:border-[var(--primary)]"
               >
@@ -879,9 +403,7 @@ function WorkoutSession({
               <button
                 type="button"
                 onClick={() =>
-                  setRestTime(
-                    restTime + 15,
-                  )
+                  addTime(15)
                 }
                 className="rounded-xl border border-[var(--border-strong)] bg-[var(--surface)] px-4 py-2 text-sm font-semibold text-[var(--text)] transition hover:border-[var(--primary)]"
               >
@@ -890,7 +412,7 @@ function WorkoutSession({
 
               <button
                 type="button"
-                onClick={resetRestTimer}
+                onClick={stopRestTimer}
                 className="flex items-center gap-2 rounded-xl bg-[var(--primary)] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[var(--primary-hover)]"
               >
                 <RotateCcw size={15} />
@@ -899,25 +421,23 @@ function WorkoutSession({
             </div>
           </div>
 
-          {restDuration > 0 && (
-            <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-[var(--surface)]">
-              <div
-                className="h-full rounded-full bg-[var(--primary)] transition-all duration-1000"
-                style={{
-                  width: `${
-                    restTime === null
-                      ? 0
-                      : Math.min(
-                          100,
-                          (restTime /
-                            restDuration) *
-                            100,
-                        )
-                  }%`,
-                }}
-              />
-            </div>
-          )}
+          <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-[var(--surface)]">
+            <div
+              className="h-full rounded-full bg-[var(--primary)] transition-all duration-1000"
+              style={{
+                width:
+                  restDuration > 0
+                    ? `${Math.min(
+                      100,
+                      (restTime /
+                        restDuration) *
+                      100,
+                    )
+                    }%`
+                    : "0%",
+              }}
+            />
+          </div>
         </section>
       )}
 
@@ -934,9 +454,11 @@ function WorkoutSession({
                 workoutExercise
               }
               updateWeight={updateWeight}
+              commitWeight={commitWeight}
               updateReps={updateReps}
+              commitReps={commitReps}
               updateCompleted={
-                updateCompleted
+                handleToggleSet
               }
             />
           ),
@@ -952,7 +474,7 @@ function WorkoutSession({
             className={
               completedSets ===
                 totalSets &&
-              totalSets > 0
+                totalSets > 0
                 ? "text-[var(--success)]"
                 : "text-[var(--text-muted)]"
             }
@@ -962,7 +484,7 @@ function WorkoutSession({
             <p className="font-bold text-[var(--text)]">
               {completedSets ===
                 totalSets &&
-              totalSets > 0
+                totalSets > 0
                 ? "Workout complete!"
                 : "Keep going!"}
             </p>
@@ -991,18 +513,48 @@ function WorkoutSession({
   );
 }
 
-function formatDuration(
-  totalSeconds: number,
+type WorkoutStatProps = {
+  label: string;
+  value: string | number;
+  wide?: boolean;
+};
+
+function WorkoutStat({
+  label,
+  value,
+  wide = false,
+}: WorkoutStatProps) {
+  return (
+    <div
+      className={`rounded-2xl bg-[var(--surface-soft)] p-4 ${wide
+          ? "col-span-2 md:col-span-1"
+          : ""
+        }`}
+    >
+      <p className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
+        {label}
+      </p>
+
+      <p className="mt-1 text-xl font-black text-[var(--text)]">
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function formatRestTime(
+  seconds: number,
 ) {
   const minutes = Math.floor(
-    totalSeconds / 60,
+    seconds / 60,
   );
 
-  const seconds = totalSeconds % 60;
+  const remainingSeconds =
+    seconds % 60;
 
   return `${minutes
     .toString()
-    .padStart(2, "0")}:${seconds
-    .toString()
-    .padStart(2, "0")}`;
+    .padStart(2, "0")}:${remainingSeconds
+      .toString()
+      .padStart(2, "0")}`;
 }

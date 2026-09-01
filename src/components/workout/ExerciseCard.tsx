@@ -1,19 +1,37 @@
-import { CheckCircle2, Circle } from "lucide-react";
+import {
+  CheckCircle2,
+  Circle,
+} from "lucide-react";
+
 import type { WorkoutExercise } from "../../types/WorkoutExercise";
+
 import SetRow from "./SetRow";
 
 type ExerciseCardProps = {
   workoutExercise: WorkoutExercise;
+
   updateWeight: (
     exerciseId: string,
     setId: string,
-    newWeight: number,
+    weight: number,
   ) => void;
+
+  commitWeight: (
+    exerciseId: string,
+    setId: string,
+  ) => void;
+
   updateReps: (
     exerciseId: string,
     setId: string,
-    newReps: number,
+    reps: number,
   ) => void;
+
+  commitReps: (
+    exerciseId: string,
+    setId: string,
+  ) => void;
+
   updateCompleted: (
     exerciseId: string,
     setId: string,
@@ -23,7 +41,9 @@ type ExerciseCardProps = {
 export default function ExerciseCard({
   workoutExercise,
   updateWeight,
+  commitWeight,
   updateReps,
+  commitReps,
   updateCompleted,
 }: ExerciseCardProps) {
   const {
@@ -34,15 +54,30 @@ export default function ExerciseCard({
     sets,
   } = workoutExercise;
 
-  const completedSets = sets.filter(
-    (set) => set.completed,
-  ).length;
+  const completedSets =
+    sets.filter(
+      (set) => set.completed,
+    ).length;
 
   const isCompleted =
-    sets.length > 0 && completedSets === sets.length;
+    sets.length > 0 &&
+    completedSets ===
+      sets.length;
 
   return (
-    <article className="rounded-[2rem] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm md:p-7">
+    <article
+      className="
+        rounded-[2rem]
+        border
+        border-[var(--border)]
+        bg-[var(--surface)]
+        p-5
+        shadow-sm
+        md:p-7
+      "
+    >
+      {/* Exercise header */}
+
       <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-start">
         <div>
           <div className="flex items-center gap-3">
@@ -64,31 +99,71 @@ export default function ExerciseCard({
           </div>
 
           <p className="mt-2 text-sm text-[var(--text-muted)]">
-            {exercise.muscleGroup} · {exercise.equipment}
+            {exercise.muscleGroup} ·{" "}
+            {exercise.equipment}
           </p>
 
           <p className="mt-4 text-sm font-semibold text-[var(--primary)]">
-            {targetSets} sets · {targetReps} reps · {restSeconds}s rest
+            {targetSets} sets ·{" "}
+            {targetReps} reps ·{" "}
+            {restSeconds}s rest
           </p>
         </div>
 
         <div
-          className={`rounded-full px-4 py-2 text-sm font-semibold ${
-            isCompleted
-              ? "bg-[var(--success)]/15 text-[var(--success)]"
-              : "bg-[var(--surface-soft)] text-[var(--text-muted)]"
-          }`}
+          className={`
+            rounded-full
+            px-4
+            py-2
+            text-sm
+            font-semibold
+            ${
+              isCompleted
+                ? "bg-[var(--success)]/15 text-[var(--success)]"
+                : "bg-[var(--surface-soft)] text-[var(--text-muted)]"
+            }
+          `}
         >
-          {completedSets}/{sets.length} complete
+          {completedSets}/
+          {sets.length} complete
         </div>
       </div>
 
+      {/* Set table */}
+
       <div className="mt-7">
-        <div className="mb-3 grid grid-cols-[48px_1fr_1fr_58px] gap-3 px-3 text-xs font-bold uppercase tracking-[0.18em] text-[var(--text-muted)] md:grid-cols-[60px_1fr_1fr_70px] md:gap-4 md:px-4">
-          <div className="text-center">Set</div>
-          <div className="text-center">Weight</div>
-          <div className="text-center">Reps</div>
-          <div className="text-center">Done</div>
+        <div
+          className="
+            mb-3
+            grid
+            grid-cols-[48px_1fr_1fr_58px]
+            gap-3
+            px-3
+            text-xs
+            font-bold
+            uppercase
+            tracking-[0.18em]
+            text-[var(--text-muted)]
+            md:grid-cols-[60px_1fr_1fr_70px]
+            md:gap-4
+            md:px-4
+          "
+        >
+          <div className="text-center">
+            Set
+          </div>
+
+          <div className="text-center">
+            Weight
+          </div>
+
+          <div className="text-center">
+            Reps
+          </div>
+
+          <div className="text-center">
+            Done
+          </div>
         </div>
 
         <div className="space-y-2">
@@ -97,13 +172,38 @@ export default function ExerciseCard({
               key={set.id}
               workoutSet={set}
               onToggle={() =>
-                updateCompleted(exercise.id, set.id)
+                updateCompleted(
+                  exercise.id,
+                  set.id,
+                )
               }
-              onWeightChange={(weight) =>
-                updateWeight(exercise.id, set.id, weight)
+              onWeightChange={(
+                weight,
+              ) =>
+                updateWeight(
+                  exercise.id,
+                  set.id,
+                  weight,
+                )
+              }
+              onWeightCommit={() =>
+                commitWeight(
+                  exercise.id,
+                  set.id,
+                )
               }
               onRepsChange={(reps) =>
-                updateReps(exercise.id, set.id, reps)
+                updateReps(
+                  exercise.id,
+                  set.id,
+                  reps,
+                )
+              }
+              onRepsCommit={() =>
+                commitReps(
+                  exercise.id,
+                  set.id,
+                )
               }
             />
           ))}

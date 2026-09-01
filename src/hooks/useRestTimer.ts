@@ -1,0 +1,88 @@
+import { useEffect, useState } from "react";
+
+type RestTimer = {
+  restTime: number | null;
+  restDuration: number;
+  start: (seconds: number) => void;
+  stop: () => void;
+  addTime: (seconds: number) => void;
+  removeTime: (seconds: number) => void;
+};
+
+export function useRestTimer(): RestTimer {
+  const [restTime, setRestTime] =
+    useState<number | null>(null);
+
+  const [restDuration, setRestDuration] =
+    useState(0);
+
+  useEffect(() => {
+    if (restTime === null) {
+      return;
+    }
+
+    if (restTime <= 0) {
+      setRestTime(null);
+      setRestDuration(0);
+      return;
+    }
+
+    const interval =
+      window.setInterval(() => {
+        setRestTime((current) =>
+          current === null
+            ? null
+            : Math.max(
+                0,
+                current - 1,
+              ),
+        );
+      }, 1000);
+
+    return () => {
+      window.clearInterval(interval);
+    };
+  }, [restTime]);
+
+  function start(seconds: number) {
+    if (seconds <= 0) {
+      return;
+    }
+
+    setRestDuration(seconds);
+    setRestTime(seconds);
+  }
+
+  function stop() {
+    setRestTime(null);
+    setRestDuration(0);
+  }
+
+  function addTime(seconds: number) {
+    setRestTime((current) =>
+      current === null
+        ? null
+        : current + seconds,
+    );
+  }
+
+  function removeTime(seconds: number) {
+    setRestTime((current) =>
+      current === null
+        ? null
+        : Math.max(
+            0,
+            current - seconds,
+          ),
+    );
+  }
+
+  return {
+    restTime,
+    restDuration,
+    start,
+    stop,
+    addTime,
+    removeTime,
+  };
+}

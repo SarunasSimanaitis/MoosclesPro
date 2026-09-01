@@ -4,11 +4,13 @@ import {
 } from "lucide-react";
 import type {
   KeyboardEvent,
+  WheelEvent,
 } from "react";
 
 type NumberStepperProps = {
   value: number;
   onChange: (value: number) => void;
+  onCommit?: () => void;
   min?: number;
   max?: number;
   step?: number;
@@ -20,6 +22,7 @@ type NumberStepperProps = {
 export default function NumberStepper({
   value,
   onChange,
+  onCommit,
   min = 0,
   max,
   step = 1,
@@ -27,19 +30,26 @@ export default function NumberStepper({
   ariaLabel = "Number",
   className = "",
 }: NumberStepperProps) {
-  function clamp(nextValue: number) {
+  function clamp(
+    nextValue: number,
+  ) {
     if (!Number.isFinite(nextValue)) {
       return min;
     }
 
-    if (max !== undefined) {
-      return Math.min(
-        max,
-        Math.max(min, nextValue),
-      );
+    const minimumValue = Math.max(
+      min,
+      nextValue,
+    );
+
+    if (max === undefined) {
+      return minimumValue;
     }
 
-    return Math.max(min, nextValue);
+    return Math.min(
+      max,
+      minimumValue,
+    );
   }
 
   function updateValue(
@@ -50,26 +60,56 @@ export default function NumberStepper({
     );
   }
 
-  function decrement() {
-    updateValue(value - step);
+  function increment() {
+    updateValue(
+      value + step,
+    );
+    onCommit?.();
   }
 
-  function increment() {
-    updateValue(value + step);
+  function decrement() {
+    updateValue(
+      value - step,
+    );
+    onCommit?.();
   }
 
   function handleKeyDown(
     event: KeyboardEvent<HTMLInputElement>,
   ) {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      onCommit?.();
+      event.currentTarget.blur();
+      return;
+    }
+
     if (event.key === "ArrowUp") {
       event.preventDefault();
-      increment();
+      updateValue(
+        value + step,
+      );
+      onCommit?.();
+      return;
     }
 
     if (event.key === "ArrowDown") {
       event.preventDefault();
-      decrement();
+      updateValue(
+        value - step,
+      );
+      onCommit?.();
     }
+  }
+
+  function handleWheel(
+    event: WheelEvent<HTMLInputElement>,
+  ) {
+    /*
+     * Prevent accidental value changes while
+     * scrolling the workout page.
+     */
+    event.currentTarget.blur();
   }
 
   return (
@@ -86,7 +126,11 @@ export default function NumberStepper({
         focus-within:border-[var(--primary)]
         focus-within:ring-2
         focus-within:ring-[var(--primary-soft)]
-        ${disabled ? "opacity-50" : ""}
+        ${
+          disabled
+            ? "opacity-50"
+            : ""
+        }
         ${className}
       `}
     >
@@ -136,12 +180,8 @@ export default function NumberStepper({
         step={step}
         disabled={disabled}
         aria-label={ariaLabel}
-        onKeyDown={
-          handleKeyDown
-        }
-        onChange={(
-          event,
-        ) => {
+        placeholder="0"
+        onChange={(event) => {
           const rawValue =
             event.target.value;
 
@@ -158,16 +198,18 @@ export default function NumberStepper({
               parsedValue,
             )
           ) {
-            onChange(
-              clamp(
-                parsedValue,
-              ),
-            );
+            onChange(parsedValue);
           }
         }}
+        onBlur={onCommit}
+        onKeyDown={
+          handleKeyDown
+        }
+        onWheel={handleWheel}
         className="
           min-w-0
           flex-1
+          appearance-none
           bg-transparent
           px-2
           py-2
@@ -177,7 +219,6 @@ export default function NumberStepper({
           outline-none
           placeholder:text-[var(--text-muted)]
         "
-        placeholder="0"
       />
 
       <button

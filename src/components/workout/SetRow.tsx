@@ -7,15 +7,27 @@ import type { WorkoutSet } from "../../types/WorkoutSet";
 type SetRowProps = {
   workoutSet: WorkoutSet;
   onToggle: () => void;
-  onWeightChange: (weight: number) => void;
-  onRepsChange: (reps: number) => void;
+
+  onWeightChange: (
+    weight: number,
+  ) => void;
+
+  onWeightCommit: () => void;
+
+  onRepsChange: (
+    reps: number,
+  ) => void;
+
+  onRepsCommit: () => void;
 };
 
 export default function SetRow({
   workoutSet,
   onToggle,
   onWeightChange,
+  onWeightCommit,
   onRepsChange,
+  onRepsCommit,
 }: SetRowProps) {
   return (
     <div
@@ -37,7 +49,10 @@ export default function SetRow({
     >
       {/* Set number */}
 
-      <div className="text-center font-semibold text-[var(--text-muted)]">
+      <div
+        aria-label={`Set ${workoutSet.order}`}
+        className="text-center font-semibold text-[var(--text-muted)]"
+      >
         {workoutSet.order}
       </div>
 
@@ -46,6 +61,7 @@ export default function SetRow({
       <NumberStepper
         value={workoutSet.weight}
         onChange={onWeightChange}
+        onCommit={onWeightCommit}
         min={0}
         step={0.5}
         ariaLabel={`Weight for set ${workoutSet.order}`}
@@ -56,6 +72,7 @@ export default function SetRow({
       <NumberStepper
         value={workoutSet.reps}
         onChange={onRepsChange}
+        onCommit={onRepsCommit}
         min={0}
         step={1}
         ariaLabel={`Reps for set ${workoutSet.order}`}
@@ -80,6 +97,9 @@ export default function SetRow({
           justify-center
           rounded-xl
           transition
+          focus:outline-none
+          focus:ring-2
+          focus:ring-[var(--primary-soft)]
           ${
             workoutSet.completed
               ? "bg-[var(--success)] text-white"

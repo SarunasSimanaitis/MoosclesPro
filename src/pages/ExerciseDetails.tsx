@@ -5,7 +5,6 @@ import {
   ExternalLink,
   Play,
   Plus,
-  X,
 } from "lucide-react";
 import {
   NavLink,
@@ -14,35 +13,67 @@ import {
 } from "react-router-dom";
 import { useState } from "react";
 
+import { routinesApi } from "../api/routines";
 import { exercises } from "../data/exercises";
 import { useRoutineStore } from "../stores/routineStore";
 
 import Badge from "../components/ui/Badge";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
+import Modal from "../components/ui/Modal";
 
 export default function ExerciseDetails() {
-  const { exerciseId } = useParams();
+  const { exerciseId } =
+    useParams<{
+      exerciseId: string;
+    }>();
+
   const navigate = useNavigate();
 
   const [showRoutinePicker, setShowRoutinePicker] =
     useState(false);
 
-  const [addedRoutineId, setAddedRoutineId] =
-    useState<string | null>(null);
-
-  const customRoutines = useRoutineStore(
-    (state) => state.customRoutines,
+  const [
+    addedRoutineIds,
+    setAddedRoutineIds,
+  ] = useState<Set<string>>(
+    () => new Set(),
   );
 
-  const addExerciseToRoutine = useRoutineStore(
-    (state) => state.addExerciseToRoutine,
+  const [
+    addingRoutineId,
+    setAddingRoutineId,
+  ] = useState<string | null>(
+    null,
   );
+
+  const [
+    addError,
+    setAddError,
+  ] = useState<string | null>(
+    null,
+  );
+
+  const customRoutines =
+    useRoutineStore(
+      (state) => state.customRoutines,
+    );
+
+  const updateRoutine =
+    useRoutineStore(
+      (state) => state.updateRoutine,
+    );
 
   const exercise = exercises.find(
     (item) => item.id === exerciseId,
   );
 
+  /*
+   * Keep a narrowed, non-optional reference.
+   * This is important because nested callbacks don't
+   * inherit TypeScript's control-flow narrowing of
+   * the outer variable.
+   */
   if (!exercise) {
     return (
       <main className="mx-auto max-w-4xl py-10">
@@ -56,12 +87,15 @@ export default function ExerciseDetails() {
           </h1>
 
           <p className="mt-2 text-[var(--text-muted)]">
-            This exercise doesn't exist in the current exercise library.
+            This exercise doesn't exist in the
+            current exercise library.
           </p>
 
           <Button
             variant="secondary"
-            onClick={() => navigate("/exercises")}
+            onClick={() =>
+              navigate("/exercises")
+            }
             className="mt-6"
           >
             <ArrowLeft size={17} />
@@ -72,30 +106,110 @@ export default function ExerciseDetails() {
     );
   }
 
-const selectedExercise = exercise;
+  const selectedExercise =
+    exercise;
 
-function handleAddToRoutine(routineId: string) {
-  addExerciseToRoutine(routineId, {
-    exercise: selectedExercise,
-    targetSets: 3,
-    targetReps: "8-12",
-    restSeconds: 90,
-  });
+  async function handleAddToRoutine(
+    routineId: string,
+  ) {
+    const routine =
+      customRoutines.find(
+        (item) =>
+          item.id === routineId,
+      );
 
-  setAddedRoutineId(routineId);
+    if (!routine) {
+      return;
+    }
 
-  setTimeout(() => {
+    const alreadyExists =
+      routine.exercises.some(
+        (routineExercise) =>
+          routineExercise.exercise.id ===
+          selectedExercise.id,
+      );
+
+    if (alreadyExists) {
+      return;
+    }
+
+    try {
+      setAddingRoutineId(
+        routineId,
+      );
+      setAddError(null);
+
+      const updatedRoutine = {
+        ...routine,
+        exercises: [
+          ...routine.exercises,
+          {
+            exercise: selectedExercise,
+            targetSets: 3,
+            targetReps: "8-12",
+            restSeconds: 90,
+          },
+        ],
+      };
+
+      const savedRoutine =
+        await routinesApi.update(
+          updatedRoutine,
+        );
+
+      updateRoutine(
+        savedRoutine,
+      );
+
+      setAddedRoutineIds(
+        (current) => {
+          const next =
+            new Set(current);
+
+          next.add(routineId);
+
+          return next;
+        },
+      );
+    } catch (error) {
+      console.error(
+        "Failed to add exercise to routine:",
+        error,
+      );
+
+      setAddError(
+        error instanceof Error
+          ? error.message
+          : "Could not add the exercise. Please try again.",
+      );
+    } finally {
+      setAddingRoutineId(null);
+    }
+  }
+
+  function closeRoutinePicker() {
     setShowRoutinePicker(false);
-    setAddedRoutineId(null);
-  }, 700);
-}
+    setAddError(null);
+    setAddedRoutineIds(
+      new Set(),
+    );
+  }
 
   return (
     <main className="space-y-8">
       {/* Back */}
       <NavLink
         to="/exercises"
-        className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--text-muted)] transition hover:text-[var(--primary)]"
+        className="
+          inline-flex
+          items-center
+          gap-2
+          text-sm
+          font-semibold
+          text-[var(--text-muted)]
+          transition-colors
+          hover:text-[var(--primary)]
+        "
       >
         <ArrowLeft size={17} />
         Exercise Library
@@ -106,10 +220,12 @@ function handleAddToRoutine(routineId: string) {
         {/* Media */}
         <Card className="overflow-hidden p-0">
           <div className="relative flex min-h-[360px] items-center justify-center overflow-hidden bg-[var(--surface-soft)] md:min-h-[460px]">
-            {exercise.imageUrl ? (
+            {selectedExercise.imageUrl ? (
               <img
-                src={exercise.imageUrl}
-                alt={exercise.name}
+                src={selectedExercise.imageUrl}
+                alt={
+                  selectedExercise.name
+                }
                 className="h-full w-full object-cover"
               />
             ) : (
@@ -123,21 +239,44 @@ function handleAddToRoutine(routineId: string) {
                 </p>
 
                 <p className="mt-2 max-w-sm text-sm leading-relaxed text-[var(--text-muted)]">
-                  Exercise imagery or video can be added here when media is
-                  available.
+                  Exercise imagery or video
+                  can be added here when
+                  media is available.
                 </p>
               </div>
             )}
 
-            {exercise.videoUrl && (
+            {selectedExercise.videoUrl && (
               <a
-                href={exercise.videoUrl}
+                href={
+                  selectedExercise.videoUrl
+                }
                 target="_blank"
                 rel="noreferrer"
-                className="absolute bottom-5 right-5 inline-flex items-center gap-2 rounded-xl bg-[var(--text)] px-4 py-3 text-sm font-semibold text-[var(--surface)] shadow-lg transition hover:opacity-90"
+                className="
+                  absolute
+                  bottom-5
+                  right-5
+                  inline-flex
+                  items-center
+                  gap-2
+                  rounded-[var(--radius-md)]
+                  bg-[var(--text)]
+                  px-4
+                  py-3
+                  text-sm
+                  font-semibold
+                  text-[var(--background)]
+                  shadow-[var(--shadow-md)]
+                  transition-opacity
+                  hover:opacity-90
+                  focus-visible:outline-none
+                  focus-visible:ring-2
+                  focus-visible:ring-[var(--primary)]
+                "
               >
                 <Play size={16} />
-                Watch Video
+                Watch video
                 <ExternalLink size={14} />
               </a>
             )}
@@ -148,38 +287,50 @@ function handleAddToRoutine(routineId: string) {
         <Card className="flex flex-col p-7 md:p-9">
           <div className="flex flex-wrap gap-2">
             <Badge variant="primary">
-              {exercise.category}
+              {selectedExercise.category}
             </Badge>
 
             <Badge>
-              {exercise.muscleGroup}
+              {
+                selectedExercise.muscleGroup
+              }
             </Badge>
 
             <Badge>
-              {exercise.equipment}
+              {
+                selectedExercise.equipment
+              }
             </Badge>
           </div>
 
           <h1 className="mt-6 text-4xl font-black tracking-tight text-[var(--text)] md:text-5xl">
-            {exercise.name}
+            {selectedExercise.name}
           </h1>
 
           <p className="mt-4 leading-relaxed text-[var(--text-muted)]">
-            A structured {exercise.category.toLowerCase()} exercise
-            targeting the {exercise.muscleGroup.toLowerCase()}.
+            A structured{" "}
+            {selectedExercise.category.toLowerCase()}{" "}
+            exercise targeting the{" "}
+            {selectedExercise.muscleGroup.toLowerCase()}.
           </p>
 
           <div className="mt-8 space-y-6">
             <MuscleSection
               title="Primary Muscles"
-              muscles={exercise.primaryMuscles}
+              muscles={
+                selectedExercise.primaryMuscles
+              }
               primary
             />
 
-            {exercise.secondaryMuscles.length > 0 && (
+            {selectedExercise
+              .secondaryMuscles.length >
+              0 && (
               <MuscleSection
                 title="Secondary Muscles"
-                muscles={exercise.secondaryMuscles}
+                muscles={
+                  selectedExercise.secondaryMuscles
+                }
               />
             )}
           </div>
@@ -187,7 +338,15 @@ function handleAddToRoutine(routineId: string) {
           <div className="mt-auto pt-8">
             <Button
               className="w-full"
-              onClick={() => setShowRoutinePicker(true)}
+              onClick={() => {
+                setAddError(null);
+                setAddedRoutineIds(
+                  new Set(),
+                );
+                setShowRoutinePicker(
+                  true,
+                );
+              }}
             >
               <Plus size={18} />
               Add to Routine
@@ -209,12 +368,16 @@ function handleAddToRoutine(routineId: string) {
         </div>
 
         <Card className="p-7 md:p-9">
-          {exercise.instructions.length > 0 ? (
+          {selectedExercise.instructions
+            .length > 0 ? (
             <ol className="space-y-6">
-              {exercise.instructions.map(
-                (instruction, index) => (
+              {selectedExercise.instructions.map(
+                (
+                  instruction,
+                  index,
+                ) => (
                   <li
-                    key={`${exercise.id}-instruction-${index}`}
+                    key={`${selectedExercise.id}-instruction-${index}`}
                     className="flex gap-5"
                   >
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[var(--primary-soft)] text-sm font-black text-[var(--primary)]">
@@ -230,143 +393,206 @@ function handleAddToRoutine(routineId: string) {
             </ol>
           ) : (
             <p className="text-[var(--text-muted)]">
-              No instructions have been added for this exercise yet.
+              No instructions have been
+              added for this exercise yet.
             </p>
           )}
         </Card>
       </section>
 
-      {/* Training Information */}
+      {/* Training information */}
       <section className="grid gap-5 md:grid-cols-3">
         <InfoCard
           label="Muscle Group"
-          value={exercise.muscleGroup}
+          value={
+            selectedExercise.muscleGroup
+          }
         />
 
         <InfoCard
           label="Equipment"
-          value={exercise.equipment}
+          value={
+            selectedExercise.equipment
+          }
         />
 
         <InfoCard
           label="Category"
-          value={exercise.category}
+          value={
+            selectedExercise.category
+          }
         />
       </section>
 
-      {/* Routine Picker */}
-      {showRoutinePicker && (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-5 backdrop-blur-sm"
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget) {
-              setShowRoutinePicker(false);
-            }
-          }}
-        >
-          <div className="w-full max-w-lg rounded-[2rem] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-2xl md:p-8">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--primary)]">
-                  Add Exercise
-                </p>
+      {/* Routine picker */}
+      <Modal
+        open={showRoutinePicker}
+        onClose={closeRoutinePicker}
+        title="Choose a routine"
+        description={`Add ${selectedExercise.name} to one of your custom routines.`}
+        size="md"
+      >
+        {addError && (
+          <div
+            role="alert"
+            className="
+              mb-5
+              rounded-[var(--radius-md)]
+              border
+              border-[var(--danger)]/30
+              bg-[var(--danger-soft)]
+              p-4
+              text-sm
+              font-medium
+              text-[var(--danger)]
+            "
+          >
+            {addError}
+          </div>
+        )}
 
-                <h2 className="mt-2 text-2xl font-black text-[var(--text)]">
-                  Choose a routine
-                </h2>
-
-                <p className="mt-2 text-sm text-[var(--text-muted)]">
-                  Add {exercise.name} to one of your custom routines.
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setShowRoutinePicker(false)}
-                className="flex h-9 w-9 items-center justify-center rounded-xl text-[var(--text-muted)] transition hover:bg-[var(--surface-soft)] hover:text-[var(--text)]"
-                aria-label="Close"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            {customRoutines.length > 0 ? (
-              <div className="mt-6 space-y-3">
-                {customRoutines.map((routine) => {
-                  const alreadyExists =
-                    routine.exercises.some(
-                      (routineExercise) =>
-                        routineExercise.exercise.id === exercise.id,
-                    );
-
-                  const wasAdded =
-                    addedRoutineId === routine.id;
-
-                  return (
-                    <button
-                      key={routine.id}
-                      type="button"
-                      disabled={alreadyExists || wasAdded}
-                      onClick={() =>
-                        handleAddToRoutine(routine.id)
-                      }
-                      className="flex w-full items-center justify-between rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-4 text-left transition hover:border-[var(--primary)] disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      <div>
-                        <p className="font-bold text-[var(--text)]">
-                          {routine.name}
-                        </p>
-
-                        <p className="mt-1 text-sm text-[var(--text-muted)]">
-                          {routine.exercises.length} exercises
-                        </p>
-                      </div>
-
-                      {wasAdded ? (
-                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--success)] text-white">
-                          <Check size={18} />
-                        </div>
-                      ) : alreadyExists ? (
-                        <span className="text-xs font-semibold text-[var(--text-muted)]">
-                          Already added
-                        </span>
-                      ) : (
-                        <Plus
-                          size={19}
-                          className="text-[var(--primary)]"
-                        />
-                      )}
-                    </button>
+        {customRoutines.length > 0 ? (
+          <div className="space-y-3">
+            {customRoutines.map(
+              (routine) => {
+                const alreadyExists =
+                  routine.exercises.some(
+                    (
+                      routineExercise,
+                    ) =>
+                      routineExercise
+                        .exercise.id ===
+                      selectedExercise.id,
                   );
-                })}
-              </div>
-            ) : (
-              <div className="mt-6 rounded-2xl border border-dashed border-[var(--border-strong)] p-8 text-center">
-                <Dumbbell
-                  size={26}
-                  className="mx-auto text-[var(--text-muted)]"
-                />
 
-                <h3 className="mt-4 font-bold text-[var(--text)]">
-                  No custom routines yet
-                </h3>
+                const wasAdded =
+                  addedRoutineIds.has(
+                    routine.id,
+                  );
 
-                <p className="mt-2 text-sm text-[var(--text-muted)]">
-                  Create a routine first, then you can add exercises to it.
-                </p>
+                const isAdding =
+                  addingRoutineId ===
+                  routine.id;
 
-                <Button
-                  onClick={() => navigate("/workouts/create")}
-                  className="mt-5"
-                >
-                  <Plus size={17} />
-                  Create Routine
-                </Button>
-              </div>
+                return (
+                  <button
+                    key={routine.id}
+                    type="button"
+                    disabled={
+                      alreadyExists ||
+                      wasAdded ||
+                      isAdding
+                    }
+                    onClick={() =>
+                      void handleAddToRoutine(
+                        routine.id,
+                      )
+                    }
+                    className="
+                      flex
+                      w-full
+                      items-center
+                      justify-between
+                      gap-4
+                      rounded-[var(--radius-lg)]
+                      border
+                      border-[var(--border)]
+                      bg-[var(--surface-soft)]
+                      p-4
+                      text-left
+                      transition-[background-color,border-color,opacity]
+                      duration-150
+                      hover:border-[var(--primary)]
+                      hover:bg-[var(--surface-hover)]
+                      disabled:cursor-not-allowed
+                      disabled:opacity-65
+                      focus-visible:outline-none
+                      focus-visible:ring-2
+                      focus-visible:ring-[var(--primary)]
+                    "
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate font-bold text-[var(--text)]">
+                        {routine.name}
+                      </p>
+
+                      <p className="mt-1 text-sm text-[var(--text-muted)]">
+                        {routine.exercises.length}{" "}
+                        {routine.exercises.length ===
+                        1
+                          ? "exercise"
+                          : "exercises"}
+                      </p>
+                    </div>
+
+                    {wasAdded ? (
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--success)] text-white">
+                        <Check
+                          size={18}
+                        />
+                      </div>
+                    ) : alreadyExists ? (
+                      <span className="shrink-0 text-xs font-semibold text-[var(--text-muted)]">
+                        Already added
+                      </span>
+                    ) : isAdding ? (
+                      <span className="shrink-0 text-xs font-semibold text-[var(--primary)]">
+                        Adding...
+                      </span>
+                    ) : (
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--primary-soft)] text-[var(--primary)]">
+                        <Plus size={19} />
+                      </div>
+                    )}
+                  </button>
+                );
+              },
             )}
           </div>
-        </div>
-      )}
+        ) : (
+          <div className="rounded-[var(--radius-lg)] border border-dashed border-[var(--border-strong)] p-8 text-center">
+            <Dumbbell
+              size={26}
+              className="mx-auto text-[var(--text-muted)]"
+            />
+
+            <h3 className="mt-4 font-bold text-[var(--text)]">
+              No custom routines yet
+            </h3>
+
+            <p className="mt-2 text-sm leading-relaxed text-[var(--text-muted)]">
+              Create a routine first, then
+              you can add exercises to it.
+            </p>
+
+            <Button
+              onClick={() => {
+                closeRoutinePicker();
+                navigate(
+                  "/workouts/create",
+                );
+              }}
+              className="mt-5"
+            >
+              <Plus size={17} />
+              Create Routine
+            </Button>
+          </div>
+        )}
+
+        {customRoutines.length > 0 && (
+          <div className="mt-6 flex justify-end border-t border-[var(--border)] pt-5">
+            <Button
+              variant="secondary"
+              onClick={
+                closeRoutinePicker
+              }
+            >
+              Done
+            </Button>
+          </div>
+        )}
+      </Modal>
     </main>
   );
 }
@@ -392,11 +618,18 @@ function MuscleSection({
         {muscles.map((muscle) => (
           <span
             key={muscle}
-            className={`rounded-xl px-3 py-2 text-sm font-semibold ${
-              primary
-                ? "bg-[var(--primary-soft)] text-[var(--primary)]"
-                : "bg-[var(--surface-soft)] text-[var(--text-muted)]"
-            }`}
+            className={`
+              rounded-xl
+              px-3
+              py-2
+              text-sm
+              font-semibold
+              ${
+                primary
+                  ? "bg-[var(--primary-soft)] text-[var(--primary)]"
+                  : "bg-[var(--surface-soft)] text-[var(--text-muted)]"
+              }
+            `}
           >
             {muscle}
           </span>

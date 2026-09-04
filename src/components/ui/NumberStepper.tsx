@@ -3,6 +3,7 @@ import {
   Plus,
 } from "lucide-react";
 import type {
+  ChangeEvent,
   KeyboardEvent,
   WheelEvent,
 } from "react";
@@ -86,18 +87,22 @@ export default function NumberStepper({
 
     if (event.key === "ArrowUp") {
       event.preventDefault();
+
       updateValue(
         value + step,
       );
+
       onCommit?.();
       return;
     }
 
     if (event.key === "ArrowDown") {
       event.preventDefault();
+
       updateValue(
         value - step,
       );
+
       onCommit?.();
     }
   }
@@ -106,10 +111,51 @@ export default function NumberStepper({
     event: WheelEvent<HTMLInputElement>,
   ) {
     /*
-     * Prevent accidental value changes while
-     * scrolling the workout page.
+     * Never let scrolling the workout page accidentally
+     * modify the currently focused value.
      */
     event.currentTarget.blur();
+  }
+
+  function handleChange(
+    event: ChangeEvent<HTMLInputElement>,
+  ) {
+    const rawValue =
+      event.target.value;
+
+    if (rawValue === "") {
+      onChange(0);
+      return;
+    }
+
+    /*
+     * Allow decimal values when the step requires them.
+     * The actual value is still normalized by updateValue
+     * when using the +/- controls.
+     */
+    const decimalPattern =
+      step < 1
+        ? /^\d*(?:\.\d*)?$/
+        : /^\d*$/;
+
+    if (
+      !decimalPattern.test(
+        rawValue,
+      )
+    ) {
+      return;
+    }
+
+    const parsedValue =
+      Number(rawValue);
+
+    if (
+      Number.isFinite(
+        parsedValue,
+      )
+    ) {
+      onChange(parsedValue);
+    }
   }
 
   return (
@@ -122,7 +168,8 @@ export default function NumberStepper({
         border
         border-[var(--border-strong)]
         bg-[var(--surface)]
-        transition
+        transition-[border-color,box-shadow,background-color]
+        duration-150
         focus-within:border-[var(--primary)]
         focus-within:ring-2
         focus-within:ring-[var(--primary-soft)]
@@ -155,6 +202,10 @@ export default function NumberStepper({
           hover:text-[var(--primary)]
           disabled:cursor-not-allowed
           disabled:opacity-30
+          focus-visible:outline-none
+          focus-visible:ring-2
+          focus-visible:ring-inset
+          focus-visible:ring-[var(--primary)]
         "
       >
         <Minus
@@ -164,7 +215,7 @@ export default function NumberStepper({
       </button>
 
       <input
-        type="number"
+        type="text"
         inputMode={
           step < 1
             ? "decimal"
@@ -173,38 +224,14 @@ export default function NumberStepper({
         value={
           value === 0
             ? ""
-            : value
+            : String(value)
         }
-        min={min}
-        max={max}
-        step={step}
         disabled={disabled}
         aria-label={ariaLabel}
         placeholder="0"
-        onChange={(event) => {
-          const rawValue =
-            event.target.value;
-
-          if (rawValue === "") {
-            onChange(0);
-            return;
-          }
-
-          const parsedValue =
-            Number(rawValue);
-
-          if (
-            Number.isFinite(
-              parsedValue,
-            )
-          ) {
-            onChange(parsedValue);
-          }
-        }}
+        onChange={handleChange}
         onBlur={onCommit}
-        onKeyDown={
-          handleKeyDown
-        }
+        onKeyDown={handleKeyDown}
         onWheel={handleWheel}
         className="
           min-w-0
@@ -218,6 +245,8 @@ export default function NumberStepper({
           text-[var(--text)]
           outline-none
           placeholder:text-[var(--text-muted)]
+          [&::-webkit-inner-spin-button]:appearance-none
+          [&::-webkit-outer-spin-button]:appearance-none
         "
       />
 
@@ -243,6 +272,10 @@ export default function NumberStepper({
           hover:text-[var(--primary)]
           disabled:cursor-not-allowed
           disabled:opacity-30
+          focus-visible:outline-none
+          focus-visible:ring-2
+          focus-visible:ring-inset
+          focus-visible:ring-[var(--primary)]
         "
       >
         <Plus

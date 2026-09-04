@@ -34,24 +34,15 @@ export default function WorkoutSessionHeader({
   onTogglePause,
 }: WorkoutSessionHeaderProps) {
   return (
-    <Card
-      className="
-        sticky
-        top-[5rem]
-        z-30
-        p-5
-        shadow-[var(--shadow-md)]
-        md:p-7
-      "
-    >
+    <Card className="p-5 shadow-[var(--shadow-md)] md:p-7">
       <div className="flex flex-col gap-5">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
           <div className="min-w-0">
             <p className="text-xs font-bold uppercase tracking-[0.22em] text-[var(--primary)]">
               Active workout
             </p>
 
-            <h1 className="mt-1 truncate text-2xl font-black tracking-tight text-[var(--text)] md:text-3xl">
+            <h1 className="mt-1 break-words text-2xl font-black tracking-tight text-[var(--text)] md:text-3xl">
               {routineName}
             </h1>
 
@@ -77,19 +68,8 @@ export default function WorkoutSessionHeader({
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <div
-              className="
-                hidden
-                min-w-28
-                rounded-[var(--radius-md)]
-                bg-[var(--surface-soft)]
-                px-4
-                py-3
-                text-center
-                sm:block
-              "
-            >
+          <div className="flex items-center gap-2 md:shrink-0">
+            <div className="hidden min-w-28 rounded-[var(--radius-md)] bg-[var(--surface-soft)] px-4 py-3 text-center sm:block">
               <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[var(--text-muted)]">
                 Time
               </p>
@@ -128,18 +108,7 @@ export default function WorkoutSessionHeader({
         {isPaused && (
           <div
             role="status"
-            className="
-              rounded-[var(--radius-md)]
-              border
-              border-[var(--primary)]
-              border-opacity-20
-              bg-[var(--primary-soft)]
-              px-4
-              py-3
-              text-sm
-              font-semibold
-              text-[var(--primary)]
-            "
+            className="rounded-[var(--radius-md)] border border-[var(--primary)]/20 bg-[var(--primary-soft)] px-4 py-3 text-sm font-semibold text-[var(--primary)]"
           >
             Workout paused. Your active training
             time is not increasing.

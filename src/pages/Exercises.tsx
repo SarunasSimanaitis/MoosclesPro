@@ -7,17 +7,18 @@ import {
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import Card from "../components/ui/Card";
+import Button from "../components/ui/Button";
+import Badge from "../components/ui/Badge";
+import Input from "../components/ui/Input";
+
 import { exercises } from "../data/exercises";
+
 import type {
   Equipment,
   ExerciseCategory,
   MuscleGroup,
 } from "../types/Exercise";
-
-import Card from "../components/ui/Card";
-import Button from "../components/ui/Button";
-import Badge from "../components/ui/Badge";
-import Input from "../components/ui/Input";
 
 const muscleGroups: MuscleGroup[] = [
   "Chest",
@@ -55,63 +56,112 @@ const categories: ExerciseCategory[] = [
   "Mobility",
 ];
 
+const filterPluralLabels: Record<
+  string,
+  string
+> = {
+  "Muscle group": "muscle groups",
+  Equipment: "equipment types",
+  Category: "categories",
+};
+
 export default function Exercises() {
   const navigate = useNavigate();
 
-  const [search, setSearch] = useState("");
-  const [muscleFilter, setMuscleFilter] =
-    useState<MuscleGroup | "All">("All");
+  const [search, setSearch] =
+    useState("");
 
-  const [equipmentFilter, setEquipmentFilter] =
-    useState<Equipment | "All">("All");
-
-  const [categoryFilter, setCategoryFilter] =
-    useState<ExerciseCategory | "All">("All");
-
-  const [filtersOpen, setFiltersOpen] = useState(false);
-
-  const filteredExercises = useMemo(() => {
-    const query = search.trim().toLowerCase();
-
-    return exercises.filter((exercise) => {
-      const matchesSearch =
-        query === "" ||
-        exercise.name.toLowerCase().includes(query) ||
-        exercise.muscleGroup.toLowerCase().includes(query) ||
-        exercise.equipment.toLowerCase().includes(query) ||
-        exercise.category.toLowerCase().includes(query) ||
-        exercise.primaryMuscles.some((muscle) =>
-          muscle.toLowerCase().includes(query),
-        ) ||
-        exercise.secondaryMuscles.some((muscle) =>
-          muscle.toLowerCase().includes(query),
-        );
-
-      const matchesMuscle =
-        muscleFilter === "All" ||
-        exercise.muscleGroup === muscleFilter;
-
-      const matchesEquipment =
-        equipmentFilter === "All" ||
-        exercise.equipment === equipmentFilter;
-
-      const matchesCategory =
-        categoryFilter === "All" ||
-        exercise.category === categoryFilter;
-
-      return (
-        matchesSearch &&
-        matchesMuscle &&
-        matchesEquipment &&
-        matchesCategory
-      );
-    });
-  }, [
-    search,
+  const [
     muscleFilter,
+    setMuscleFilter,
+  ] = useState<
+    MuscleGroup | "All"
+  >("All");
+
+  const [
     equipmentFilter,
+    setEquipmentFilter,
+  ] = useState<
+    Equipment | "All"
+  >("All");
+
+  const [
     categoryFilter,
-  ]);
+    setCategoryFilter,
+  ] = useState<
+    ExerciseCategory | "All"
+  >("All");
+
+  const [
+    filtersOpen,
+    setFiltersOpen,
+  ] = useState(false);
+
+  const filteredExercises =
+    useMemo(() => {
+      const query = search
+        .trim()
+        .toLowerCase();
+
+      return exercises.filter(
+        (exercise) => {
+          const matchesSearch =
+            query === "" ||
+            exercise.name
+              .toLowerCase()
+              .includes(query) ||
+            exercise.muscleGroup
+              .toLowerCase()
+              .includes(query) ||
+            exercise.equipment
+              .toLowerCase()
+              .includes(query) ||
+            exercise.category
+              .toLowerCase()
+              .includes(query) ||
+            exercise.primaryMuscles.some(
+              (muscle) =>
+                muscle
+                  .toLowerCase()
+                  .includes(query),
+            ) ||
+            exercise.secondaryMuscles.some(
+              (muscle) =>
+                muscle
+                  .toLowerCase()
+                  .includes(query),
+            );
+
+          const matchesMuscle =
+            muscleFilter === "All" ||
+            exercise.muscleGroup ===
+              muscleFilter;
+
+          const matchesEquipment =
+            equipmentFilter ===
+              "All" ||
+            exercise.equipment ===
+              equipmentFilter;
+
+          const matchesCategory =
+            categoryFilter === "All" ||
+            exercise.category ===
+              categoryFilter;
+
+          return (
+            matchesSearch &&
+            matchesMuscle &&
+            matchesEquipment &&
+            matchesCategory
+          );
+        },
+      );
+    }, [
+      search,
+      muscleFilter,
+      equipmentFilter,
+      categoryFilter,
+    ]);
 
   const hasFilters =
     search.trim() !== "" ||
@@ -128,7 +178,6 @@ export default function Exercises() {
 
   return (
     <main className="space-y-10">
-      {/* Header */}
       <section>
         <p className="text-sm font-semibold uppercase tracking-[0.25em] text-[var(--primary)]">
           Exercise Library
@@ -140,39 +189,50 @@ export default function Exercises() {
               Find your exercise
             </h1>
 
-            <p className="mt-3 max-w-2xl text-lg text-[var(--text-muted)]">
-              Explore exercises by muscle group, equipment, and training
-              goal.
+            <p className="mt-3 max-w-2xl text-lg leading-relaxed text-[var(--text-muted)]">
+              Explore exercises by
+              muscle group, equipment,
+              and training goal.
             </p>
           </div>
 
           <div className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
             <Dumbbell size={17} />
+
             <span>
-              {exercises.length} exercises available
+              {exercises.length} exercises
+              available
             </span>
           </div>
         </div>
       </section>
 
-      {/* Search */}
       <Card className="p-5 md:p-6">
         <Input
           type="search"
           value={search}
-          onChange={(event) => setSearch(event.target.value)}
+          onChange={(event) =>
+            setSearch(
+              event.target.value,
+            )
+          }
           placeholder="Search exercises, muscles, equipment..."
           className="bg-[var(--surface-soft)]"
         />
 
-        {/* Mobile filter toggle */}
         <div className="mt-4 flex items-center justify-between md:hidden">
           <button
             type="button"
-            onClick={() => setFiltersOpen((open) => !open)}
+            onClick={() =>
+              setFiltersOpen(
+                (open) => !open,
+              )
+            }
             className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--text-muted)] transition hover:text-[var(--primary)]"
           >
-            <SlidersHorizontal size={17} />
+            <SlidersHorizontal
+              size={17}
+            />
             Filters
           </button>
 
@@ -188,7 +248,6 @@ export default function Exercises() {
           )}
         </div>
 
-        {/* Filters */}
         <div
           className={`
             ${
@@ -230,13 +289,14 @@ export default function Exercises() {
             options={categories}
             onChange={(value) =>
               setCategoryFilter(
-                value as ExerciseCategory | "All",
+                value as
+                  | ExerciseCategory
+                  | "All",
               )
             }
           />
         </div>
 
-        {/* Desktop clear filters */}
         {hasFilters && (
           <div className="mt-5 hidden md:block">
             <Button
@@ -252,7 +312,6 @@ export default function Exercises() {
         )}
       </Card>
 
-      {/* Results */}
       <section>
         <div className="mb-5 flex items-center justify-between">
           <p className="text-sm text-[var(--text-muted)]">
@@ -260,95 +319,104 @@ export default function Exercises() {
             <span className="font-bold text-[var(--text)]">
               {filteredExercises.length}
             </span>{" "}
-            {filteredExercises.length === 1
+            {filteredExercises.length ===
+            1
               ? "exercise"
               : "exercises"}
           </p>
         </div>
 
-        {filteredExercises.length > 0 ? (
+        {filteredExercises.length >
+        0 ? (
           <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-            {filteredExercises.map((exercise) => (
-              <Card
-                key={exercise.id}
-                hover
-                className="flex flex-col p-6"
-              >
-                {/* Top */}
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--primary-soft)] text-[var(--primary)]">
-                    <Dumbbell size={22} />
+            {filteredExercises.map(
+              (exercise) => (
+                <Card
+                  key={exercise.id}
+                  hover
+                  className="flex flex-col p-6"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--primary-soft)] text-[var(--primary)]">
+                      <Dumbbell size={22} />
+                    </div>
+
+                    <Badge
+                      variant={
+                        exercise.category ===
+                        "Strength"
+                          ? "primary"
+                          : exercise.category ===
+                              "Hypertrophy"
+                            ? "success"
+                            : "default"
+                      }
+                    >
+                      {exercise.category}
+                    </Badge>
                   </div>
 
-                  <Badge
-                    variant={
-                      exercise.category === "Strength"
-                        ? "primary"
-                        : exercise.category === "Hypertrophy"
-                          ? "success"
-                          : "default"
-                    }
-                  >
-                    {exercise.category}
-                  </Badge>
-                </div>
+                  <h2 className="mt-6 text-xl font-black text-[var(--text)]">
+                    {exercise.name}
+                  </h2>
 
-                {/* Name */}
-                <h2 className="mt-6 text-xl font-black text-[var(--text)]">
-                  {exercise.name}
-                </h2>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <Badge>
+                      {
+                        exercise.muscleGroup
+                      }
+                    </Badge>
 
-                {/* Tags */}
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <Badge>
-                    {exercise.muscleGroup}
-                  </Badge>
+                    <Badge>
+                      {
+                        exercise.equipment
+                      }
+                    </Badge>
+                  </div>
 
-                  <Badge>
-                    {exercise.equipment}
-                  </Badge>
-                </div>
-
-                {/* Primary muscles */}
-                <div className="mt-6">
-                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]">
-                    Primary muscles
-                  </p>
-
-                  <p className="mt-2 text-sm font-medium leading-relaxed text-[var(--text)]">
-                    {exercise.primaryMuscles.join(" · ")}
-                  </p>
-                </div>
-
-                {/* Secondary muscles */}
-                {exercise.secondaryMuscles.length > 0 && (
-                  <div className="mt-4">
+                  <div className="mt-6">
                     <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]">
-                      Secondary
+                      Primary muscles
                     </p>
 
-                    <p className="mt-2 text-sm text-[var(--text-muted)]">
-                      {exercise.secondaryMuscles.join(" · ")}
+                    <p className="mt-2 text-sm font-medium leading-relaxed text-[var(--text)]">
+                      {exercise.primaryMuscles.join(
+                        " · ",
+                      )}
                     </p>
                   </div>
-                )}
 
-                {/* Action */}
-                <div className="mt-auto pt-6">
-                  <Button
-                    variant="secondary"
-                    className="w-full"
-                    onClick={() =>
-                      navigate(
-                        `/exercises/${exercise.id}`,
-                      )
-                    }
-                  >
-                    View Exercise
-                  </Button>
-                </div>
-              </Card>
-            ))}
+                  {exercise.secondaryMuscles
+                    .length > 0 && (
+                    <div className="mt-4">
+                      <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]">
+                        Secondary
+                      </p>
+
+                      <p className="mt-2 text-sm text-[var(--text-muted)]">
+                        {exercise.secondaryMuscles.join(
+                          " · ",
+                        )}
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="mt-auto pt-6">
+                    <Button
+                      variant="secondary"
+                      className="w-full"
+                      onClick={() =>
+                        navigate(
+                          `/exercises/${exercise.id}`,
+                        )
+                      }
+                    >
+                      View Exercise
+                    </Button>
+                  </div>
+                </Card>
+              ),
+            )}
           </div>
         ) : (
           <Card className="p-12 text-center">
@@ -361,7 +429,8 @@ export default function Exercises() {
             </h2>
 
             <p className="mt-2 text-[var(--text-muted)]">
-              Try changing your search or filters.
+              Try changing your search or
+              filters.
             </p>
 
             <Button
@@ -369,7 +438,7 @@ export default function Exercises() {
               onClick={clearFilters}
               className="mt-6"
             >
-              Clear Filters
+              Clear filters
             </Button>
           </Card>
         )}
@@ -391,6 +460,10 @@ function FilterSelect({
   options,
   onChange,
 }: FilterSelectProps) {
+  const pluralLabel =
+    filterPluralLabels[label] ??
+    label.toLowerCase();
+
   return (
     <label className="block">
       <span className="mb-2 block text-xs font-bold uppercase tracking-[0.15em] text-[var(--text-muted)]">
@@ -400,16 +473,21 @@ function FilterSelect({
       <select
         value={value}
         onChange={(event) =>
-          onChange(event.target.value)
+          onChange(
+            event.target.value,
+          )
         }
         className="w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface-soft)] px-4 py-3 text-sm font-medium text-[var(--text)] outline-none transition focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary-soft)]"
       >
         <option value="All">
-          All {label.toLowerCase()}s
+          All {pluralLabel}
         </option>
 
         {options.map((option) => (
-          <option key={option} value={option}>
+          <option
+            key={option}
+            value={option}
+          >
             {option}
           </option>
         ))}

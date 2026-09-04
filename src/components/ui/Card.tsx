@@ -1,31 +1,38 @@
-import type { ReactNode } from "react";
+import type {
+  HTMLAttributes,
+  ReactNode,
+} from "react";
 
-type CardProps = {
-  children: ReactNode;
-  className?: string;
-  hover?: boolean;
-};
+type CardProps =
+  HTMLAttributes<HTMLDivElement> & {
+    children: ReactNode;
+    hover?: boolean;
+  };
 
 export default function Card({
   children,
   className = "",
   hover = false,
+  ...props
 }: CardProps) {
   return (
     <div
+      {...props}
       className={`
         rounded-[var(--radius-xl)]
         border
         border-[var(--border)]
         bg-[var(--surface)]
         shadow-[var(--shadow-sm)]
-        transition-all
-        duration-300
-        ${
-          hover
-            ? "hover:-translate-y-1 hover:border-[var(--border-strong)] hover:shadow-[var(--shadow-md)]"
-            : ""
-        }
+        ${hover
+          ? `
+            transition-[transform,box-shadow,border-color]
+            duration-200
+            hover:-translate-y-0.5
+            hover:border-[var(--border-strong)]
+            hover:shadow-[var(--shadow-md)]
+          `
+          : ""}
         ${className}
       `}
     >

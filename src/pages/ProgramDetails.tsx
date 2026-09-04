@@ -8,17 +8,59 @@ import {
   Target,
 } from "lucide-react";
 import { useMemo } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import {
+  useNavigate,
+  useParams,
+} from "react-router-dom";
 
+import Badge from "../components/ui/Badge";
+import Button from "../components/ui/Button";
+import Card from "../components/ui/Card";
 import { programs } from "../data/programs";
 import { routines } from "../data/routines";
+
+type ProgramHighlightProps = {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+};
+
+function ProgramHighlight({
+  icon,
+  label,
+  value,
+}: ProgramHighlightProps) {
+  return (
+    <div
+      className="
+        rounded-[var(--radius-lg)]
+        border
+        border-[var(--feature-border)]
+        bg-[var(--feature-surface)]
+        p-4
+        backdrop-blur-sm
+      "
+    >
+      <div className="text-[var(--primary)]">
+        {icon}
+      </div>
+
+      <p className="mt-3 text-xs font-bold uppercase tracking-[0.16em] text-[var(--feature-subtle)]">
+        {label}
+      </p>
+
+      <p className="mt-1 font-bold text-[var(--feature-text)]">
+        {value}
+      </p>
+    </div>
+  );
+}
 
 export default function ProgramDetails() {
   const navigate = useNavigate();
 
-  const { programId } = useParams<{
-    programId: string;
-  }>();
+  const { programId } =
+    useParams<{ programId: string }>();
 
   const program = useMemo(
     () =>
@@ -31,34 +73,42 @@ export default function ProgramDetails() {
   if (!program) {
     return (
       <main className="space-y-6">
-        <button
-          type="button"
-          onClick={() => navigate("/workouts")}
-          className="
-            inline-flex
-            items-center
-            gap-2
-            text-sm
-            font-semibold
-            text-[var(--text-muted)]
-            transition
-            hover:text-[var(--primary)]
-          "
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() =>
+            navigate("/workouts")
+          }
+          className="w-fit px-2"
         >
           <ArrowLeft size={17} />
           Back to workouts
-        </button>
+        </Button>
 
-        <section className="rounded-[2rem] border border-[var(--border)] bg-[var(--surface)] p-10 text-center">
-          <h1 className="text-3xl font-black text-[var(--text)]">
+        <Card className="p-10 text-center">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[var(--danger-soft)] text-[var(--danger)]">
+            <Target size={24} />
+          </div>
+
+          <h1 className="mt-6 text-3xl font-black tracking-tight text-[var(--text)]">
             Program not found
           </h1>
 
-          <p className="mt-3 text-[var(--text-muted)]">
-            This training program may no longer be
-            available.
+          <p className="mx-auto mt-3 max-w-md text-[var(--text-muted)]">
+            This training program may no longer
+            be available.
           </p>
-        </section>
+
+          <Button
+            variant="secondary"
+            onClick={() =>
+              navigate("/workouts")
+            }
+            className="mt-7"
+          >
+            Return to workouts
+          </Button>
+        </Card>
       </main>
     );
   }
@@ -73,12 +123,13 @@ export default function ProgramDetails() {
     }),
   );
 
-  const totalExercises = programDays.reduce(
-    (total, day) =>
-      total +
-      (day.routine?.exercises.length ?? 0),
-    0,
-  );
+  const totalExercises =
+    programDays.reduce(
+      (total, day) =>
+        total +
+        (day.routine?.exercises.length ?? 0),
+      0,
+    );
 
   function startRoutine(
     routineId: string,
@@ -92,105 +143,122 @@ export default function ProgramDetails() {
 
   return (
     <main className="space-y-10">
-      {/* Back */}
-
-      <button
-        type="button"
-        onClick={() => navigate("/workouts")}
-        className="
-          inline-flex
-          items-center
-          gap-2
-          text-sm
-          font-semibold
-          text-[var(--text-muted)]
-          transition
-          hover:text-[var(--primary)]
-        "
+      {/* Navigation */}
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() =>
+          navigate("/workouts")
+        }
+        className="w-fit px-2"
       >
         <ArrowLeft size={17} />
         Back to workouts
-      </button>
+      </Button>
 
       {/* Hero */}
+      <section
+        className="
+          relative
+          overflow-hidden
+          rounded-[var(--radius-xl)]
+          bg-[var(--feature-background)]
+          px-6
+          py-8
+          md:px-10
+          md:py-12
+        "
+      >
+        <div
+          aria-hidden="true"
+          className="
+            absolute
+            -right-24
+            -top-24
+            h-72
+            w-72
+            rounded-full
+            bg-[var(--primary)]
+            opacity-15
+            blur-3xl
+          "
+        />
 
-      <section className="relative overflow-hidden rounded-[2.5rem] bg-[#2f261d] px-7 py-10 md:px-10 md:py-14">
-        <div className="absolute -right-24 -top-24 h-72 w-72 rounded-full bg-[var(--primary)]/15 blur-3xl" />
+        <div
+          aria-hidden="true"
+          className="
+            absolute
+            -bottom-28
+            -left-16
+            h-56
+            w-56
+            rounded-full
+            bg-[var(--primary)]
+            opacity-10
+            blur-3xl
+          "
+        />
 
-        <div className="relative max-w-4xl">
+        <div className="relative max-w-5xl">
           <div className="flex flex-wrap gap-2">
-            <span className="rounded-full bg-[var(--primary)]/15 px-3 py-1.5 text-xs font-bold text-[var(--primary)]">
-              FREE PROGRAM
-            </span>
+            <Badge variant="primary">
+              Free program
+            </Badge>
 
-            <span className="rounded-full bg-white/10 px-3 py-1.5 text-xs font-semibold text-[#fffaf0]/70">
+            <span
+              className="
+                inline-flex
+                items-center
+                rounded-full
+                border
+                border-[var(--feature-border)]
+                bg-[var(--feature-surface)]
+                px-3
+                py-1.5
+                text-xs
+                font-semibold
+                text-[var(--feature-muted)]
+              "
+            >
               {program.difficulty}
             </span>
           </div>
 
-          <h1 className="mt-6 text-4xl font-black tracking-tight text-[#fffaf0] md:text-6xl">
+          <h1 className="mt-6 max-w-4xl text-4xl font-black tracking-tight text-[var(--feature-text)] md:text-6xl">
             {program.name}
           </h1>
 
-          <p className="mt-5 max-w-2xl text-lg leading-relaxed text-[#fffaf0]/65">
+          <p className="mt-5 max-w-2xl text-lg leading-relaxed text-[var(--feature-muted)]">
             {program.description}
           </p>
 
           <div className="mt-8 grid gap-3 sm:grid-cols-3">
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-              <CalendarDays
-                size={18}
-                className="text-[var(--primary)]"
-              />
+            <ProgramHighlight
+              icon={<CalendarDays size={18} />}
+              label="Frequency"
+              value={`${program.daysPerWeek} days/week`}
+            />
 
-              <p className="mt-3 text-xs font-semibold uppercase tracking-wider text-[#fffaf0]/40">
-                Frequency
-              </p>
+            <ProgramHighlight
+              icon={<Clock3 size={18} />}
+              label="Session"
+              value={`~${program.sessionMinutes} min`}
+            />
 
-              <p className="mt-1 font-bold text-[#fffaf0]">
-                {program.daysPerWeek} days/week
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-              <Clock3
-                size={18}
-                className="text-[var(--primary)]"
-              />
-
-              <p className="mt-3 text-xs font-semibold uppercase tracking-wider text-[#fffaf0]/40">
-                Session
-              </p>
-
-              <p className="mt-1 font-bold text-[#fffaf0]">
-                ~{program.sessionMinutes} min
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-              <Target
-                size={18}
-                className="text-[var(--primary)]"
-              />
-
-              <p className="mt-3 text-xs font-semibold uppercase tracking-wider text-[#fffaf0]/40">
-                Goal
-              </p>
-
-              <p className="mt-1 font-bold text-[#fffaf0]">
-                {program.goal}
-              </p>
-            </div>
+            <ProgramHighlight
+              icon={<Target size={18} />}
+              label="Goal"
+              value={program.goal}
+            />
           </div>
         </div>
       </section>
 
-      {/* Program overview */}
-
+      {/* Overview */}
       <section className="grid gap-6 lg:grid-cols-[1fr_320px]">
-        <div className="rounded-[2rem] border border-[var(--border)] bg-[var(--surface)] p-7 md:p-8">
+        <Card className="p-7 md:p-8">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--primary-soft)] text-[var(--primary)]">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[var(--radius-md)] bg-[var(--primary-soft)] text-[var(--primary)]">
               <Dumbbell size={21} />
             </div>
 
@@ -199,7 +267,7 @@ export default function ProgramDetails() {
                 Program overview
               </p>
 
-              <h2 className="mt-1 text-2xl font-black text-[var(--text)]">
+              <h2 className="mt-1 text-2xl font-black tracking-tight text-[var(--text)]">
                 What you'll be doing
               </h2>
             </div>
@@ -223,8 +291,11 @@ export default function ProgramDetails() {
                 key={item}
                 className="flex items-center gap-3"
               >
-                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--primary-soft)] text-[var(--primary)]">
-                  <Check size={15} strokeWidth={3} />
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--success-soft)] text-[var(--success)]">
+                  <Check
+                    size={15}
+                    strokeWidth={3}
+                  />
                 </div>
 
                 <span className="text-sm font-medium text-[var(--text)]">
@@ -233,49 +304,45 @@ export default function ProgramDetails() {
               </div>
             ))}
           </div>
-        </div>
+        </Card>
 
-        <aside className="rounded-[2rem] border border-[var(--border)] bg-[var(--surface)] p-7">
+        <Card className="p-7">
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--primary)]">
             Built for
           </p>
 
-          <div className="mt-5 space-y-4">
-            <div>
+          <div className="mt-5 divide-y divide-[var(--border)]">
+            <div className="pb-4">
               <p className="text-xs text-[var(--text-muted)]">
                 Goal
               </p>
-
               <p className="mt-1 font-bold text-[var(--text)]">
                 {program.goal}
               </p>
             </div>
 
-            <div>
+            <div className="py-4">
               <p className="text-xs text-[var(--text-muted)]">
                 Experience
               </p>
-
               <p className="mt-1 font-bold text-[var(--text)]">
                 {program.difficulty}
               </p>
             </div>
 
-            <div>
+            <div className="pt-4">
               <p className="text-xs text-[var(--text-muted)]">
                 Equipment
               </p>
-
               <p className="mt-1 font-bold text-[var(--text)]">
                 {program.environment}
               </p>
             </div>
           </div>
-        </aside>
+        </Card>
       </section>
 
-      {/* Weekly schedule */}
-
+      {/* Weekly structure */}
       <section className="space-y-6">
         <div>
           <p className="text-sm font-bold uppercase tracking-[0.2em] text-[var(--primary)]">
@@ -286,7 +353,7 @@ export default function ProgramDetails() {
             Weekly structure
           </h2>
 
-          <p className="mt-2 text-[var(--text-muted)]">
+          <p className="mt-2 max-w-2xl text-[var(--text-muted)]">
             Complete the sessions in order and give
             yourself enough recovery between them.
           </p>
@@ -301,46 +368,35 @@ export default function ProgramDetails() {
             }) => {
               if (!routine) {
                 return (
-                  <article
+                  <Card
                     key={day}
-                    className="rounded-[2rem] border border-[var(--danger)]/30 bg-[var(--danger)]/5 p-6"
+                    className="border-[var(--danger)]/30 bg-[var(--danger-soft)] p-6 shadow-none"
                   >
                     <p className="font-bold text-[var(--danger)]">
                       Day {day}: Routine unavailable
                     </p>
-                  </article>
+                  </Card>
                 );
               }
 
               return (
-                <article
+                <Card
                   key={routine.id}
-                  className="
-                    rounded-[2rem]
-                    border
-                    border-[var(--border)]
-                    bg-[var(--surface)]
-                    p-6
-                    shadow-sm
-                    transition-all
-                    duration-300
-                    hover:border-[var(--border-strong)]
-                    hover:shadow-[var(--shadow-md)]
-                    md:p-7
-                  "
+                  hover
+                  className="p-6 md:p-7"
                 >
                   <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-                    <div className="flex gap-5">
-                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[var(--primary-soft)] font-black text-[var(--primary)]">
+                    <div className="flex min-w-0 gap-5">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[var(--radius-md)] bg-[var(--primary-soft)] font-black text-[var(--primary)]">
                         {day}
                       </div>
 
-                      <div>
+                      <div className="min-w-0">
                         <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--text-muted)]">
                           Day {day}
                         </p>
 
-                        <h3 className="mt-1 text-2xl font-black text-[var(--text)]">
+                        <h3 className="mt-1 text-2xl font-black tracking-tight text-[var(--text)]">
                           {name}
                         </h3>
 
@@ -349,37 +405,23 @@ export default function ProgramDetails() {
                           exercises · ~
                           {Math.max(
                             20,
-                            routine.exercises.length * 10,
+                            routine.exercises.length *
+                              10,
                           )}{" "}
                           min
                         </p>
                       </div>
                     </div>
 
-                    <button
-                      type="button"
+                    <Button
                       onClick={() =>
                         startRoutine(routine.id)
                       }
-                      className="
-                        inline-flex
-                        shrink-0
-                        items-center
-                        justify-center
-                        gap-2
-                        rounded-xl
-                        bg-[var(--primary)]
-                        px-5
-                        py-3
-                        font-semibold
-                        text-white
-                        transition
-                        hover:bg-[var(--primary-hover)]
-                      "
+                      className="shrink-0"
                     >
                       Start workout
                       <ArrowRight size={17} />
-                    </button>
+                    </Button>
                   </div>
 
                   <div className="mt-6 grid gap-2 border-t border-[var(--border)] pt-5 sm:grid-cols-2">
@@ -390,28 +432,31 @@ export default function ProgramDetails() {
                       ) => (
                         <div
                           key={`${routine.id}-${routineExercise.exercise.id}-${index}`}
-                          className="flex items-center justify-between gap-3 rounded-xl bg-[var(--surface-soft)] px-4 py-3"
+                          className="
+                            flex
+                            items-center
+                            justify-between
+                            gap-3
+                            rounded-[var(--radius-md)]
+                            bg-[var(--surface-soft)]
+                            px-4
+                            py-3
+                          "
                         >
                           <span className="truncate text-sm font-medium text-[var(--text)]">
-                            {
-                              routineExercise.exercise.name
-                            }
+                            {routineExercise.exercise.name}
                           </span>
 
                           <span className="shrink-0 text-xs font-semibold text-[var(--text-muted)]">
-                            {
-                              routineExercise.targetSets
-                            }{" "}
+                            {routineExercise.targetSets}{" "}
                             ×{" "}
-                            {
-                              routineExercise.targetReps
-                            }
+                            {routineExercise.targetReps}
                           </span>
                         </div>
                       ),
                     )}
                   </div>
-                </article>
+                </Card>
               );
             },
           )}
@@ -419,8 +464,7 @@ export default function ProgramDetails() {
       </section>
 
       {/* Future personalization */}
-
-      <section className="overflow-hidden rounded-[2.5rem] bg-[var(--surface-soft)] p-7 md:p-10">
+      <section className="overflow-hidden rounded-[var(--radius-xl)] bg-[var(--surface-soft)] p-7 md:p-10">
         <div className="max-w-3xl">
           <p className="text-sm font-bold uppercase tracking-[0.2em] text-[var(--primary)]">
             One size doesn't fit everyone
@@ -437,31 +481,16 @@ export default function ProgramDetails() {
             preferences into account.
           </p>
 
-          <button
-            type="button"
+          <Button
+            variant="secondary"
             disabled
-            className="
-              mt-7
-              inline-flex
-              items-center
-              gap-2
-              rounded-xl
-              border
-              border-[var(--border)]
-              px-5
-              py-3
-              text-sm
-              font-semibold
-              text-[var(--text-muted)]
-              opacity-60
-            "
+            className="mt-7"
           >
             Personalize my training
-
-            <span className="text-xs">
+            <span className="text-xs font-medium text-[var(--text-muted)]">
               Coming soon
             </span>
-          </button>
+          </Button>
         </div>
       </section>
     </main>

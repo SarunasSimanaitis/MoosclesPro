@@ -21,22 +21,20 @@ export function useRestTimer(): RestTimer {
       return;
     }
 
-    if (restTime <= 0) {
-      setRestTime(null);
-      setRestDuration(0);
-      return;
-    }
-
     const interval =
       window.setInterval(() => {
-        setRestTime((current) =>
-          current === null
-            ? null
-            : Math.max(
-                0,
-                current - 1,
-              ),
-        );
+        setRestTime((current) => {
+          if (current === null) {
+            return null;
+          }
+
+          if (current <= 1) {
+            setRestDuration(0);
+            return null;
+          }
+
+          return current - 1;
+        });
       }, 1000);
 
     return () => {
@@ -45,7 +43,10 @@ export function useRestTimer(): RestTimer {
   }, [restTime]);
 
   function start(seconds: number) {
-    if (seconds <= 0) {
+    if (
+      !Number.isFinite(seconds) ||
+      seconds <= 0
+    ) {
       return;
     }
 
@@ -59,21 +60,26 @@ export function useRestTimer(): RestTimer {
   }
 
   function addTime(seconds: number) {
+    if (!Number.isFinite(seconds)) {
+      return;
+    }
+
     setRestTime((current) =>
       current === null
         ? null
-        : current + seconds,
+        : Math.max(0, current + seconds),
     );
   }
 
   function removeTime(seconds: number) {
+    if (!Number.isFinite(seconds)) {
+      return;
+    }
+
     setRestTime((current) =>
       current === null
         ? null
-        : Math.max(
-            0,
-            current - seconds,
-          ),
+        : Math.max(0, current - seconds),
     );
   }
 

@@ -62,10 +62,10 @@ export default function RoutineBuilder() {
   const editingRoutine =
     editRoutineId
       ? customRoutines.find(
-          (routine) =>
-            routine.id ===
-            editRoutineId,
-        )
+        (routine) =>
+          routine.id ===
+          editRoutineId,
+      )
       : undefined;
 
   const [
@@ -118,31 +118,26 @@ export default function RoutineBuilder() {
    * fetch the server source of truth.
    */
   useEffect(() => {
-    if (!editRoutineId) {
-      setName("");
-      setRoutineExercises([]);
-      setIsLoadingRoutine(false);
-
-      return;
-    }
-
-    if (editingRoutine) {
-      setName(
-        editingRoutine.name,
-      );
-
-      setRoutineExercises(
-        editingRoutine.exercises,
-      );
-
-      setIsLoadingRoutine(false);
-
-      return;
-    }
-
     let cancelled = false;
 
-    async function loadRoutine() {
+    async function initializeRoutine() {
+      if (!editRoutineId) {
+        return;
+      }
+
+      if (editingRoutine) {
+        setName(
+          editingRoutine.name,
+        );
+
+        setRoutineExercises(
+          editingRoutine.exercises,
+        );
+
+        setIsLoadingRoutine(false);
+        return;
+      }
+
       try {
         setIsLoadingRoutine(true);
         setError(null);
@@ -158,19 +153,18 @@ export default function RoutineBuilder() {
 
         const routine = data.find(
           (item) =>
-            item.id ===
-            editRoutineId,
+            item.id === editRoutineId,
         );
 
         if (!routine) {
           setError(
             "The routine you're trying to edit could not be found.",
           );
-
           return;
         }
 
         setName(routine.name);
+
         setRoutineExercises(
           routine.exercises,
         );
@@ -196,7 +190,7 @@ export default function RoutineBuilder() {
       }
     }
 
-    void loadRoutine();
+    void initializeRoutine();
 
     return () => {
       cancelled = true;
@@ -298,11 +292,11 @@ export default function RoutineBuilder() {
         current.map(
           (item) =>
             item.exercise.id ===
-            exerciseId
+              exerciseId
               ? {
-                  ...item,
-                  ...changes,
-                }
+                ...item,
+                ...changes,
+              }
               : item,
         ),
     );
@@ -347,11 +341,11 @@ export default function RoutineBuilder() {
       const savedRoutine =
         isEditing
           ? await routinesApi.update(
-              routine,
-            )
+            routine,
+          )
           : await routinesApi.create(
-              routine,
-            );
+            routine,
+          );
 
       if (isEditing) {
         updateRoutine(
@@ -510,7 +504,7 @@ export default function RoutineBuilder() {
 
             <div className="mt-4 max-h-72 space-y-2 overflow-y-auto">
               {availableExercises.length ===
-              0 ? (
+                0 ? (
                 <p className="py-6 text-center text-sm text-[var(--text-muted)]">
                   No exercises match your search.
                 </p>
@@ -581,7 +575,7 @@ export default function RoutineBuilder() {
         {/* Selected exercises */}
 
         {routineExercises.length >
-        0 ? (
+          0 ? (
           <div className="mt-6 space-y-4">
             {routineExercises.map(
               (
@@ -676,14 +670,14 @@ export default function RoutineBuilder() {
                                   value,
                                 )
                                   ? Math.min(
-                                      100,
-                                      Math.max(
-                                        1,
-                                        Math.floor(
-                                          value,
-                                        ),
+                                    100,
+                                    Math.max(
+                                      1,
+                                      Math.floor(
+                                        value,
                                       ),
-                                    )
+                                    ),
+                                  )
                                   : 1,
                             },
                           );
@@ -750,11 +744,10 @@ export default function RoutineBuilder() {
                                     },
                                   )
                                 }
-                                className={`rounded-xl border px-3 py-2.5 text-sm font-semibold transition ${
-                                  isSelected
-                                    ? "border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary)]"
-                                    : "border-[var(--border-strong)] bg-[var(--surface)] text-[var(--text-muted)] hover:border-[var(--primary)] hover:text-[var(--primary)]"
-                                }`}
+                                className={`rounded-xl border px-3 py-2.5 text-sm font-semibold transition ${isSelected
+                                  ? "border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary)]"
+                                  : "border-[var(--border-strong)] bg-[var(--surface)] text-[var(--text-muted)] hover:border-[var(--primary)] hover:text-[var(--primary)]"
+                                  }`}
                               >
                                 {seconds}s
                               </button>
@@ -792,14 +785,14 @@ export default function RoutineBuilder() {
                                     value,
                                   )
                                     ? Math.min(
-                                        3600,
-                                        Math.max(
-                                          0,
-                                          Math.floor(
-                                            value,
-                                          ),
+                                      3600,
+                                      Math.max(
+                                        0,
+                                        Math.floor(
+                                          value,
                                         ),
-                                      )
+                                      ),
+                                    )
                                     : 0,
                               },
                             );
@@ -848,7 +841,7 @@ export default function RoutineBuilder() {
             isSaving ||
             !name.trim() ||
             routineExercises.length ===
-              0
+            0
           }
           className="rounded-xl bg-[var(--primary)] px-7 py-3.5 font-semibold text-white transition hover:bg-[var(--primary-hover)] disabled:cursor-not-allowed disabled:opacity-40"
         >

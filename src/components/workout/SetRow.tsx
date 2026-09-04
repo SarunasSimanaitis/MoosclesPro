@@ -1,11 +1,12 @@
 import { Check } from "lucide-react";
 
-import NumberStepper from "../ui/NumberStepper";
-
 import type { WorkoutSet } from "../../types/WorkoutSet";
+
+import NumberStepper from "../ui/NumberStepper";
 
 type SetRowProps = {
   workoutSet: WorkoutSet;
+
   onToggle: () => void;
 
   onWeightChange: (
@@ -31,55 +32,81 @@ export default function SetRow({
 }: SetRowProps) {
   return (
     <div
-      className="
+      className={`
         grid
-        grid-cols-[48px_1fr_1fr_58px]
+        grid-cols-[40px_1fr_1fr_48px]
         items-center
-        gap-3
-        rounded-2xl
+        gap-2
+        rounded-[var(--radius-md)]
         border
-        border-[var(--border)]
-        bg-[var(--surface-soft)]
-        px-3
-        py-3
-        md:grid-cols-[60px_1fr_1fr_70px]
-        md:gap-4
-        md:px-4
-      "
+        px-2
+        py-2
+        transition-[background-color,border-color,box-shadow]
+        duration-200
+        sm:grid-cols-[44px_1fr_1fr_56px]
+        sm:gap-3
+        sm:px-3
+        ${
+          workoutSet.completed
+            ? "border-[var(--success)]/30 bg-[var(--success-soft)]"
+            : "border-[var(--border)] bg-[var(--surface-soft)]"
+        }
+      `}
     >
-      {/* Set number */}
-
+      {/* Set */}
       <div
+        className={`
+          flex
+          h-10
+          items-center
+          justify-center
+          rounded-[var(--radius-sm)]
+          text-sm
+          font-black
+          ${
+            workoutSet.completed
+              ? "text-[var(--success)]"
+              : "text-[var(--text-muted)]"
+          }
+        `}
         aria-label={`Set ${workoutSet.order}`}
-        className="text-center font-semibold text-[var(--text-muted)]"
       >
         {workoutSet.order}
       </div>
 
       {/* Weight */}
+      <div className="min-w-0">
+        <NumberStepper
+          value={workoutSet.weight}
+          onChange={onWeightChange}
+          onCommit={onWeightCommit}
+          min={0}
+          step={0.5}
+          ariaLabel={`Weight for set ${workoutSet.order}`}
+        />
 
-      <NumberStepper
-        value={workoutSet.weight}
-        onChange={onWeightChange}
-        onCommit={onWeightCommit}
-        min={0}
-        step={0.5}
-        ariaLabel={`Weight for set ${workoutSet.order}`}
-      />
+        <span className="mt-1 block text-center text-[9px] font-bold uppercase tracking-[0.1em] text-[var(--text-muted)] sm:hidden">
+          kg
+        </span>
+      </div>
 
       {/* Reps */}
+      <div className="min-w-0">
+        <NumberStepper
+          value={workoutSet.reps}
+          onChange={onRepsChange}
+          onCommit={onRepsCommit}
+          min={0}
+          step={1}
+          ariaLabel={`Reps for set ${workoutSet.order}`}
+        />
 
-      <NumberStepper
-        value={workoutSet.reps}
-        onChange={onRepsChange}
-        onCommit={onRepsCommit}
-        min={0}
-        step={1}
-        ariaLabel={`Reps for set ${workoutSet.order}`}
-      />
+        <span className="mt-1 block text-center text-[9px] font-bold uppercase tracking-[0.1em] text-[var(--text-muted)] sm:hidden">
+          reps
+        </span>
+      </div>
 
       {/* Complete */}
-
       <button
         type="button"
         onClick={onToggle}
@@ -88,6 +115,9 @@ export default function SetRow({
             ? `Mark set ${workoutSet.order} incomplete`
             : `Mark set ${workoutSet.order} complete`
         }
+        aria-pressed={
+          workoutSet.completed
+        }
         className={`
           mx-auto
           flex
@@ -95,15 +125,18 @@ export default function SetRow({
           w-10
           items-center
           justify-center
-          rounded-xl
-          transition
-          focus:outline-none
-          focus:ring-2
-          focus:ring-[var(--primary-soft)]
+          rounded-[var(--radius-md)]
+          border
+          transition-[background-color,border-color,color,transform]
+          duration-150
+          active:scale-95
+          focus-visible:outline-none
+          focus-visible:ring-2
+          focus-visible:ring-[var(--primary)]
           ${
             workoutSet.completed
-              ? "bg-[var(--success)] text-white"
-              : "border border-[var(--border-strong)] bg-[var(--surface)] text-[var(--text-muted)] hover:border-[var(--primary)] hover:text-[var(--primary)]"
+              ? "border-[var(--success)] bg-[var(--success)] text-white"
+              : "border-[var(--border-strong)] bg-[var(--surface)] text-[var(--text-muted)] hover:border-[var(--primary)] hover:text-[var(--primary)]"
           }
         `}
       >
@@ -113,7 +146,10 @@ export default function SetRow({
             strokeWidth={3}
           />
         ) : (
-          "○"
+          <span
+            aria-hidden="true"
+            className="h-2.5 w-2.5 rounded-full border-2 border-current"
+          />
         )}
       </button>
     </div>

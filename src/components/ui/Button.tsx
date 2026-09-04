@@ -59,8 +59,10 @@ export default function Button({
     `,
     danger: `
       bg-[var(--danger)]
-      text-white
+      text-[var(--primary-foreground)]
+      shadow-[var(--shadow-sm)]
       hover:opacity-90
+      hover:shadow-[var(--shadow-md)]
     `,
   };
 
@@ -93,7 +95,9 @@ export default function Button({
       {...props}
       type={type}
       disabled={disabled || loading}
-      aria-busy={loading || undefined}
+      aria-busy={
+        loading || undefined
+      }
       className={`
         inline-flex
         items-center
@@ -122,7 +126,15 @@ export default function Button({
       {loading && (
         <span
           aria-hidden="true"
-          className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"
+          className="
+            h-4
+            w-4
+            animate-spin
+            rounded-full
+            border-2
+            border-current
+            border-t-transparent
+          "
         />
       )}
 

@@ -5,7 +5,6 @@ import {
   House,
   NotebookTabs,
   PlayCircle,
-  Settings,
   Sparkles,
 } from "lucide-react";
 
@@ -55,9 +54,4 @@ export const authenticatedNavigation: NavigationItem[] = [
     icon: ChartColumn,
   },
   ...publicNavigation,
-  {
-    label: "Settings",
-    path: "/settings",
-    icon: Settings,
-  },
 ];

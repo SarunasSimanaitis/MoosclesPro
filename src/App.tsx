@@ -4,10 +4,13 @@ import {
   Route,
   Routes,
 } from "react-router-dom";
+import type { ReactNode } from "react";
 
 import AppLayout from "./components/layout/AppLayout";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import ScrollToTop from "./components/layout/ScrollToTop";
+
+import { authClient } from "./lib/auth-client";
 
 import Dashboard from "./pages/Dashboard";
 import ExerciseDetails from "./pages/ExerciseDetails";
@@ -26,6 +29,48 @@ import WorkoutSessionPage from "./pages/WorkoutSessionPage";
 import Workouts from "./pages/Workouts";
 import ProgramDetails from "./pages/ProgramDetails";
 
+function LoadingScreen() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-[var(--background)]">
+      <div className="text-sm font-medium text-[var(--text-muted)]">
+        Loading...
+      </div>
+    </div>
+  );
+}
+
+function HomeRoute() {
+  const { data: session, isPending } = authClient.useSession();
+
+  if (isPending) {
+    return <LoadingScreen />;
+  }
+
+  if (session?.user) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return <LandingPage />;
+}
+
+function GuestRoute({
+  children,
+}: {
+  children: ReactNode;
+}) {
+  const { data: session, isPending } = authClient.useSession();
+
+  if (isPending) {
+    return <LoadingScreen />;
+  }
+
+  if (session?.user) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return children;
+}
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -36,12 +81,20 @@ export default function App() {
 
         <Route
           path="/login"
-          element={<Login />}
+          element={
+            <GuestRoute>
+              <Login />
+            </GuestRoute>
+          }
         />
 
         <Route
           path="/register"
-          element={<Register />}
+          element={
+            <GuestRoute>
+              <Register />
+            </GuestRoute>
+          }
         />
 
         {/* Public product pages */}
@@ -49,7 +102,7 @@ export default function App() {
         <Route element={<AppLayout />}>
           <Route
             path="/"
-            element={<LandingPage />}
+            element={<HomeRoute />}
           />
 
           <Route

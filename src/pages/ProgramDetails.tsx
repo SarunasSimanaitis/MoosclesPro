@@ -15,6 +15,7 @@ import { routines } from "../data/routines";
 
 export default function ProgramDetails() {
   const navigate = useNavigate();
+
   const { programId } = useParams<{
     programId: string;
   }>();
@@ -113,7 +114,7 @@ export default function ProgramDetails() {
 
       {/* Hero */}
 
-      <section className="relative overflow-hidden rounded-[2.5rem] bg-[var(--text)] px-7 py-10 md:px-10 md:py-14">
+      <section className="relative overflow-hidden rounded-[2.5rem] bg-[#2f261d] px-7 py-10 md:px-10 md:py-14">
         <div className="absolute -right-24 -top-24 h-72 w-72 rounded-full bg-[var(--primary)]/15 blur-3xl" />
 
         <div className="relative max-w-4xl">
@@ -122,16 +123,16 @@ export default function ProgramDetails() {
               FREE PROGRAM
             </span>
 
-            <span className="rounded-full bg-white/10 px-3 py-1.5 text-xs font-semibold text-white/70">
+            <span className="rounded-full bg-white/10 px-3 py-1.5 text-xs font-semibold text-[#fffaf0]/70">
               {program.difficulty}
             </span>
           </div>
 
-          <h1 className="mt-6 text-4xl font-black tracking-tight text-white md:text-6xl">
+          <h1 className="mt-6 text-4xl font-black tracking-tight text-[#fffaf0] md:text-6xl">
             {program.name}
           </h1>
 
-          <p className="mt-5 max-w-2xl text-lg leading-relaxed text-white/60">
+          <p className="mt-5 max-w-2xl text-lg leading-relaxed text-[#fffaf0]/65">
             {program.description}
           </p>
 
@@ -142,11 +143,11 @@ export default function ProgramDetails() {
                 className="text-[var(--primary)]"
               />
 
-              <p className="mt-3 text-xs font-semibold uppercase tracking-wider text-white/40">
+              <p className="mt-3 text-xs font-semibold uppercase tracking-wider text-[#fffaf0]/40">
                 Frequency
               </p>
 
-              <p className="mt-1 font-bold text-white">
+              <p className="mt-1 font-bold text-[#fffaf0]">
                 {program.daysPerWeek} days/week
               </p>
             </div>
@@ -157,11 +158,11 @@ export default function ProgramDetails() {
                 className="text-[var(--primary)]"
               />
 
-              <p className="mt-3 text-xs font-semibold uppercase tracking-wider text-white/40">
+              <p className="mt-3 text-xs font-semibold uppercase tracking-wider text-[#fffaf0]/40">
                 Session
               </p>
 
-              <p className="mt-1 font-bold text-white">
+              <p className="mt-1 font-bold text-[#fffaf0]">
                 ~{program.sessionMinutes} min
               </p>
             </div>
@@ -172,11 +173,11 @@ export default function ProgramDetails() {
                 className="text-[var(--primary)]"
               />
 
-              <p className="mt-3 text-xs font-semibold uppercase tracking-wider text-white/40">
+              <p className="mt-3 text-xs font-semibold uppercase tracking-wider text-[#fffaf0]/40">
                 Goal
               </p>
 
-              <p className="mt-1 font-bold text-white">
+              <p className="mt-1 font-bold text-[#fffaf0]">
                 {program.goal}
               </p>
             </div>
@@ -348,8 +349,7 @@ export default function ProgramDetails() {
                           exercises · ~
                           {Math.max(
                             20,
-                            routine.exercises
-                              .length * 10,
+                            routine.exercises.length * 10,
                           )}{" "}
                           min
                         </p>
@@ -359,9 +359,7 @@ export default function ProgramDetails() {
                     <button
                       type="button"
                       onClick={() =>
-                        startRoutine(
-                          routine.id,
-                        )
+                        startRoutine(routine.id)
                       }
                       className="
                         inline-flex
@@ -396,9 +394,7 @@ export default function ProgramDetails() {
                         >
                           <span className="truncate text-sm font-medium text-[var(--text)]">
                             {
-                              routineExercise
-                                .exercise
-                                .name
+                              routineExercise.exercise.name
                             }
                           </span>
 
@@ -461,6 +457,7 @@ export default function ProgramDetails() {
             "
           >
             Personalize my training
+
             <span className="text-xs">
               Coming soon
             </span>

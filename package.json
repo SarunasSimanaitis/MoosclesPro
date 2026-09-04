@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "vercel:dev": "vercel dev"
+    "vercel:dev": "npx vercel dev"
   },
   "dependencies": {
     "@better-auth/mongo-adapter": "^1.7.1",
@@ -35,7 +35,6 @@
     "tailwindcss": "^4.3.3",
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.62.0",
-    "vercel": "^54.17.3",
     "vite": "^8.1.1"
   }
 }

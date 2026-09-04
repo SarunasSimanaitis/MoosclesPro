@@ -7,10 +7,11 @@ import {
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import Card from "../components/ui/Card";
-import Button from "../components/ui/Button";
 import Badge from "../components/ui/Badge";
+import Button from "../components/ui/Button";
+import Card from "../components/ui/Card";
 import Input from "../components/ui/Input";
+import Select from "../components/ui/Select";
 
 import { exercises } from "../data/exercises";
 
@@ -56,15 +57,6 @@ const categories: ExerciseCategory[] = [
   "Mobility",
 ];
 
-const filterPluralLabels: Record<
-  string,
-  string
-> = {
-  "Muscle group": "muscle groups",
-  Equipment: "equipment types",
-  Category: "categories",
-};
-
 export default function Exercises() {
   const navigate = useNavigate();
 
@@ -99,9 +91,8 @@ export default function Exercises() {
 
   const filteredExercises =
     useMemo(() => {
-      const query = search
-        .trim()
-        .toLowerCase();
+      const query =
+        search.trim().toLowerCase();
 
       return exercises.filter(
         (exercise) => {
@@ -144,7 +135,8 @@ export default function Exercises() {
               equipmentFilter;
 
           const matchesCategory =
-            categoryFilter === "All" ||
+            categoryFilter ===
+              "All" ||
             exercise.category ===
               categoryFilter;
 
@@ -178,6 +170,7 @@ export default function Exercises() {
 
   return (
     <main className="space-y-10">
+      {/* Header */}
       <section>
         <p className="text-sm font-semibold uppercase tracking-[0.25em] text-[var(--primary)]">
           Exercise Library
@@ -190,9 +183,9 @@ export default function Exercises() {
             </h1>
 
             <p className="mt-3 max-w-2xl text-lg leading-relaxed text-[var(--text-muted)]">
-              Explore exercises by
-              muscle group, equipment,
-              and training goal.
+              Explore exercises by muscle
+              group, equipment, and training
+              goal.
             </p>
           </div>
 
@@ -207,6 +200,7 @@ export default function Exercises() {
         </div>
       </section>
 
+      {/* Search + filters */}
       <Card className="p-5 md:p-6">
         <Input
           type="search"
@@ -228,7 +222,25 @@ export default function Exercises() {
                 (open) => !open,
               )
             }
-            className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--text-muted)] transition hover:text-[var(--primary)]"
+            aria-expanded={
+              filtersOpen
+            }
+            className="
+              inline-flex
+              items-center
+              gap-2
+              rounded-[var(--radius-md)]
+              px-2
+              py-2
+              text-sm
+              font-semibold
+              text-[var(--text-muted)]
+              transition-colors
+              hover:text-[var(--primary)]
+              focus-visible:outline-none
+              focus-visible:ring-2
+              focus-visible:ring-[var(--primary)]
+            "
           >
             <SlidersHorizontal
               size={17}
@@ -240,7 +252,20 @@ export default function Exercises() {
             <button
               type="button"
               onClick={clearFilters}
-              className="inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--primary)]"
+              className="
+                inline-flex
+                items-center
+                gap-1.5
+                rounded-[var(--radius-md)]
+                px-2
+                py-2
+                text-sm
+                font-semibold
+                text-[var(--primary)]
+                focus-visible:outline-none
+                focus-visible:ring-2
+                focus-visible:ring-[var(--primary)]
+              "
             >
               <X size={15} />
               Clear
@@ -255,38 +280,45 @@ export default function Exercises() {
                 ? "mt-5 grid"
                 : "hidden"
             }
-            gap-3
+            gap-4
             md:mt-5
             md:grid
             md:grid-cols-3
           `}
         >
-          <FilterSelect
+          <Select
             label="Muscle group"
             value={muscleFilter}
             options={muscleGroups}
+            allLabel="All muscle groups"
             onChange={(value) =>
               setMuscleFilter(
-                value as MuscleGroup | "All",
+                value as
+                  | MuscleGroup
+                  | "All",
               )
             }
           />
 
-          <FilterSelect
+          <Select
             label="Equipment"
             value={equipmentFilter}
             options={equipmentTypes}
+            allLabel="All equipment types"
             onChange={(value) =>
               setEquipmentFilter(
-                value as Equipment | "All",
+                value as
+                  | Equipment
+                  | "All",
               )
             }
           />
 
-          <FilterSelect
+          <Select
             label="Category"
             value={categoryFilter}
             options={categories}
+            allLabel="All categories"
             onChange={(value) =>
               setCategoryFilter(
                 value as
@@ -312,6 +344,7 @@ export default function Exercises() {
         )}
       </Card>
 
+      {/* Results */}
       <section>
         <div className="mb-5 flex items-center justify-between">
           <p className="text-sm text-[var(--text-muted)]">
@@ -444,54 +477,5 @@ export default function Exercises() {
         )}
       </section>
     </main>
-  );
-}
-
-type FilterSelectProps = {
-  label: string;
-  value: string;
-  options: string[];
-  onChange: (value: string) => void;
-};
-
-function FilterSelect({
-  label,
-  value,
-  options,
-  onChange,
-}: FilterSelectProps) {
-  const pluralLabel =
-    filterPluralLabels[label] ??
-    label.toLowerCase();
-
-  return (
-    <label className="block">
-      <span className="mb-2 block text-xs font-bold uppercase tracking-[0.15em] text-[var(--text-muted)]">
-        {label}
-      </span>
-
-      <select
-        value={value}
-        onChange={(event) =>
-          onChange(
-            event.target.value,
-          )
-        }
-        className="w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface-soft)] px-4 py-3 text-sm font-medium text-[var(--text)] outline-none transition focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary-soft)]"
-      >
-        <option value="All">
-          All {pluralLabel}
-        </option>
-
-        {options.map((option) => (
-          <option
-            key={option}
-            value={option}
-          >
-            {option}
-          </option>
-        ))}
-      </select>
-    </label>
   );
 }

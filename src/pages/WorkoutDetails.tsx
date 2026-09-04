@@ -6,36 +6,65 @@ import {
   Dumbbell,
 } from "lucide-react";
 import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+import {
   Link,
   useNavigate,
   useParams,
 } from "react-router-dom";
-import { useEffect, useState } from "react";
 
-import { useRoutineStore } from "../stores/routineStore";
-import { routines } from "../data/routines";
 import {
-  getWorkoutSessions,
-} from "../utils/workoutStorage";
+  workoutSessionsApi,
+} from "../api/workoutSessions";
+import Button from "../components/ui/Button";
+import Card from "../components/ui/Card";
+import Badge from "../components/ui/Badge";
+import { routines } from "../data/routines";
+import { useRoutineStore } from "../stores/routineStore";
 
 import type { WorkoutSession } from "../types/WorkoutSession";
 
+import {
+  formatNumber,
+  formatWorkoutDate,
+  formatWorkoutTime,
+  getCompletedSets,
+  getSessionDuration,
+  getSessionVolume,
+  getTotalSets,
+} from "../lib/workoutPresentation";
+
 export default function WorkoutDetails() {
   const navigate = useNavigate();
-  const { sessionId } = useParams();
 
-  const customRoutines = useRoutineStore(
-    (state) => state.customRoutines,
-  );
+  const {
+    sessionId,
+  } = useParams<{
+    sessionId: string;
+  }>();
 
-  const [sessions, setSessions] =
-    useState<WorkoutSession[]>([]);
+  const customRoutines =
+    useRoutineStore(
+      (state) => state.customRoutines,
+    );
 
-  const [isLoading, setIsLoading] =
-    useState(true);
+  const [
+    sessions,
+    setSessions,
+  ] = useState<WorkoutSession[]>([]);
 
-  const [error, setError] =
-    useState<string | null>(null);
+  const [
+    isLoading,
+    setIsLoading,
+  ] = useState(true);
+
+  const [
+    error,
+    setError,
+  ] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -46,7 +75,7 @@ export default function WorkoutDetails() {
         setError(null);
 
         const data =
-          await getWorkoutSessions();
+          await workoutSessionsApi.list();
 
         if (!cancelled) {
           setSessions(data);
@@ -76,332 +105,420 @@ export default function WorkoutDetails() {
     };
   }, []);
 
-  const allRoutines = [
-    ...routines,
-    ...customRoutines,
-  ];
+  const allRoutines = useMemo(
+    () => [
+      ...routines,
+      ...customRoutines,
+    ],
+    [customRoutines],
+  );
 
-  const session = sessions.find(
-    (item) => item.id === sessionId,
+  const session = useMemo(
+    () =>
+      sessions.find(
+        (item) =>
+          item.id === sessionId,
+      ),
+    [sessionId, sessions],
+  );
+
+  const routineName = useMemo(
+    () =>
+      allRoutines.find(
+        (routine) =>
+          routine.id ===
+          session?.routineId,
+      )?.name ??
+      "Unknown Routine",
+    [allRoutines, session?.routineId],
   );
 
   if (isLoading) {
-    return (
-      <main className="mx-auto flex min-h-[70vh] max-w-5xl items-center justify-center px-6">
-        <section className="w-full rounded-[2rem] border border-[var(--border)] bg-[var(--surface)] p-10 text-center shadow-sm">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--primary-soft)] text-[var(--primary)]">
-            <Dumbbell size={28} />
-          </div>
-
-          <h1 className="mt-6 text-2xl font-black text-[var(--text)]">
-            Loading workout...
-          </h1>
-
-          <p className="mt-3 text-[var(--text-muted)]">
-            Fetching your workout details.
-          </p>
-        </section>
-      </main>
-    );
+    return <DetailsSkeleton />;
   }
 
   if (error || !session) {
     return (
-      <main className="mx-auto flex min-h-[70vh] max-w-3xl items-center justify-center px-6">
-        <section className="w-full rounded-[2rem] border border-[var(--border)] bg-[var(--surface)] p-10 text-center shadow-sm">
+      <main className="mx-auto flex min-h-[65vh] max-w-3xl items-center justify-center">
+        <Card
+          role="alert"
+          className="w-full p-10 text-center"
+        >
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--surface-soft)] text-[var(--text-muted)]">
             <Dumbbell size={28} />
           </div>
 
-          <h1 className="mt-6 text-3xl font-black text-[var(--text)]">
+          <h1 className="mt-6 text-3xl font-black tracking-tight text-[var(--text)]">
             Workout not found
           </h1>
 
-          <p className="mt-3 text-[var(--text-muted)]">
+          <p className="mt-3 leading-relaxed text-[var(--text-muted)]">
             {error ??
               "This workout session could not be found."}
           </p>
 
-          <button
-            type="button"
-            onClick={() => navigate("/history")}
-            className="mt-7 rounded-xl bg-[var(--primary)] px-6 py-3 font-semibold text-white transition hover:bg-[var(--primary-hover)]"
+          <Button
+            variant="secondary"
+            onClick={() =>
+              navigate("/history")
+            }
+            className="mt-7"
           >
-            Back to History
-          </button>
-        </section>
+            <ArrowLeft size={17} />
+            Back to history
+          </Button>
+        </Card>
       </main>
     );
   }
 
-  const routineName =
-    allRoutines.find(
-      (routine) =>
-        routine.id === session.routineId,
-    )?.name ?? "Unknown Routine";
-
   const completedSets =
-    session.exercises.reduce(
-      (total, exercise) =>
-        total +
-        exercise.sets.filter(
-          (set) => set.completed,
-        ).length,
-      0,
-    );
+    getCompletedSets(session);
 
   const totalSets =
-    session.exercises.reduce(
-      (total, exercise) =>
-        total + exercise.sets.length,
-      0,
-    );
+    getTotalSets(session);
 
   const totalVolume =
-    session.exercises.reduce(
-      (total, exercise) =>
-        total +
-        exercise.sets.reduce(
-          (exerciseTotal, set) =>
-            exerciseTotal +
-            (set.completed
-              ? set.weight * set.reps
-              : 0),
-          0,
-        ),
-      0,
-    );
+    getSessionVolume(session);
 
-  const duration = getDuration(session);
+  const duration =
+    getSessionDuration(session);
+
+  const completionPercentage =
+    totalSets > 0
+      ? Math.round(
+          (completedSets /
+            totalSets) *
+            100,
+        )
+      : 0;
 
   return (
     <main className="mx-auto max-w-5xl space-y-8 pb-10">
-      {/* Back */}
-
       <Link
         to="/history"
-        className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--text-muted)] transition hover:text-[var(--primary)]"
+        className="
+          inline-flex
+          items-center
+          gap-2
+          text-sm
+          font-semibold
+          text-[var(--text-muted)]
+          transition-colors
+          hover:text-[var(--primary)]
+        "
       >
         <ArrowLeft size={17} />
         Workout History
       </Link>
 
       {/* Header */}
+      <section className="relative overflow-hidden rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-[var(--shadow-sm)] md:p-8">
+        <div
+          aria-hidden="true"
+          className="absolute -right-24 -top-24 h-64 w-64 rounded-full bg-[var(--primary)] opacity-10 blur-3xl"
+        />
 
-      <section className="rounded-[2rem] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-sm md:p-8">
-        <div className="flex flex-col justify-between gap-6 md:flex-row md:items-start">
-          <div>
-            <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.2em] text-[var(--success)]">
-              <CheckCircle2 size={17} />
-              Completed Workout
+        <div className="relative">
+          <div className="flex flex-col gap-7 lg:flex-row lg:items-start lg:justify-between">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-[var(--success)]">
+                <CheckCircle2
+                  size={16}
+                />
+                Completed workout
+              </div>
+
+              <h1 className="mt-4 text-3xl font-black tracking-tight text-[var(--text)] md:text-4xl">
+                {routineName}
+              </h1>
+
+              <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm text-[var(--text-muted)]">
+                <span className="inline-flex items-center gap-2">
+                  <CalendarDays
+                    size={16}
+                  />
+                  {formatWorkoutDate(
+                    session.completedAt,
+                  )}
+                </span>
+
+                <span className="inline-flex items-center gap-2">
+                  <Clock3 size={16} />
+                  {formatWorkoutTime(
+                    session.completedAt,
+                  )}
+                </span>
+
+                <span className="inline-flex items-center gap-2">
+                  <Clock3 size={16} />
+                  {duration}
+                </span>
+              </div>
             </div>
 
-            <h1 className="mt-4 text-3xl font-black tracking-tight text-[var(--text)] md:text-4xl">
-              {routineName}
-            </h1>
+            <div className="grid grid-cols-3 gap-2 sm:gap-3">
+              <SummaryStat
+                label="Exercises"
+                value={session.exercises.length.toString()}
+              />
 
-            <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm text-[var(--text-muted)]">
-              <span className="flex items-center gap-2">
-                <CalendarDays size={16} />
+              <SummaryStat
+                label="Sets"
+                value={`${completedSets}/${totalSets}`}
+              />
 
-                {new Date(
-                  session.completedAt,
-                ).toLocaleDateString()}
-              </span>
-
-              <span className="flex items-center gap-2">
-                <Clock3 size={16} />
-
-                {duration}
-              </span>
+              <SummaryStat
+                label="Volume"
+                value={`${formatNumber(
+                  totalVolume,
+                )} kg`}
+              />
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
-            <SummaryStat
-              label="Exercises"
-              value={session.exercises.length.toString()}
-            />
+          <div className="mt-7 border-t border-[var(--border)] pt-6">
+            <div className="flex items-center justify-between gap-4 text-sm">
+              <span className="font-semibold text-[var(--text)]">
+                Workout completion
+              </span>
 
-            <SummaryStat
-              label="Sets"
-              value={`${completedSets}/${totalSets}`}
-            />
+              <span className="font-black text-[var(--primary)]">
+                {completionPercentage}%
+              </span>
+            </div>
 
-            <SummaryStat
-              label="Volume"
-              value={`${totalVolume.toLocaleString()} kg`}
-            />
+            <div className="mt-3 h-2 overflow-hidden rounded-full bg-[var(--surface-soft)]">
+              <div
+                className="h-full rounded-full bg-[var(--primary)] transition-[width] duration-500"
+                style={{
+                  width: `${completionPercentage}%`,
+                }}
+              />
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Exercises */}
-
-      <section>
-        <div className="mb-5">
-          <p className="text-sm font-semibold uppercase tracking-[0.25em] text-[var(--primary)]">
+      {/* Exercise breakdown */}
+      <section className="space-y-5">
+        <div>
+          <p className="text-sm font-bold uppercase tracking-[0.2em] text-[var(--primary)]">
             Performance
           </p>
 
-          <h2 className="mt-2 text-3xl font-black text-[var(--text)]">
+          <h2 className="mt-2 text-3xl font-black tracking-tight text-[var(--text)]">
             Exercise breakdown
           </h2>
+
+          <p className="mt-2 text-[var(--text-muted)]">
+            Every set from this workout,
+            including what you completed and
+            what you skipped.
+          </p>
         </div>
 
-        <div className="space-y-5">
-          {session.exercises.map(
-            (exercise) => {
-              const exerciseCompletedSets =
-                exercise.sets.filter(
-                  (set) => set.completed,
-                ).length;
+        {session.exercises.map(
+          (exercise) => {
+            const exerciseCompletedSets =
+              exercise.sets.filter(
+                (set) => set.completed,
+              ).length;
 
-              const exerciseVolume =
-                exercise.sets.reduce(
-                  (total, set) =>
-                    total +
-                    (set.completed
-                      ? set.weight *
+            const exerciseVolume =
+              exercise.sets.reduce(
+                (total, set) =>
+                  total +
+                  (set.completed
+                    ? set.weight *
                       set.reps
-                      : 0),
-                  0,
-                );
+                    : 0),
+                0,
+              );
 
-              return (
-                <section
-                  key={exercise.exercise.id}
-                  className="rounded-[2rem] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-sm md:p-7"
-                >
-                  <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
-                    <div>
-                      <h3 className="text-xl font-black text-[var(--text)] md:text-2xl">
-                        {exercise.exercise.name}
+            return (
+              <Card
+                key={exercise.exercise.id}
+                className="overflow-hidden"
+              >
+                <div className="p-6 md:p-7">
+                  <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-start">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap gap-2">
+                        <Badge>
+                          {
+                            exercise
+                              .exercise
+                              .muscleGroup
+                          }
+                        </Badge>
+
+                        <Badge>
+                          {
+                            exercise
+                              .exercise
+                              .equipment
+                          }
+                        </Badge>
+                      </div>
+
+                      <h3 className="mt-4 text-xl font-black tracking-tight text-[var(--text)] md:text-2xl">
+                        {
+                          exercise
+                            .exercise.name
+                        }
                       </h3>
 
-                      <p className="mt-1 text-sm text-[var(--text-muted)]">
-                        {exercise.exercise.muscleGroup}{" "}
-                        ·{" "}
-                        {exercise.exercise.equipment}
-                      </p>
-
-                      <p className="mt-3 text-sm font-semibold text-[var(--primary)]">
+                      <p className="mt-2 text-sm font-semibold text-[var(--primary)]">
                         Target:{" "}
-                        {exercise.targetSets}{" "}
+                        {
+                          exercise.targetSets
+                        }{" "}
                         sets ·{" "}
-                        {exercise.targetReps}
+                        {
+                          exercise.targetReps
+                        }
                       </p>
                     </div>
 
                     <div className="flex flex-wrap gap-2">
-                      <span className="rounded-full bg-[var(--success-soft)] px-3 py-1.5 text-xs font-semibold text-[var(--success)]">
+                      <Badge variant="success">
                         {exerciseCompletedSets}/
-                        {exercise.sets.length}{" "}
+                        {
+                          exercise.sets
+                            .length
+                        }{" "}
                         complete
-                      </span>
+                      </Badge>
 
-                      <span className="rounded-full bg-[var(--surface-soft)] px-3 py-1.5 text-xs font-semibold text-[var(--text-muted)]">
-                        {exerciseVolume.toLocaleString()}{" "}
+                      <Badge>
+                        {formatNumber(
+                          exerciseVolume,
+                        )}{" "}
                         kg
-                      </span>
+                      </Badge>
                     </div>
                   </div>
+                </div>
 
-                  {/* Set table */}
+                <div className="overflow-x-auto border-t border-[var(--border)]">
+                  <table className="w-full min-w-[560px] border-collapse">
+                    <thead>
+                      <tr className="bg-[var(--surface-soft)] text-left text-xs font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">
+                        <th className="px-5 py-3">
+                          Set
+                        </th>
+                        <th className="px-5 py-3">
+                          Weight
+                        </th>
+                        <th className="px-5 py-3">
+                          Reps
+                        </th>
+                        <th className="px-5 py-3">
+                          Volume
+                        </th>
+                        <th className="px-5 py-3 text-right">
+                          Status
+                        </th>
+                      </tr>
+                    </thead>
 
-                  <div className="mt-6 overflow-x-auto">
-                    <table className="w-full min-w-[500px] border-collapse">
-                      <thead>
-                        <tr className="border-b border-[var(--border)] text-left text-xs font-bold uppercase tracking-[0.15em] text-[var(--text-muted)]">
-                          <th className="px-3 py-3">
-                            Set
-                          </th>
+                    <tbody>
+                      {exercise.sets.map(
+                        (set) => (
+                          <tr
+                            key={set.id}
+                            className="border-t border-[var(--border)]"
+                          >
+                            <td className="px-5 py-4 font-bold text-[var(--text)]">
+                              {set.order}
+                            </td>
 
-                          <th className="px-3 py-3">
-                            Weight
-                          </th>
+                            <td className="px-5 py-4 text-[var(--text)]">
+                              {formatNumber(
+                                set.weight,
+                              )}{" "}
+                              kg
+                            </td>
 
-                          <th className="px-3 py-3">
-                            Reps
-                          </th>
+                            <td className="px-5 py-4 text-[var(--text)]">
+                              {set.reps}
+                            </td>
 
-                          <th className="px-3 py-3">
-                            Volume
-                          </th>
+                            <td className="px-5 py-4 text-[var(--text-muted)]">
+                              {formatNumber(
+                                set.weight *
+                                  set.reps,
+                              )}{" "}
+                              kg
+                            </td>
 
-                          <th className="px-3 py-3 text-right">
-                            Status
-                          </th>
-                        </tr>
-                      </thead>
-
-                      <tbody>
-                        {exercise.sets.map(
-                          (set) => (
-                            <tr
-                              key={set.id}
-                              className="border-b border-[var(--border)] last:border-0"
-                            >
-                              <td className="px-3 py-4 font-semibold text-[var(--text)]">
-                                {set.order}
-                              </td>
-
-                              <td className="px-3 py-4 text-[var(--text)]">
-                                {set.weight} kg
-                              </td>
-
-                              <td className="px-3 py-4 text-[var(--text)]">
-                                {set.reps}
-                              </td>
-
-                              <td className="px-3 py-4 text-[var(--text-muted)]">
-                                {set.weight *
-                                  set.reps}{" "}
-                                kg
-                              </td>
-
-                              <td className="px-3 py-4 text-right">
-                                {set.completed ? (
-                                  <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--success)]">
-                                    <CheckCircle2
-                                      size={15}
-                                    />
-                                    Complete
-                                  </span>
-                                ) : (
-                                  <span className="text-sm text-[var(--text-muted)]">
-                                    Skipped
-                                  </span>
-                                )}
-                              </td>
-                            </tr>
-                          ),
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                </section>
-              );
-            },
-          )}
-        </div>
+                            <td className="px-5 py-4 text-right">
+                              {set.completed ? (
+                                <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--success)]">
+                                  <CheckCircle2
+                                    size={15}
+                                  />
+                                  Complete
+                                </span>
+                              ) : (
+                                <span className="text-sm font-medium text-[var(--text-muted)]">
+                                  Skipped
+                                </span>
+                              )}
+                            </td>
+                          </tr>
+                        ),
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </Card>
+            );
+          },
+        )}
       </section>
+
+      {/* Footer action */}
+      <Card className="flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="font-bold text-[var(--text)]">
+            Ready for the next one?
+          </p>
+
+          <p className="mt-1 text-sm text-[var(--text-muted)]">
+            Keep the momentum going with another
+            workout.
+          </p>
+        </div>
+
+        <Button
+          onClick={() =>
+            navigate("/workouts")
+          }
+          className="w-full sm:w-auto"
+        >
+          Browse workouts
+          <ArrowLeft
+            size={17}
+            className="rotate-180"
+          />
+        </Button>
+      </Card>
     </main>
   );
 }
 
-type SummaryStatProps = {
-  label: string;
-  value: string;
-};
-
 function SummaryStat({
   label,
   value,
-}: SummaryStatProps) {
+}: {
+  label: string;
+  value: string;
+}) {
   return (
-    <div className="rounded-2xl bg-[var(--surface-soft)] px-4 py-3 text-center">
-      <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
+    <div className="min-w-20 rounded-[var(--radius-md)] bg-[var(--surface-soft)] px-3 py-3 text-center sm:min-w-24">
+      <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text-muted)]">
         {label}
       </p>
 
@@ -412,38 +529,27 @@ function SummaryStat({
   );
 }
 
-function getDuration(
-  session: Pick<
-    WorkoutSession,
-    "startedAt" | "completedAt"
-  >,
-) {
-  const start = new Date(
-    session.startedAt,
-  ).getTime();
+function DetailsSkeleton() {
+  return (
+    <main
+      role="status"
+      aria-label="Loading workout details"
+      className="mx-auto max-w-5xl space-y-6"
+    >
+      <span className="sr-only">
+        Loading workout details
+      </span>
 
-  const end = new Date(
-    session.completedAt,
-  ).getTime();
+      <div className="h-5 w-36 animate-pulse rounded bg-[var(--surface-soft)]" />
 
-  const totalSeconds = Math.max(
-    0,
-    Math.round((end - start) / 1000),
+      <div className="h-72 animate-pulse rounded-[var(--radius-xl)] bg-[var(--surface-soft)]" />
+
+      {[1, 2].map((item) => (
+        <div
+          key={item}
+          className="h-72 animate-pulse rounded-[var(--radius-xl)] bg-[var(--surface-soft)]"
+        />
+      ))}
+    </main>
   );
-
-  const minutes = Math.floor(
-    totalSeconds / 60,
-  );
-
-  const seconds = totalSeconds % 60;
-
-  if (minutes === 0) {
-    return `${seconds} sec`;
-  }
-
-  if (seconds === 0) {
-    return `${minutes} min`;
-  }
-
-  return `${minutes} min ${seconds} sec`;
 }

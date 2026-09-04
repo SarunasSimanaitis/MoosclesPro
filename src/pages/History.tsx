@@ -4,33 +4,64 @@ import {
   CheckCircle2,
   Clock3,
   Dumbbell,
+  Filter,
+  History as HistoryIcon,
   Weight,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { useNavigate } from "react-router-dom";
 
+import { workoutSessionsApi } from "../api/workoutSessions";
+import Button from "../components/ui/Button";
+import Card from "../components/ui/Card";
 import { routines } from "../data/routines";
 import { useRoutineStore } from "../stores/routineStore";
-
-import { getWorkoutSessions } from "../utils/workoutStorage";
+import {
+  formatNumber,
+  formatWorkoutDate,
+  getCompletedSets,
+  getSessionDuration,
+  getSessionVolume,
+} from "../lib/workoutPresentation";
 
 import type { WorkoutSession } from "../types/WorkoutSession";
+
+type HistoryFilter =
+  | "all"
+  | "this-month"
+  | "last-month";
 
 export default function History() {
   const navigate = useNavigate();
 
-  const customRoutines = useRoutineStore(
-    (state) => state.customRoutines,
-  );
+  const customRoutines =
+    useRoutineStore(
+      (state) => state.customRoutines,
+    );
 
-  const [sessions, setSessions] =
-    useState<WorkoutSession[]>([]);
+  const [
+    sessions,
+    setSessions,
+  ] = useState<WorkoutSession[]>([]);
 
-  const [isLoading, setIsLoading] =
-    useState(true);
+  const [
+    isLoading,
+    setIsLoading,
+  ] = useState(true);
 
-  const [error, setError] =
-    useState<string | null>(null);
+  const [
+    error,
+    setError,
+  ] = useState<string | null>(null);
+
+  const [
+    filter,
+    setFilter,
+  ] = useState<HistoryFilter>("all");
 
   useEffect(() => {
     let cancelled = false;
@@ -41,21 +72,24 @@ export default function History() {
         setError(null);
 
         const data =
-          await getWorkoutSessions();
+          await workoutSessionsApi.list();
 
-        if (!cancelled) {
-          setSessions(
-            [...data].sort(
-              (a, b) =>
-                new Date(
-                  b.completedAt,
-                ).getTime() -
-                new Date(
-                  a.completedAt,
-                ).getTime(),
-            ),
-          );
+        if (cancelled) {
+          return;
         }
+
+        const sorted =
+          [...data].sort(
+            (a, b) =>
+              new Date(
+                b.completedAt,
+              ).getTime() -
+              new Date(
+                a.completedAt,
+              ).getTime(),
+          );
+
+        setSessions(sorted);
       } catch (requestError) {
         console.error(
           "Failed to load workout history:",
@@ -81,270 +115,580 @@ export default function History() {
     };
   }, []);
 
-  const allRoutines = [
-    ...routines,
-    ...customRoutines,
-  ];
+  const allRoutines = useMemo(
+    () => [
+      ...routines,
+      ...customRoutines,
+    ],
+    [customRoutines],
+  );
 
-  function getRoutineName(
-    routineId: string,
-  ) {
-    return (
-      allRoutines.find(
-        (routine) =>
-          routine.id === routineId,
-      )?.name ?? "Unknown Routine"
-    );
-  }
+  const routineNames = useMemo(
+    () =>
+      new Map(
+        allRoutines.map(
+          (routine) => [
+            routine.id,
+            routine.name,
+          ],
+        ),
+      ),
+    [allRoutines],
+  );
 
-  function getCompletedSets(
-    session: WorkoutSession,
-  ) {
-    return session.exercises.reduce(
-      (total, exercise) =>
-        total +
-        exercise.sets.filter(
-          (set) => set.completed,
-        ).length,
-      0,
-    );
-  }
+  const filteredSessions =
+    useMemo(() => {
+      if (filter === "all") {
+        return sessions;
+      }
 
-  function getTotalVolume(
-    session: WorkoutSession,
-  ) {
-    return session.exercises.reduce(
-      (total, exercise) =>
-        total +
-        exercise.sets.reduce(
-          (exerciseTotal, set) =>
-            exerciseTotal +
-            (set.completed
-              ? set.weight * set.reps
-              : 0),
+      const now = new Date();
+
+      if (filter === "this-month") {
+        return sessions.filter(
+          (session) => {
+            const date = new Date(
+              session.completedAt,
+            );
+
+            return (
+              date.getFullYear() ===
+                now.getFullYear() &&
+              date.getMonth() ===
+                now.getMonth()
+            );
+          },
+        );
+      }
+
+      const previousMonth =
+        new Date(
+          now.getFullYear(),
+          now.getMonth() - 1,
+          1,
+        );
+
+      return sessions.filter(
+        (session) => {
+          const date = new Date(
+            session.completedAt,
+          );
+
+          return (
+            date.getFullYear() ===
+              previousMonth.getFullYear() &&
+            date.getMonth() ===
+              previousMonth.getMonth()
+          );
+        },
+      );
+    }, [filter, sessions]);
+
+  const totalVolume = useMemo(
+    () =>
+      sessions.reduce(
+        (total, session) =>
+          total +
+          getSessionVolume(session),
+        0,
+      ),
+    [sessions],
+  );
+
+  const totalCompletedSets =
+    useMemo(
+      () =>
+        sessions.reduce(
+          (total, session) =>
+            total +
+            getCompletedSets(session),
           0,
         ),
-      0,
+      [sessions],
     );
-  }
-
-  function getDuration(
-    session: WorkoutSession,
-  ) {
-    const start = new Date(
-      session.startedAt,
-    ).getTime();
-
-    const end = new Date(
-      session.completedAt,
-    ).getTime();
-
-    const totalSeconds = Math.max(
-      0,
-      Math.round(
-        (end - start) / 1000,
-      ),
-    );
-
-    const minutes = Math.floor(
-      totalSeconds / 60,
-    );
-
-    const seconds = totalSeconds % 60;
-
-    if (minutes === 0) {
-      return `${seconds} sec`;
-    }
-
-    if (seconds === 0) {
-      return `${minutes} min`;
-    }
-
-    return `${minutes} min ${seconds} sec`;
-  }
 
   if (isLoading) {
-    return (
-      <main className="mx-auto flex min-h-[60vh] max-w-6xl items-center justify-center">
-        <p className="text-sm font-medium text-[var(--text-muted)]">
-          Loading your workout history...
-        </p>
-      </main>
-    );
+    return <HistorySkeleton />;
   }
 
   if (error) {
     return (
-      <main className="mx-auto max-w-6xl">
-        <section className="rounded-[2rem] border border-[var(--danger)]/30 bg-[var(--surface)] p-10 text-center shadow-sm">
-          <h1 className="text-2xl font-black text-[var(--text)]">
-            Something went wrong
-          </h1>
-
-          <p className="mt-3 text-[var(--text-muted)]">
-            {error}
-          </p>
-
-          <button
-            type="button"
-            onClick={() =>
-              window.location.reload()
-            }
-            className="mt-6 rounded-xl bg-[var(--primary)] px-6 py-3 font-semibold text-white transition hover:bg-[var(--primary-hover)]"
-          >
-            Try Again
-          </button>
-        </section>
-      </main>
+      <HistoryError
+        message={error}
+        onRetry={() =>
+          window.location.reload()
+        }
+      />
     );
   }
 
   return (
     <main className="mx-auto max-w-6xl space-y-10">
       {/* Header */}
-
       <section>
-        <p className="text-sm font-semibold uppercase tracking-[0.25em] text-[var(--primary)]">
-          Training Log
+        <p className="flex items-center gap-2 text-sm font-bold uppercase tracking-[0.25em] text-[var(--primary)]">
+          <HistoryIcon size={16} />
+          Training log
         </p>
 
-        <h1 className="mt-3 text-4xl font-black tracking-tight text-[var(--text)] md:text-5xl">
-          Workout History
-        </h1>
+        <div className="mt-3 flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
+          <div>
+            <h1 className="text-4xl font-black tracking-tight text-[var(--text)] md:text-5xl">
+              Workout History
+            </h1>
 
-        <p className="mt-3 max-w-2xl text-lg text-[var(--text-muted)]">
-          Review your completed workouts and track
-          your progress over time.
-        </p>
-      </section>
-
-      {/* Empty state */}
-
-      {sessions.length === 0 ? (
-        <section className="rounded-[2rem] border border-dashed border-[var(--border-strong)] bg-[var(--surface)] p-12 text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--primary-soft)] text-[var(--primary)]">
-            <Dumbbell size={28} />
+            <p className="mt-3 max-w-2xl text-lg leading-relaxed text-[var(--text-muted)]">
+              Look back at the work you've
+              put in and keep building on it.
+            </p>
           </div>
 
-          <h2 className="mt-6 text-2xl font-black text-[var(--text)]">
-            No workouts yet
-          </h2>
-
-          <p className="mx-auto mt-2 max-w-md text-[var(--text-muted)]">
-            Complete your first workout and it will
-            appear here.
-          </p>
-
-          <button
-            type="button"
+          <Button
+            variant="secondary"
             onClick={() =>
               navigate("/workouts")
             }
-            className="mt-6 rounded-xl bg-[var(--primary)] px-6 py-3 font-semibold text-white transition hover:bg-[var(--primary-hover)]"
           >
-            Browse Workouts
-          </button>
-        </section>
+            <Dumbbell size={17} />
+            Start a workout
+          </Button>
+        </div>
+      </section>
+
+      {/* Overview */}
+      <section
+        aria-label="History overview"
+        className="grid gap-4 sm:grid-cols-3"
+      >
+        <HistoryMetric
+          label="Workouts"
+          value={sessions.length}
+          suffix="completed"
+        />
+
+        <HistoryMetric
+          label="Volume"
+          value={formatNumber(
+            totalVolume,
+          )}
+          suffix="kg"
+        />
+
+        <HistoryMetric
+          label="Completed sets"
+          value={totalCompletedSets}
+          suffix="sets"
+        />
+      </section>
+
+      {sessions.length === 0 ? (
+        <EmptyHistory
+          onStart={() =>
+            navigate("/workouts")
+          }
+        />
       ) : (
-        <section className="space-y-5">
-          {sessions.map((session) => {
-            const routineName =
-              getRoutineName(
-                session.routineId,
-              );
+        <>
+          {/* Filters */}
+          <Card className="p-4 md:p-5">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div className="flex items-center gap-2">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--primary-soft)] text-[var(--primary)]">
+                  <Filter size={16} />
+                </div>
 
-            const completedSets =
-              getCompletedSets(session);
+                <div>
+                  <p className="text-sm font-bold text-[var(--text)]">
+                    Training history
+                  </p>
 
-            const totalVolume =
-              getTotalVolume(session);
+                  <p className="text-xs text-[var(--text-muted)]">
+                    {filteredSessions.length}{" "}
+                    {filteredSessions.length ===
+                    1
+                      ? "workout"
+                      : "workouts"}{" "}
+                    shown
+                  </p>
+                </div>
+              </div>
 
-            return (
-              <article
-                key={session.id}
-                className="group rounded-[2rem] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg md:p-8"
+              <div
+                role="group"
+                aria-label="History date filter"
+                className="grid grid-cols-3 rounded-[var(--radius-md)] bg-[var(--surface-soft)] p-1"
               >
-                <div className="flex flex-col justify-between gap-5 md:flex-row md:items-start">
-                  <div>
-                    <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.2em] text-[var(--primary)]">
-                      <CheckCircle2 size={16} />
-                      Completed Workout
-                    </div>
+                <FilterOption
+                  active={
+                    filter === "all"
+                  }
+                  label="All"
+                  onClick={() =>
+                    setFilter("all")
+                  }
+                />
 
-                    <h2 className="mt-4 text-2xl font-black text-[var(--text)] md:text-3xl">
-                      {routineName}
-                    </h2>
+                <FilterOption
+                  active={
+                    filter ===
+                    "this-month"
+                  }
+                  label="This month"
+                  onClick={() =>
+                    setFilter(
+                      "this-month",
+                    )
+                  }
+                />
 
-                    <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-[var(--text-muted)]">
-                      <span className="flex items-center gap-2">
-                        <CalendarDays size={16} />
+                <FilterOption
+                  active={
+                    filter ===
+                    "last-month"
+                  }
+                  label="Last month"
+                  onClick={() =>
+                    setFilter(
+                      "last-month",
+                    )
+                  }
+                />
+              </div>
+            </div>
+          </Card>
 
-                        {new Date(
-                          session.completedAt,
-                        ).toLocaleDateString()}
-                      </span>
+          {filteredSessions.length === 0 ? (
+            <Card className="p-10 text-center">
+              <CalendarDays
+                size={24}
+                className="mx-auto text-[var(--text-muted)]"
+              />
 
-                      <span className="flex items-center gap-2">
-                        <Clock3 size={16} />
+              <h2 className="mt-4 text-xl font-black text-[var(--text)]">
+                Nothing here yet
+              </h2>
 
-                        {getDuration(session)}
-                      </span>
-                    </div>
-                  </div>
+              <p className="mt-2 text-sm text-[var(--text-muted)]">
+                You don't have any workouts in
+                this period.
+              </p>
 
-                  <button
-                    type="button"
-                    onClick={() =>
+              <Button
+                variant="secondary"
+                onClick={() =>
+                  setFilter("all")
+                }
+                className="mt-6"
+              >
+                Show all workouts
+              </Button>
+            </Card>
+          ) : (
+            <section className="space-y-4">
+              {filteredSessions.map(
+                (session) => (
+                  <HistoryItem
+                    key={session.id}
+                    session={session}
+                    routineName={
+                      routineNames.get(
+                        session.routineId,
+                      ) ??
+                      "Unknown Routine"
+                    }
+                    onView={() =>
                       navigate(
                         `/history/${session.id}`,
                       )
                     }
-                    className="flex items-center gap-2 self-start text-sm font-semibold text-[var(--primary)] transition hover:gap-3"
-                  >
-                    View details
-                    <ArrowRight size={17} />
-                  </button>
-                </div>
-
-                <div className="mt-7 grid gap-4 md:grid-cols-3">
-                  <div className="rounded-2xl bg-[var(--surface-soft)] p-5">
-                    <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
-                      <Dumbbell size={15} />
-                      Exercises
-                    </div>
-
-                    <p className="mt-3 text-2xl font-black text-[var(--text)]">
-                      {session.exercises.length}
-                    </p>
-                  </div>
-
-                  <div className="rounded-2xl bg-[var(--surface-soft)] p-5">
-                    <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
-                      <CheckCircle2 size={15} />
-                      Completed Sets
-                    </div>
-
-                    <p className="mt-3 text-2xl font-black text-[var(--text)]">
-                      {completedSets}
-                    </p>
-                  </div>
-
-                  <div className="rounded-2xl bg-[var(--surface-soft)] p-5">
-                    <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
-                      <Weight size={15} />
-                      Volume
-                    </div>
-
-                    <p className="mt-3 text-2xl font-black text-[var(--text)]">
-                      {totalVolume.toLocaleString()} kg
-                    </p>
-                  </div>
-                </div>
-              </article>
-            );
-          })}
-        </section>
+                  />
+                ),
+              )}
+            </section>
+          )}
+        </>
       )}
+    </main>
+  );
+}
+
+function HistoryItem({
+  session,
+  routineName,
+  onView,
+}: {
+  session: WorkoutSession;
+  routineName: string;
+  onView: () => void;
+}) {
+  const completedSets =
+    getCompletedSets(session);
+
+  const totalVolume =
+    getSessionVolume(session);
+
+  const duration =
+    getSessionDuration(session);
+
+  return (
+    <Card
+      hover
+      className="p-6 md:p-7"
+    >
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-[var(--success)]">
+            <CheckCircle2 size={15} />
+            Completed workout
+          </div>
+
+          <h2 className="mt-3 truncate text-2xl font-black tracking-tight text-[var(--text)] md:text-3xl">
+            {routineName}
+          </h2>
+
+          <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm text-[var(--text-muted)]">
+            <span className="inline-flex items-center gap-2">
+              <CalendarDays size={15} />
+              {formatWorkoutDate(
+                session.completedAt,
+              )}
+            </span>
+
+            <span className="inline-flex items-center gap-2">
+              <Clock3 size={15} />
+              {duration}
+            </span>
+          </div>
+        </div>
+
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onView}
+          className="w-fit shrink-0 px-0 lg:ml-auto"
+        >
+          View details
+          <ArrowRight size={16} />
+        </Button>
+      </div>
+
+      <div className="mt-6 grid gap-3 border-t border-[var(--border)] pt-6 sm:grid-cols-3">
+        <MiniMetric
+          icon={<Dumbbell size={15} />}
+          label="Exercises"
+          value={
+            session.exercises.length.toString()
+          }
+        />
+
+        <MiniMetric
+          icon={<CheckCircle2 size={15} />}
+          label="Completed sets"
+          value={
+            completedSets.toString()
+          }
+        />
+
+        <MiniMetric
+          icon={<Weight size={15} />}
+          label="Volume"
+          value={`${formatNumber(
+            totalVolume,
+          )} kg`}
+        />
+      </div>
+    </Card>
+  );
+}
+
+function HistoryMetric({
+  label,
+  value,
+  suffix,
+}: {
+  label: string;
+  value: number | string;
+  suffix: string;
+}) {
+  return (
+    <Card className="p-5">
+      <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">
+        {label}
+      </p>
+
+      <div className="mt-2 flex items-baseline gap-2">
+        <span className="text-2xl font-black text-[var(--text)]">
+          {value}
+        </span>
+
+        <span className="text-xs font-semibold text-[var(--text-muted)]">
+          {suffix}
+        </span>
+      </div>
+    </Card>
+  );
+}
+
+function MiniMetric({
+  icon,
+  label,
+  value,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="rounded-[var(--radius-md)] bg-[var(--surface-soft)] p-4">
+      <div className="flex items-center gap-2 text-xs font-semibold text-[var(--text-muted)]">
+        {icon}
+        {label}
+      </div>
+
+      <p className="mt-2 font-black text-[var(--text)]">
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function FilterOption({
+  active,
+  label,
+  onClick,
+}: {
+  active: boolean;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={active}
+      onClick={onClick}
+      className={`
+        rounded-[var(--radius-sm)]
+        px-3
+        py-2
+        text-xs
+        font-bold
+        transition-[background-color,color,box-shadow]
+        duration-200
+        ${
+          active
+            ? "bg-[var(--surface)] text-[var(--text)] shadow-[var(--shadow-sm)]"
+            : "text-[var(--text-muted)] hover:text-[var(--text)]"
+        }
+      `}
+    >
+      {label}
+    </button>
+  );
+}
+
+function EmptyHistory({
+  onStart,
+}: {
+  onStart: () => void;
+}) {
+  return (
+    <Card className="border-dashed p-12 text-center">
+      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--primary-soft)] text-[var(--primary)]">
+        <HistoryIcon size={28} />
+      </div>
+
+      <h2 className="mt-6 text-2xl font-black text-[var(--text)]">
+        Your training story starts here
+      </h2>
+
+      <p className="mx-auto mt-2 max-w-md leading-relaxed text-[var(--text-muted)]">
+        Complete your first workout and
+        MoosclesPro will start building your
+        training history.
+      </p>
+
+      <Button
+        onClick={onStart}
+        className="mt-7"
+      >
+        Start your first workout
+        <ArrowRight size={17} />
+      </Button>
+    </Card>
+  );
+}
+
+function HistorySkeleton() {
+  return (
+    <main
+      role="status"
+      aria-label="Loading workout history"
+      className="mx-auto max-w-6xl space-y-8"
+    >
+      <span className="sr-only">
+        Loading your workout history
+      </span>
+
+      <div className="space-y-4">
+        <div className="h-4 w-32 animate-pulse rounded bg-[var(--surface-soft)]" />
+        <div className="h-12 w-80 animate-pulse rounded-xl bg-[var(--surface-soft)]" />
+        <div className="h-6 w-full max-w-2xl animate-pulse rounded-lg bg-[var(--surface-soft)]" />
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-3">
+        {[1, 2, 3].map((item) => (
+          <div
+            key={item}
+            className="h-24 animate-pulse rounded-[var(--radius-xl)] bg-[var(--surface-soft)]"
+          />
+        ))}
+      </div>
+
+      <div className="space-y-4">
+        {[1, 2, 3].map((item) => (
+          <div
+            key={item}
+            className="h-64 animate-pulse rounded-[var(--radius-xl)] bg-[var(--surface-soft)]"
+          />
+        ))}
+      </div>
+    </main>
+  );
+}
+
+function HistoryError({
+  message,
+  onRetry,
+}: {
+  message: string;
+  onRetry: () => void;
+}) {
+  return (
+    <main className="mx-auto flex min-h-[60vh] max-w-2xl items-center justify-center">
+      <Card
+        role="alert"
+        className="w-full p-10 text-center"
+      >
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--danger-soft)] text-[var(--danger)]">
+          <HistoryIcon size={24} />
+        </div>
+
+        <h1 className="mt-6 text-2xl font-black text-[var(--text)]">
+          History unavailable
+        </h1>
+
+        <p className="mt-3 text-[var(--text-muted)]">
+          {message}
+        </p>
+
+        <Button
+          variant="secondary"
+          onClick={onRetry}
+          className="mt-7"
+        >
+          Try again
+        </Button>
+      </Card>
     </main>
   );
 }

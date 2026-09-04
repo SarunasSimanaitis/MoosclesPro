@@ -1,9 +1,9 @@
-import type { Exercise } from "../types/Exercise";
-import type { Routine } from "../types/Routine";
-import type { RoutineExercise } from "../types/RoutineExercise";
-import type { WorkoutExercise } from "../types/WorkoutExercise";
-import type { WorkoutSession } from "../types/WorkoutSession";
-import type { WorkoutSet } from "../types/WorkoutSet";
+import type { Exercise } from "../types/Exercise.js";
+import type { Routine } from "../types/Routine.js";
+import type { RoutineExercise } from "../types/RoutineExercise.js";
+import type { WorkoutExercise } from "../types/WorkoutExercise.js";
+import type { WorkoutSession } from "../types/WorkoutSession.js";
+import type { WorkoutSet } from "../types/WorkoutSet.js";
 
 type ValidationSuccess<T> = {
   success: true;
@@ -119,9 +119,7 @@ function isOneOf<const T extends readonly string[]>(
 ): value is T[number] {
   return (
     typeof value === "string" &&
-    values.includes(
-      value as T[number],
-    )
+    values.includes(value as T[number])
   );
 }
 
@@ -132,12 +130,9 @@ function isValidDateString(
     return false;
   }
 
-  const timestamp =
-    new Date(value).getTime();
+  const timestamp = new Date(value).getTime();
 
-  return Number.isFinite(
-    timestamp,
-  );
+  return Number.isFinite(timestamp);
 }
 
 function validateExercise(
@@ -150,38 +145,19 @@ function validateExercise(
   return (
     isNonEmptyString(value.id) &&
     isNonEmptyString(value.name) &&
-    isOneOf(
-      value.muscleGroup,
-      MUSCLE_GROUPS,
-    ) &&
-    isOneOf(
-      value.equipment,
-      EQUIPMENT,
-    ) &&
-    isOneOf(
-      value.category,
-      EXERCISE_CATEGORIES,
-    ) &&
-    isStringArray(
-      value.instructions,
-    ) &&
-    isStringArray(
-      value.primaryMuscles,
-    ) &&
-    isStringArray(
-      value.secondaryMuscles,
+    isOneOf(value.muscleGroup, MUSCLE_GROUPS) &&
+    isOneOf(value.equipment, EQUIPMENT) &&
+    isOneOf(value.category, EXERCISE_CATEGORIES) &&
+    isStringArray(value.instructions) &&
+    isStringArray(value.primaryMuscles) &&
+    isStringArray(value.secondaryMuscles) &&
+    (
+      value.imageUrl === undefined ||
+      typeof value.imageUrl === "string"
     ) &&
     (
-      value.imageUrl ===
-        undefined ||
-      typeof value.imageUrl ===
-        "string"
-    ) &&
-    (
-      value.videoUrl ===
-        undefined ||
-      typeof value.videoUrl ===
-        "string"
+      value.videoUrl === undefined ||
+      typeof value.videoUrl === "string"
     )
   );
 }
@@ -194,21 +170,11 @@ function validateRoutineExercise(
   }
 
   return (
-    validateExercise(
-      value.exercise,
-    ) &&
-    isPositiveInteger(
-      value.targetSets,
-    ) &&
-    isNonEmptyString(
-      value.targetReps,
-    ) &&
-    isNonNegativeNumber(
-      value.restSeconds,
-    ) &&
-    Number.isInteger(
-      value.restSeconds,
-    )
+    validateExercise(value.exercise) &&
+    isPositiveInteger(value.targetSets) &&
+    isNonEmptyString(value.targetReps) &&
+    isNonNegativeNumber(value.restSeconds) &&
+    Number.isInteger(value.restSeconds)
   );
 }
 
@@ -221,23 +187,12 @@ function validateWorkoutSet(
 
   return (
     isNonEmptyString(value.id) &&
-    isNonNegativeNumber(
-      value.weight,
-    ) &&
-    Number.isInteger(
-      value.weight * 2,
-    ) &&
-    isNonNegativeNumber(
-      value.reps,
-    ) &&
-    Number.isInteger(
-      value.reps,
-    ) &&
-    typeof value.completed ===
-      "boolean" &&
-    isPositiveInteger(
-      value.order,
-    )
+    isNonNegativeNumber(value.weight) &&
+    Number.isInteger(value.weight * 2) &&
+    isNonNegativeNumber(value.reps) &&
+    Number.isInteger(value.reps) &&
+    typeof value.completed === "boolean" &&
+    isPositiveInteger(value.order)
   );
 }
 
@@ -249,26 +204,14 @@ function validateWorkoutExercise(
   }
 
   return (
-    validateExercise(
-      value.exercise,
-    ) &&
-    isPositiveInteger(
-      value.targetSets,
-    ) &&
-    isNonEmptyString(
-      value.targetReps,
-    ) &&
-    isNonNegativeNumber(
-      value.restSeconds,
-    ) &&
-    Number.isInteger(
-      value.restSeconds,
-    ) &&
+    validateExercise(value.exercise) &&
+    isPositiveInteger(value.targetSets) &&
+    isNonEmptyString(value.targetReps) &&
+    isNonNegativeNumber(value.restSeconds) &&
+    Number.isInteger(value.restSeconds) &&
     Array.isArray(value.sets) &&
     value.sets.length > 0 &&
-    value.sets.every(
-      validateWorkoutSet,
-    )
+    value.sets.every(validateWorkoutSet)
   );
 }
 
@@ -302,15 +245,9 @@ function validateWorkoutSession(
 
   return (
     isNonEmptyString(value.id) &&
-    isNonEmptyString(
-      value.routineId,
-    ) &&
-    isValidDateString(
-      value.startedAt,
-    ) &&
-    isValidDateString(
-      value.completedAt,
-    ) &&
+    isNonEmptyString(value.routineId) &&
+    isValidDateString(value.startedAt) &&
+    isValidDateString(value.completedAt) &&
     Array.isArray(value.exercises) &&
     value.exercises.length > 0 &&
     value.exercises.every(
@@ -335,9 +272,13 @@ export function parseRoutineRequestBody(
     };
   }
 
+  const id = value.id;
+  const name = value.name;
+  const exercises = value.exercises;
+
   if (
-    value.id !== undefined &&
-    !isNonEmptyString(value.id)
+    id !== undefined &&
+    !isNonEmptyString(id)
   ) {
     return {
       success: false,
@@ -346,8 +287,8 @@ export function parseRoutineRequestBody(
   }
 
   if (
-    value.name !== undefined &&
-    typeof value.name !== "string"
+    name !== undefined &&
+    typeof name !== "string"
   ) {
     return {
       success: false,
@@ -356,22 +297,23 @@ export function parseRoutineRequestBody(
   }
 
   if (
-    value.exercises !== undefined &&
-    !Array.isArray(value.exercises)
+    exercises !== undefined &&
+    !Array.isArray(exercises)
   ) {
     return {
       success: false,
-      error:
-        "Routine exercises must be an array.",
+      error: "Routine exercises must be an array.",
     };
   }
 
   return {
     success: true,
     data: {
-      id: value.id,
-      name: value.name,
-      exercises: value.exercises,
+      ...(id !== undefined ? { id } : {}),
+      ...(name !== undefined ? { name } : {}),
+      ...(exercises !== undefined
+        ? { exercises }
+        : {}),
     },
   };
 }
@@ -411,9 +353,15 @@ export function parseWorkoutSessionRequestBody(
     };
   }
 
+  const id = value.id;
+  const routineId = value.routineId;
+  const startedAt = value.startedAt;
+  const completedAt = value.completedAt;
+  const exercises = value.exercises;
+
   if (
-    value.id !== undefined &&
-    !isNonEmptyString(value.id)
+    id !== undefined &&
+    !isNonEmptyString(id)
   ) {
     return {
       success: false,
@@ -423,8 +371,8 @@ export function parseWorkoutSessionRequestBody(
   }
 
   if (
-    value.routineId !== undefined &&
-    !isNonEmptyString(value.routineId)
+    routineId !== undefined &&
+    !isNonEmptyString(routineId)
   ) {
     return {
       success: false,
@@ -434,23 +382,18 @@ export function parseWorkoutSessionRequestBody(
   }
 
   if (
-    value.startedAt !== undefined &&
-    !isValidDateString(
-      value.startedAt,
-    )
+    startedAt !== undefined &&
+    !isValidDateString(startedAt)
   ) {
     return {
       success: false,
-      error:
-        "Workout start time is invalid.",
+      error: "Workout start time is invalid.",
     };
   }
 
   if (
-    value.completedAt !== undefined &&
-    !isValidDateString(
-      value.completedAt,
-    )
+    completedAt !== undefined &&
+    !isValidDateString(completedAt)
   ) {
     return {
       success: false,
@@ -460,8 +403,8 @@ export function parseWorkoutSessionRequestBody(
   }
 
   if (
-    value.exercises !== undefined &&
-    !Array.isArray(value.exercises)
+    exercises !== undefined &&
+    !Array.isArray(exercises)
   ) {
     return {
       success: false,
@@ -473,13 +416,19 @@ export function parseWorkoutSessionRequestBody(
   return {
     success: true,
     data: {
-      id: value.id,
-      routineId: value.routineId,
-      startedAt: value.startedAt,
-      completedAt:
-        value.completedAt,
-      exercises:
-        value.exercises,
+      ...(id !== undefined ? { id } : {}),
+      ...(routineId !== undefined
+        ? { routineId }
+        : {}),
+      ...(startedAt !== undefined
+        ? { startedAt }
+        : {}),
+      ...(completedAt !== undefined
+        ? { completedAt }
+        : {}),
+      ...(exercises !== undefined
+        ? { exercises }
+        : {}),
     },
   };
 }
@@ -487,13 +436,10 @@ export function parseWorkoutSessionRequestBody(
 export function validateWorkoutSessionPayload(
   value: unknown,
 ): ValidationResult<WorkoutSession> {
-  if (
-    !validateWorkoutSession(value)
-  ) {
+  if (!validateWorkoutSession(value)) {
     return {
       success: false,
-      error:
-        "Invalid workout session.",
+      error: "Invalid workout session.",
     };
   }
 

@@ -1,16 +1,21 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import { authClient } from "../lib/auth-client";
 
 export default function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const from =
+    (location.state as { from?: string } | null)?.from ?? "/dashboard";
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -30,11 +35,19 @@ export default function Login() {
       return;
     }
 
-    navigate("/");
+    navigate(from, { replace: true });
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[var(--background)] px-5 py-10">
+    <main className="relative flex min-h-screen items-center justify-center bg-[var(--background)] px-5 py-10">
+      <Link
+        to="/"
+        className="absolute left-5 top-5 inline-flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3.5 py-2.5 text-sm font-semibold text-[var(--text-muted)] shadow-sm transition hover:border-[var(--border-strong)] hover:bg-[var(--surface-hover)] hover:text-[var(--text)] md:left-8 md:top-8"
+      >
+        <ArrowLeft size={17} />
+        <span>Back</span>
+      </Link>
+
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
           <Link

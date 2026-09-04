@@ -86,7 +86,7 @@ export default {
               rawBody,
             );
 
-          if (!parsed.success) {
+          if (parsed.success === false) {
             return Response.json(
               {
                 error: parsed.error,
@@ -152,13 +152,9 @@ export default {
             id:
               parsed.data.id ??
               crypto.randomUUID(),
-
             routineId,
-
             startedAt,
-
             completedAt,
-
             exercises,
           };
 
@@ -167,7 +163,10 @@ export default {
               candidate,
             );
 
-          if (!validation.success) {
+          if (
+            validation.success ===
+            false
+          ) {
             return Response.json(
               {
                 error:
@@ -182,9 +181,7 @@ export default {
           const workoutSession: StoredWorkoutSession =
             {
               ...validation.data,
-
               userId: user.id,
-
               createdAt:
                 new Date(),
             };

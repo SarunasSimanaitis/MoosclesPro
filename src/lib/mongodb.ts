@@ -2,6 +2,7 @@ import { MongoClient } from "mongodb";
 
 type RuntimeEnv = {
   MONGODB_URI?: string;
+  NODE_ENV?: string;
 };
 
 const env = (
@@ -31,10 +32,7 @@ export const mongoClient =
   globalMongo.__moosclesMongoClient ??
   new MongoClient(mongodbUri);
 
-if (
-  process.env.NODE_ENV !==
-  "production"
-) {
+if (env.NODE_ENV !== "production") {
   globalMongo.__moosclesMongoClient =
     mongoClient;
 }

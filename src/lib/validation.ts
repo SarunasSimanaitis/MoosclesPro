@@ -272,38 +272,47 @@ export function parseRoutineRequestBody(
     };
   }
 
-  const id = value.id;
-  const name = value.name;
-  const exercises = value.exercises;
+  const rawId = value.id;
+  const rawName = value.name;
+  const rawExercises = value.exercises;
 
-  if (
-    id !== undefined &&
-    !isNonEmptyString(id)
-  ) {
-    return {
-      success: false,
-      error: "Routine id must be a non-empty string.",
-    };
+  let id: string | undefined;
+  let name: string | undefined;
+  let exercises: unknown[] | undefined;
+
+  if (rawId !== undefined) {
+    if (!isNonEmptyString(rawId)) {
+      return {
+        success: false,
+        error:
+          "Routine id must be a non-empty string.",
+      };
+    }
+
+    id = rawId;
   }
 
-  if (
-    name !== undefined &&
-    typeof name !== "string"
-  ) {
-    return {
-      success: false,
-      error: "Routine name must be a string.",
-    };
+  if (rawName !== undefined) {
+    if (typeof rawName !== "string") {
+      return {
+        success: false,
+        error: "Routine name must be a string.",
+      };
+    }
+
+    name = rawName;
   }
 
-  if (
-    exercises !== undefined &&
-    !Array.isArray(exercises)
-  ) {
-    return {
-      success: false,
-      error: "Routine exercises must be an array.",
-    };
+  if (rawExercises !== undefined) {
+    if (!Array.isArray(rawExercises)) {
+      return {
+        success: false,
+        error:
+          "Routine exercises must be an array.",
+      };
+    }
+
+    exercises = rawExercises;
   }
 
   return {
@@ -353,64 +362,75 @@ export function parseWorkoutSessionRequestBody(
     };
   }
 
-  const id = value.id;
-  const routineId = value.routineId;
-  const startedAt = value.startedAt;
-  const completedAt = value.completedAt;
-  const exercises = value.exercises;
+  const rawId = value.id;
+  const rawRoutineId = value.routineId;
+  const rawStartedAt = value.startedAt;
+  const rawCompletedAt = value.completedAt;
+  const rawExercises = value.exercises;
 
-  if (
-    id !== undefined &&
-    !isNonEmptyString(id)
-  ) {
-    return {
-      success: false,
-      error:
-        "Workout session id must be a non-empty string.",
-    };
+  let id: string | undefined;
+  let routineId: string | undefined;
+  let startedAt: string | undefined;
+  let completedAt: string | undefined;
+  let exercises: unknown[] | undefined;
+
+  if (rawId !== undefined) {
+    if (!isNonEmptyString(rawId)) {
+      return {
+        success: false,
+        error:
+          "Workout session id must be a non-empty string.",
+      };
+    }
+
+    id = rawId;
   }
 
-  if (
-    routineId !== undefined &&
-    !isNonEmptyString(routineId)
-  ) {
-    return {
-      success: false,
-      error:
-        "Routine id must be a non-empty string.",
-    };
+  if (rawRoutineId !== undefined) {
+    if (!isNonEmptyString(rawRoutineId)) {
+      return {
+        success: false,
+        error:
+          "Routine id must be a non-empty string.",
+      };
+    }
+
+    routineId = rawRoutineId;
   }
 
-  if (
-    startedAt !== undefined &&
-    !isValidDateString(startedAt)
-  ) {
-    return {
-      success: false,
-      error: "Workout start time is invalid.",
-    };
+  if (rawStartedAt !== undefined) {
+    if (!isValidDateString(rawStartedAt)) {
+      return {
+        success: false,
+        error: "Workout start time is invalid.",
+      };
+    }
+
+    startedAt = rawStartedAt;
   }
 
-  if (
-    completedAt !== undefined &&
-    !isValidDateString(completedAt)
-  ) {
-    return {
-      success: false,
-      error:
-        "Workout completion time is invalid.",
-    };
+  if (rawCompletedAt !== undefined) {
+    if (!isValidDateString(rawCompletedAt)) {
+      return {
+        success: false,
+        error:
+          "Workout completion time is invalid.",
+      };
+    }
+
+    completedAt = rawCompletedAt;
   }
 
-  if (
-    exercises !== undefined &&
-    !Array.isArray(exercises)
-  ) {
-    return {
-      success: false,
-      error:
-        "Workout exercises must be an array.",
-    };
+  if (rawExercises !== undefined) {
+    if (!Array.isArray(rawExercises)) {
+      return {
+        success: false,
+        error:
+          "Workout exercises must be an array.",
+      };
+    }
+
+    exercises = rawExercises;
   }
 
   return {

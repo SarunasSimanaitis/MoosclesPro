@@ -86,7 +86,7 @@ export default {
               rawBody,
             );
 
-          if (!parsed.success) {
+          if (parsed.success === false) {
             return Response.json(
               {
                 error: parsed.error,
@@ -134,9 +134,7 @@ export default {
             id:
               parsed.data.id ??
               `custom-${crypto.randomUUID()}`,
-
             name,
-
             exercises:
               parsed.data.exercises,
           };
@@ -146,7 +144,7 @@ export default {
               candidate,
             );
 
-          if (!validation.success) {
+          if (validation.success === false) {
             return Response.json(
               {
                 error:
@@ -190,7 +188,7 @@ export default {
               rawBody,
             );
 
-          if (!parsed.success) {
+          if (parsed.success === false) {
             return Response.json(
               {
                 error: parsed.error,
@@ -273,20 +271,14 @@ export default {
                   parsed.data.exercises,
               };
 
-            /*
-             * For PATCH we validate the
-             * incoming exercise collection
-             * itself, while keeping the
-             * existing name when name was
-             * not part of the request.
-             */
             const exercisesValid =
               validateRoutinePayload(
                 candidate,
               );
 
             if (
-              !exercisesValid.success
+              exercisesValid.success ===
+              false
             ) {
               return Response.json(
                 {

@@ -1,56 +1,174 @@
 import {
+  lazy,
+  Suspense,
+  type ReactNode,
+} from "react";
+import {
   BrowserRouter,
   Navigate,
   Route,
   Routes,
 } from "react-router-dom";
-import type { ReactNode } from "react";
 
 import AppLayout from "./components/layout/AppLayout";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import ScrollToTop from "./components/layout/ScrollToTop";
-
 import { authClient } from "./lib/auth-client";
 
-import Dashboard from "./pages/Dashboard";
-import ExerciseDetails from "./pages/ExerciseDetails";
-import Exercises from "./pages/Exercises";
-import History from "./pages/History";
-import LandingPage from "./pages/LandingPage";
-import Login from "./pages/Login";
-import Mindset from "./pages/Mindset";
-import Register from "./pages/Register";
-import RoutineBuilder from "./pages/RoutineBuilder";
-import Session from "./pages/Session";
-import Settings from "./pages/Settings";
-import Statistics from "./pages/Statistics";
-import WorkoutDetails from "./pages/WorkoutDetails";
-import WorkoutSessionPage from "./pages/WorkoutSessionPage";
-import Workouts from "./pages/Workouts";
-import ProgramDetails from "./pages/ProgramDetails";
+/*
+ * Route-level code splitting.
+ *
+ * Each page is downloaded only when its route is
+ * actually rendered.
+ */
+const Dashboard = lazy(
+  () => import("./pages/Dashboard"),
+);
+
+const ExerciseDetails = lazy(
+  () =>
+    import(
+      "./pages/ExerciseDetails"
+    ),
+);
+
+const Exercises = lazy(
+  () => import("./pages/Exercises"),
+);
+
+const History = lazy(
+  () => import("./pages/History"),
+);
+
+const LandingPage = lazy(
+  () =>
+    import("./pages/LandingPage"),
+);
+
+const Login = lazy(
+  () => import("./pages/Login"),
+);
+
+const Mindset = lazy(
+  () => import("./pages/Mindset"),
+);
+
+const Register = lazy(
+  () => import("./pages/Register"),
+);
+
+const RoutineBuilder = lazy(
+  () =>
+    import("./pages/RoutineBuilder"),
+);
+
+const Session = lazy(
+  () => import("./pages/Session"),
+);
+
+const Settings = lazy(
+  () => import("./pages/Settings"),
+);
+
+const Statistics = lazy(
+  () => import("./pages/Statistics"),
+);
+
+const WorkoutDetails = lazy(
+  () =>
+    import("./pages/WorkoutDetails"),
+);
+
+const WorkoutSessionPage = lazy(
+  () =>
+    import(
+      "./pages/WorkoutSessionPage"
+    ),
+);
+
+const Workouts = lazy(
+  () => import("./pages/Workouts"),
+);
+
+const ProgramDetails = lazy(
+  () =>
+    import("./pages/ProgramDetails"),
+);
 
 function LoadingScreen() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[var(--background)]">
-      <div className="text-sm font-medium text-[var(--text-muted)]">
-        Loading...
+    <div
+      className="
+        flex
+        min-h-[60vh]
+        items-center
+        justify-center
+        bg-[var(--background)]
+        px-5
+      "
+    >
+      <div className="flex flex-col items-center gap-4">
+        <div
+          aria-hidden="true"
+          className="
+            h-8
+            w-8
+            animate-spin
+            rounded-full
+            border-2
+            border-[var(--border-strong)]
+            border-t-[var(--primary)]
+          "
+        />
+
+        <p
+          role="status"
+          aria-live="polite"
+          className="text-sm font-medium text-[var(--text-muted)]"
+        >
+          Loading…
+        </p>
       </div>
     </div>
   );
 }
 
+function LazyPage({
+  children,
+}: {
+  children: ReactNode;
+}) {
+  return (
+    <Suspense fallback={<LoadingScreen />}>
+      {children}
+    </Suspense>
+  );
+}
+
 function HomeRoute() {
-  const { data: session, isPending } = authClient.useSession();
+  const {
+    data: session,
+    isPending,
+  } = authClient.useSession();
 
   if (isPending) {
     return <LoadingScreen />;
   }
 
   if (session?.user) {
-    return <Navigate to="/dashboard" replace />;
+    return (
+      <Navigate
+        to="/dashboard"
+        replace
+      />
+    );
   }
 
-  return <LandingPage />;
+  return (
+    <LazyPage>
+      <LandingPage />
+    </LazyPage>
+  );
 }
 
 function GuestRoute({
@@ -58,14 +176,22 @@ function GuestRoute({
 }: {
   children: ReactNode;
 }) {
-  const { data: session, isPending } = authClient.useSession();
+  const {
+    data: session,
+    isPending,
+  } = authClient.useSession();
 
   if (isPending) {
     return <LoadingScreen />;
   }
 
   if (session?.user) {
-    return <Navigate to="/dashboard" replace />;
+    return (
+      <Navigate
+        to="/dashboard"
+        replace
+      />
+    );
   }
 
   return children;
@@ -78,12 +204,13 @@ export default function App() {
 
       <Routes>
         {/* Public authentication */}
-
         <Route
           path="/login"
           element={
             <GuestRoute>
-              <Login />
+              <LazyPage>
+                <Login />
+              </LazyPage>
             </GuestRoute>
           }
         />
@@ -92,13 +219,14 @@ export default function App() {
           path="/register"
           element={
             <GuestRoute>
-              <Register />
+              <LazyPage>
+                <Register />
+              </LazyPage>
             </GuestRoute>
           }
         />
 
         {/* Public product pages */}
-
         <Route element={<AppLayout />}>
           <Route
             path="/"
@@ -107,78 +235,128 @@ export default function App() {
 
           <Route
             path="/exercises"
-            element={<Exercises />}
+            element={
+              <LazyPage>
+                <Exercises />
+              </LazyPage>
+            }
           />
 
           <Route
             path="/exercises/:exerciseId"
-            element={<ExerciseDetails />}
+            element={
+              <LazyPage>
+                <ExerciseDetails />
+              </LazyPage>
+            }
           />
 
           <Route
             path="/mindset"
-            element={<Mindset />}
+            element={
+              <LazyPage>
+                <Mindset />
+              </LazyPage>
+            }
           />
         </Route>
 
         {/* Authenticated application */}
-
         <Route element={<ProtectedRoute />}>
           <Route element={<AppLayout />}>
             <Route
               path="/dashboard"
-              element={<Dashboard />}
+              element={
+                <LazyPage>
+                  <Dashboard />
+                </LazyPage>
+              }
             />
 
             <Route
               path="/workouts"
-              element={<Workouts />}
+              element={
+                <LazyPage>
+                  <Workouts />
+                </LazyPage>
+              }
             />
 
             <Route
               path="/program/:programId"
-              element={<ProgramDetails />}
+              element={
+                <LazyPage>
+                  <ProgramDetails />
+                </LazyPage>
+              }
             />
 
             <Route
               path="/workouts/create"
-              element={<RoutineBuilder />}
+              element={
+                <LazyPage>
+                  <RoutineBuilder />
+                </LazyPage>
+              }
             />
 
             <Route
               path="/workout/:routineId"
-              element={<WorkoutSessionPage />}
+              element={
+                <LazyPage>
+                  <WorkoutSessionPage />
+                </LazyPage>
+              }
             />
 
             <Route
               path="/session"
-              element={<Session />}
+              element={
+                <LazyPage>
+                  <Session />
+                </LazyPage>
+              }
             />
 
             <Route
               path="/history"
-              element={<History />}
+              element={
+                <LazyPage>
+                  <History />
+                </LazyPage>
+              }
             />
 
             <Route
               path="/history/:sessionId"
-              element={<WorkoutDetails />}
+              element={
+                <LazyPage>
+                  <WorkoutDetails />
+                </LazyPage>
+              }
             />
 
             <Route
               path="/statistics"
-              element={<Statistics />}
+              element={
+                <LazyPage>
+                  <Statistics />
+                </LazyPage>
+              }
             />
 
             <Route
               path="/settings"
-              element={<Settings />}
+              element={
+                <LazyPage>
+                  <Settings />
+                </LazyPage>
+              }
             />
           </Route>
         </Route>
 
         {/* Unknown routes */}
-
         <Route
           path="*"
           element={

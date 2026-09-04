@@ -1,9 +1,9 @@
 import {
   ArrowLeft,
-  Check,
+  CheckCircle2,
   Dumbbell,
   Plus,
-  Trash2,
+  Save,
 } from "lucide-react";
 import {
   useEffect,
@@ -15,9 +15,14 @@ import {
   useSearchParams,
 } from "react-router-dom";
 
-import {
-  routinesApi,
-} from "../api/routines";
+import { routinesApi } from "../api/routines";
+
+import ExercisePicker from "../components/workout/ExercisePicker";
+import RoutineExerciseEditor from "../components/workout/RoutineExerciseEditor";
+
+import Button from "../components/ui/Button";
+import Card from "../components/ui/Card";
+import Input from "../components/ui/Input";
 
 import { exercises } from "../data/exercises";
 import { useRoutineStore } from "../stores/routineStore";
@@ -37,14 +42,62 @@ export default function RoutineBuilder() {
 
   const customRoutines =
     useRoutineStore(
+      (state) => state.customRoutines,
+    );
+
+  const editingRoutine =
+    editRoutineId
+      ? customRoutines.find(
+          (routine) =>
+            routine.id ===
+            editRoutineId,
+        )
+      : undefined;
+
+  /*
+   * Keying the editor by routine/mode gives each
+   * editing context a fresh local state instance.
+   *
+   * This avoids synchronously resetting form state
+   * inside an effect when the URL changes.
+   */
+  const editorKey =
+    editRoutineId ?? "create";
+
+  return (
+    <RoutineEditor
+      key={editorKey}
+      routine={editingRoutine}
+      editRoutineId={editRoutineId}
+      onBack={() =>
+        navigate("/workouts")
+      }
+    />
+  );
+}
+
+type RoutineEditorProps = {
+  routine?: Routine;
+  editRoutineId: string | null;
+  onBack: () => void;
+};
+
+function RoutineEditor({
+  routine,
+  editRoutineId,
+  onBack,
+}: RoutineEditorProps) {
+  const navigate = useNavigate();
+
+  const setCustomRoutines =
+    useRoutineStore(
       (state) =>
-        state.customRoutines,
+        state.setCustomRoutines,
     );
 
   const addRoutine =
     useRoutineStore(
-      (state) =>
-        state.addRoutine,
+      (state) => state.addRoutine,
     );
 
   const updateRoutine =
@@ -53,31 +106,19 @@ export default function RoutineBuilder() {
         state.updateRoutine,
     );
 
-  const setCustomRoutines =
-    useRoutineStore(
-      (state) =>
-        state.setCustomRoutines,
-    );
-
-  const editingRoutine =
-    editRoutineId
-      ? customRoutines.find(
-        (routine) =>
-          routine.id ===
-          editRoutineId,
-      )
-      : undefined;
-
   const [
     name,
     setName,
-  ] = useState("");
+  ] = useState(
+    routine?.name ?? "",
+  );
 
   const [
     routineExercises,
     setRoutineExercises,
   ] = useState<RoutineExercise[]>(
-    [],
+    () =>
+      routine?.exercises ?? [],
   );
 
   const [
@@ -86,15 +127,13 @@ export default function RoutineBuilder() {
   ] = useState(false);
 
   const [
-    search,
-    setSearch,
-  ] = useState("");
-
-  const [
     isLoadingRoutine,
     setIsLoadingRoutine,
   ] = useState(
-    Boolean(editRoutineId),
+    Boolean(
+      editRoutineId &&
+        !routine,
+    ),
   );
 
   const [
@@ -111,33 +150,24 @@ export default function RoutineBuilder() {
     Boolean(editRoutineId);
 
   /*
-   * Load the routine when editing.
+   * If an edit page was refreshed before the
+   * routine store had been populated, fetch the
+   * server source of truth.
    *
-   * Prefer the already loaded store data.
-   * If the page is refreshed directly,
-   * fetch the server source of truth.
+   * State updates happen after the asynchronous
+   * request, never as synchronous effect resets.
    */
   useEffect(() => {
+    if (
+      !editRoutineId ||
+      routine
+    ) {
+      return;
+    }
+
     let cancelled = false;
 
-    async function initializeRoutine() {
-      if (!editRoutineId) {
-        return;
-      }
-
-      if (editingRoutine) {
-        setName(
-          editingRoutine.name,
-        );
-
-        setRoutineExercises(
-          editingRoutine.exercises,
-        );
-
-        setIsLoadingRoutine(false);
-        return;
-      }
-
+    async function loadRoutine() {
       try {
         setIsLoadingRoutine(true);
         setError(null);
@@ -151,22 +181,31 @@ export default function RoutineBuilder() {
 
         setCustomRoutines(data);
 
-        const routine = data.find(
-          (item) =>
-            item.id === editRoutineId,
-        );
+        const foundRoutine =
+          data.find(
+            (item) =>
+              item.id ===
+              editRoutineId,
+          );
 
-        if (!routine) {
+        if (!foundRoutine) {
           setError(
             "The routine you're trying to edit could not be found.",
           );
           return;
         }
 
-        setName(routine.name);
+        /*
+         * These updates happen after await, so this
+         * is an asynchronous server synchronization
+         * rather than a synchronous effect reset.
+         */
+        setName(
+          foundRoutine.name,
+        );
 
         setRoutineExercises(
-          routine.exercises,
+          foundRoutine.exercises,
         );
       } catch (requestError) {
         if (cancelled) {
@@ -190,42 +229,37 @@ export default function RoutineBuilder() {
       }
     }
 
-    void initializeRoutine();
+    void loadRoutine();
 
     return () => {
       cancelled = true;
     };
   }, [
     editRoutineId,
-    editingRoutine,
+    routine,
     setCustomRoutines,
   ]);
 
-  const availableExercises =
-    useMemo(() => {
-      const normalizedSearch =
-        search
-          .trim()
-          .toLowerCase();
+  const selectedExerciseIds =
+    useMemo(
+      () =>
+        new Set(
+          routineExercises.map(
+            (item) =>
+              item.exercise.id,
+          ),
+        ),
+      [routineExercises],
+    );
 
-      if (!normalizedSearch) {
-        return exercises;
-      }
+  const totalExercises =
+    routineExercises.length;
 
-      return exercises.filter(
-        (exercise) =>
-          exercise.name
-            .toLowerCase()
-            .includes(
-              normalizedSearch,
-            ) ||
-          exercise.muscleGroup
-            .toLowerCase()
-            .includes(
-              normalizedSearch,
-            ),
-      );
-    }, [search]);
+  const estimatedMinutes =
+    Math.max(
+      20,
+      totalExercises * 10,
+    );
 
   function addExercise(
     exerciseId: string,
@@ -233,22 +267,18 @@ export default function RoutineBuilder() {
     const exercise =
       exercises.find(
         (item) =>
-          item.id ===
-          exerciseId,
+          item.id === exerciseId,
       );
 
     if (!exercise) {
       return;
     }
 
-    const alreadyAdded =
-      routineExercises.some(
-        (item) =>
-          item.exercise.id ===
-          exercise.id,
-      );
-
-    if (alreadyAdded) {
+    if (
+      selectedExerciseIds.has(
+        exercise.id,
+      )
+    ) {
       return;
     }
 
@@ -263,9 +293,6 @@ export default function RoutineBuilder() {
         },
       ],
     );
-
-    setShowExercisePicker(false);
-    setSearch("");
   }
 
   function removeExercise(
@@ -294,12 +321,57 @@ export default function RoutineBuilder() {
             item.exercise.id ===
               exerciseId
               ? {
-                ...item,
-                ...changes,
-              }
+                  ...item,
+                  ...changes,
+                }
               : item,
         ),
     );
+  }
+
+  function moveExercise(
+    index: number,
+    direction: -1 | 1,
+  ) {
+    setRoutineExercises(
+      (current) => {
+        const nextIndex =
+          index + direction;
+
+        if (
+          nextIndex < 0 ||
+          nextIndex >=
+            current.length
+        ) {
+          return current;
+        }
+
+        const next = [
+          ...current,
+        ];
+
+        const [
+          movedExercise,
+        ] = next.splice(
+          index,
+          1,
+        );
+
+        next.splice(
+          nextIndex,
+          0,
+          movedExercise,
+        );
+
+        return next;
+      },
+    );
+  }
+
+  function handleAddExercise(
+    exercise: RoutineExercise["exercise"],
+  ) {
+    addExercise(exercise.id);
   }
 
   async function saveRoutine() {
@@ -308,7 +380,7 @@ export default function RoutineBuilder() {
 
     if (!trimmedName) {
       setError(
-        "Please enter a routine name.",
+        "Give your routine a name before saving it.",
       );
       return;
     }
@@ -318,7 +390,7 @@ export default function RoutineBuilder() {
       0
     ) {
       setError(
-        "Add at least one exercise to your routine.",
+        "Add at least one exercise before saving your routine.",
       );
       return;
     }
@@ -326,26 +398,27 @@ export default function RoutineBuilder() {
     setError(null);
     setIsSaving(true);
 
-    const routine: Routine = {
+    const nextRoutine: Routine = {
       id:
-        editingRoutine?.id ??
+        routine?.id ??
         editRoutineId ??
         `custom-${crypto.randomUUID()}`,
 
       name: trimmedName,
 
-      exercises: routineExercises,
+      exercises:
+        routineExercises,
     };
 
     try {
       const savedRoutine =
         isEditing
           ? await routinesApi.update(
-            routine,
-          )
+              nextRoutine,
+            )
           : await routinesApi.create(
-            routine,
-          );
+              nextRoutine,
+            );
 
       if (isEditing) {
         updateRoutine(
@@ -376,75 +449,154 @@ export default function RoutineBuilder() {
     }
   }
 
+  function handleBack() {
+    const hasChanges =
+      name.trim() !==
+        (routine?.name ?? "") ||
+      JSON.stringify(
+        routineExercises,
+      ) !==
+        JSON.stringify(
+          routine?.exercises ?? [],
+        );
+
+    if (!hasChanges) {
+      onBack();
+      return;
+    }
+
+    const confirmed =
+      window.confirm(
+        "You have unsaved changes. Leave without saving?",
+      );
+
+    if (confirmed) {
+      onBack();
+    }
+  }
+
   if (isLoadingRoutine) {
     return (
-      <main className="mx-auto flex min-h-[60vh] max-w-5xl items-center justify-center">
-        <p className="text-sm font-medium text-[var(--text-muted)]">
-          Loading routine...
-        </p>
+      <main
+        role="status"
+        aria-label="Loading routine"
+        className="mx-auto max-w-5xl"
+      >
+        <span className="sr-only">
+          Loading routine
+        </span>
+
+        <div className="space-y-6">
+          <div className="h-5 w-36 animate-pulse rounded bg-[var(--surface-soft)]" />
+
+          <div className="space-y-4">
+            <div className="h-10 w-80 animate-pulse rounded-xl bg-[var(--surface-soft)]" />
+
+            <div className="h-6 w-full max-w-2xl animate-pulse rounded-lg bg-[var(--surface-soft)]" />
+          </div>
+
+          <div className="h-32 animate-pulse rounded-[var(--radius-xl)] bg-[var(--surface-soft)]" />
+
+          <div className="h-96 animate-pulse rounded-[var(--radius-xl)] bg-[var(--surface-soft)]" />
+        </div>
       </main>
     );
   }
 
   return (
-    <main className="mx-auto max-w-5xl space-y-8">
+    <main className="mx-auto max-w-5xl space-y-8 pb-10">
       {/* Back */}
-
       <button
         type="button"
-        onClick={() =>
-          navigate("/workouts")
-        }
-        className="flex items-center gap-2 text-sm font-semibold text-[var(--text-muted)] transition hover:text-[var(--primary)]"
+        onClick={handleBack}
+        className="
+          inline-flex
+          items-center
+          gap-2
+          text-sm
+          font-semibold
+          text-[var(--text-muted)]
+          transition-colors
+          hover:text-[var(--primary)]
+          focus-visible:outline-none
+          focus-visible:ring-2
+          focus-visible:ring-[var(--primary)]
+        "
       >
         <ArrowLeft size={17} />
         Back to workouts
       </button>
 
       {/* Header */}
-
       <section>
-        <p className="text-sm font-semibold uppercase tracking-[0.25em] text-[var(--primary)]">
+        <p className="text-sm font-bold uppercase tracking-[0.25em] text-[var(--primary)]">
           Routine Builder
         </p>
 
-        <h1 className="mt-3 text-4xl font-black tracking-tight text-[var(--text)]">
-          {isEditing
-            ? "Edit your routine"
-            : "Create your routine"}
-        </h1>
+        <div className="mt-3 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
+          <div>
+            <h1 className="text-4xl font-black tracking-tight text-[var(--text)] md:text-5xl">
+              {isEditing
+                ? "Edit your routine"
+                : "Create your routine"}
+            </h1>
 
-        <p className="mt-3 text-lg text-[var(--text-muted)]">
-          {isEditing
-            ? "Fine-tune your exercises, sets, reps, and rest."
-            : "Build a workout around your own training goals."}
-        </p>
+            <p className="mt-3 max-w-2xl text-lg leading-relaxed text-[var(--text-muted)]">
+              {isEditing
+                ? "Fine-tune the workout, then save your changes."
+                : "Build a workout around your own goals, equipment, and training style."}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 rounded-full bg-[var(--primary-soft)] px-4 py-2 text-sm font-semibold text-[var(--primary)]">
+            <Dumbbell size={16} />
+            {totalExercises}{" "}
+            {totalExercises === 1
+              ? "exercise"
+              : "exercises"}
+          </div>
+        </div>
       </section>
 
       {/* Error */}
-
       {error && (
-        <div
+        <Card
           role="alert"
-          className="rounded-2xl border border-[var(--danger)]/30 bg-[var(--danger)]/10 px-5 py-4 text-sm font-medium text-[var(--danger)]"
+          className="border-[var(--danger)]/30 bg-[var(--danger-soft)] p-5 shadow-none"
         >
-          {error}
-        </div>
+          <div className="flex items-start gap-3">
+            <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--danger)]/10 text-[var(--danger)]">
+              !
+            </div>
+
+            <p className="text-sm font-semibold leading-relaxed text-[var(--danger)]">
+              {error}
+            </p>
+          </div>
+        </Card>
       )}
 
-      {/* Routine name */}
+      {/* Routine details */}
+      <Card className="p-6 md:p-8">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--primary-soft)] text-[var(--primary)]">
+            <Dumbbell size={19} />
+          </div>
 
-      <section className="rounded-[2rem] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-sm md:p-8">
-        <label
-          htmlFor="routine-name"
-          className="text-sm font-bold text-[var(--text)]"
-        >
-          Routine name
-        </label>
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--primary)]">
+              Basics
+            </p>
 
-        <input
+            <h2 className="mt-1 text-xl font-black text-[var(--text)]">
+              Routine details
+            </h2>
+          </div>
+        </div>
+
+        <Input
           id="routine-name"
-          type="text"
+          label="Routine name"
           value={name}
           onChange={(event) =>
             setName(
@@ -453,405 +605,266 @@ export default function RoutineBuilder() {
           }
           placeholder="e.g. Monday Push"
           maxLength={80}
-          className="mt-3 w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface-soft)] px-4 py-3 text-[var(--text)] outline-none transition placeholder:text-[var(--text-muted)] focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary-soft)]"
+          hint="Use a name you'll recognize quickly when you're ready to train."
+          className="mt-6 bg-[var(--surface-soft)]"
         />
-      </section>
+      </Card>
 
       {/* Exercises */}
-
-      <section className="rounded-[2rem] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-sm md:p-8">
-        <div className="flex items-center justify-between gap-4">
+      <Card className="p-6 md:p-8">
+        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <div>
-            <h2 className="text-xl font-black text-[var(--text)]">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--primary)]">
+              Workout structure
+            </p>
+
+            <h2 className="mt-1 text-2xl font-black tracking-tight text-[var(--text)]">
               Exercises
             </h2>
 
             <p className="mt-1 text-sm text-[var(--text-muted)]">
-              {routineExercises.length}{" "}
-              exercises
+              Set the order, rep target, and rest
+              period for every exercise.
             </p>
           </div>
 
-          <button
-            type="button"
+          <Button
+            variant={
+              showExercisePicker
+                ? "secondary"
+                : "primary"
+            }
             onClick={() =>
               setShowExercisePicker(
-                (current) => !current,
+                (current) =>
+                  !current,
               )
             }
-            className="flex items-center gap-2 rounded-xl bg-[var(--primary)] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[var(--primary-hover)]"
           >
-            <Plus size={17} />
-            Add Exercise
-          </button>
+            <Plus size={18} />
+
+            {showExercisePicker
+              ? "Hide library"
+              : "Add exercise"}
+          </Button>
         </div>
 
-        {/* Exercise picker */}
-
         {showExercisePicker && (
-          <div className="mt-6 rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-5">
-            <input
-              type="search"
-              value={search}
-              onChange={(event) =>
-                setSearch(
-                  event.target.value,
-                )
-              }
-              placeholder="Search exercises..."
-              className="w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface)] px-4 py-3 text-sm text-[var(--text)] outline-none transition focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary-soft)]"
-            />
-
-            <div className="mt-4 max-h-72 space-y-2 overflow-y-auto">
-              {availableExercises.length ===
-                0 ? (
-                <p className="py-6 text-center text-sm text-[var(--text-muted)]">
-                  No exercises match your search.
-                </p>
-              ) : (
-                availableExercises.map(
-                  (exercise) => {
-                    const alreadyAdded =
-                      routineExercises.some(
-                        (item) =>
-                          item.exercise.id ===
-                          exercise.id,
-                      );
-
-                    return (
-                      <button
-                        key={exercise.id}
-                        type="button"
-                        disabled={
-                          alreadyAdded
-                        }
-                        onClick={() =>
-                          addExercise(
-                            exercise.id,
-                          )
-                        }
-                        className="flex w-full items-center justify-between rounded-xl border border-transparent bg-[var(--surface)] px-4 py-3 text-left transition hover:border-[var(--primary)] disabled:cursor-not-allowed disabled:opacity-40"
-                      >
-                        <div className="flex items-center gap-3">
-                          <Dumbbell
-                            size={18}
-                            className="text-[var(--primary)]"
-                          />
-
-                          <div>
-                            <p className="font-semibold text-[var(--text)]">
-                              {
-                                exercise.name
-                              }
-                            </p>
-
-                            <p className="text-xs text-[var(--text-muted)]">
-                              {
-                                exercise.muscleGroup
-                              }{" "}
-                              ·{" "}
-                              {
-                                exercise.equipment
-                              }
-                            </p>
-                          </div>
-                        </div>
-
-                        {alreadyAdded && (
-                          <Check
-                            size={18}
-                            className="text-[var(--primary)]"
-                          />
-                        )}
-                      </button>
-                    );
-                  },
-                )
-              )}
-            </div>
-          </div>
+          <ExercisePicker
+            exercises={exercises}
+            selectedExerciseIds={
+              selectedExerciseIds
+            }
+            onSelect={
+              handleAddExercise
+            }
+            onClose={() =>
+              setShowExercisePicker(
+                false,
+              )
+            }
+          />
         )}
 
-        {/* Selected exercises */}
-
         {routineExercises.length >
-          0 ? (
+        0 ? (
           <div className="mt-6 space-y-4">
             {routineExercises.map(
               (
                 routineExercise,
                 index,
               ) => (
-                <div
+                <RoutineExerciseEditor
                   key={
                     routineExercise
                       .exercise.id
                   }
-                  className="rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] p-5"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex items-start gap-3">
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[var(--primary-soft)] text-sm font-black text-[var(--primary)]">
-                        {index + 1}
-                      </div>
-
-                      <div>
-                        <h3 className="font-bold text-[var(--text)]">
-                          {
-                            routineExercise
-                              .exercise
-                              .name
-                          }
-                        </h3>
-
-                        <p className="mt-1 text-xs text-[var(--text-muted)]">
-                          {
-                            routineExercise
-                              .exercise
-                              .muscleGroup
-                          }{" "}
-                          ·{" "}
-                          {
-                            routineExercise
-                              .exercise
-                              .equipment
-                          }
-                        </p>
-                      </div>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() =>
-                        removeExercise(
-                          routineExercise
-                            .exercise
-                            .id,
-                        )
-                      }
-                      className="rounded-lg p-2 text-[var(--text-muted)] transition hover:bg-[var(--danger)]/10 hover:text-[var(--danger)]"
-                      aria-label={`Remove ${routineExercise.exercise.name}`}
-                    >
-                      <Trash2 size={17} />
-                    </button>
-                  </div>
-
-                  <div className="mt-5 grid gap-4 lg:grid-cols-[1fr_1fr_2fr]">
-                    <label className="text-sm">
-                      <span className="mb-2 block font-semibold text-[var(--text-muted)]">
-                        Sets
-                      </span>
-
-                      <input
-                        type="number"
-                        min={1}
-                        max={100}
-                        step={1}
-                        value={
-                          routineExercise.targetSets
-                        }
-                        onChange={(
-                          event,
-                        ) => {
-                          const value =
-                            Number(
-                              event
-                                .target
-                                .value,
-                            );
-
-                          updateExercise(
-                            routineExercise
-                              .exercise
-                              .id,
-                            {
-                              targetSets:
-                                Number.isFinite(
-                                  value,
-                                )
-                                  ? Math.min(
-                                    100,
-                                    Math.max(
-                                      1,
-                                      Math.floor(
-                                        value,
-                                      ),
-                                    ),
-                                  )
-                                  : 1,
-                            },
-                          );
-                        }}
-                        className="w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface)] px-3 py-2.5 text-[var(--text)] outline-none transition focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary-soft)]"
-                      />
-                    </label>
-
-                    <label className="text-sm">
-                      <span className="mb-2 block font-semibold text-[var(--text-muted)]">
-                        Target reps
-                      </span>
-
-                      <input
-                        type="text"
-                        value={
-                          routineExercise.targetReps
-                        }
-                        onChange={(
-                          event,
-                        ) =>
-                          updateExercise(
-                            routineExercise
-                              .exercise
-                              .id,
-                            {
-                              targetReps:
-                                event
-                                  .target
-                                  .value,
-                            },
-                          )
-                        }
-                        placeholder="8-12"
-                        maxLength={20}
-                        className="w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface)] px-3 py-2.5 text-[var(--text)] outline-none transition placeholder:text-[var(--text-muted)] focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary-soft)]"
-                      />
-                    </label>
-
-                    <div className="text-sm">
-                      <span className="mb-2 block font-semibold text-[var(--text-muted)]">
-                        Rest between sets
-                      </span>
-
-                      <div className="grid grid-cols-3 gap-2">
-                        {[30, 45, 60, 90, 120, 150].map(
-                          (seconds) => {
-                            const isSelected =
-                              routineExercise.restSeconds ===
-                              seconds;
-
-                            return (
-                              <button
-                                key={seconds}
-                                type="button"
-                                onClick={() =>
-                                  updateExercise(
-                                    routineExercise
-                                      .exercise
-                                      .id,
-                                    {
-                                      restSeconds:
-                                        seconds,
-                                    },
-                                  )
-                                }
-                                className={`rounded-xl border px-3 py-2.5 text-sm font-semibold transition ${isSelected
-                                  ? "border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary)]"
-                                  : "border-[var(--border-strong)] bg-[var(--surface)] text-[var(--text-muted)] hover:border-[var(--primary)] hover:text-[var(--primary)]"
-                                  }`}
-                              >
-                                {seconds}s
-                              </button>
-                            );
-                          },
-                        )}
-                      </div>
-
-                      <label className="mt-2 flex items-center gap-2">
-                        <input
-                          type="number"
-                          min={0}
-                          max={3600}
-                          step={5}
-                          value={
-                            routineExercise.restSeconds
-                          }
-                          onChange={(
-                            event,
-                          ) => {
-                            const value =
-                              Number(
-                                event
-                                  .target
-                                  .value,
-                              );
-
-                            updateExercise(
-                              routineExercise
-                                .exercise
-                                .id,
-                              {
-                                restSeconds:
-                                  Number.isFinite(
-                                    value,
-                                  )
-                                    ? Math.min(
-                                      3600,
-                                      Math.max(
-                                        0,
-                                        Math.floor(
-                                          value,
-                                        ),
-                                      ),
-                                    )
-                                    : 0,
-                              },
-                            );
-                          }}
-                          className="w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface)] px-3 py-2.5 text-[var(--text)] outline-none transition focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary-soft)]"
-                        />
-
-                        <span className="shrink-0 text-sm text-[var(--text-muted)]">
-                          seconds
-                        </span>
-                      </label>
-                    </div>
-                  </div>
-                </div>
+                  routineExercise={
+                    routineExercise
+                  }
+                  index={index}
+                  totalExercises={
+                    routineExercises.length
+                  }
+                  onChange={(
+                    changes,
+                  ) =>
+                    updateExercise(
+                      routineExercise
+                        .exercise.id,
+                      changes,
+                    )
+                  }
+                  onRemove={() =>
+                    removeExercise(
+                      routineExercise
+                        .exercise.id,
+                    )
+                  }
+                  onMoveUp={() =>
+                    moveExercise(
+                      index,
+                      -1,
+                    )
+                  }
+                  onMoveDown={() =>
+                    moveExercise(
+                      index,
+                      1,
+                    )
+                  }
+                />
               ),
             )}
           </div>
         ) : (
-          <div className="mt-6 rounded-2xl border border-dashed border-[var(--border-strong)] p-10 text-center">
-            <Dumbbell
-              size={28}
-              className="mx-auto text-[var(--text-muted)]"
-            />
+          <div className="mt-6 rounded-[var(--radius-lg)] border border-dashed border-[var(--border-strong)] px-6 py-14 text-center">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--primary-soft)] text-[var(--primary)]">
+              <Dumbbell size={28} />
+            </div>
 
-            <p className="mt-4 font-semibold text-[var(--text)]">
-              No exercises yet
+            <h3 className="mt-5 text-xl font-black text-[var(--text)]">
+              Your routine is empty
+            </h3>
+
+            <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-[var(--text-muted)]">
+              Add your first exercise to start
+              building the workout.
             </p>
 
-            <p className="mt-1 text-sm text-[var(--text-muted)]">
-              Add exercises to start building your
-              routine.
-            </p>
+            <Button
+              variant="secondary"
+              onClick={() =>
+                setShowExercisePicker(
+                  true,
+                )
+              }
+              className="mt-6"
+            >
+              <Plus size={17} />
+              Add your first exercise
+            </Button>
           </div>
         )}
+      </Card>
+
+      {/* Summary */}
+      <section className="grid gap-4 sm:grid-cols-3">
+        <SummaryCard
+          icon={
+            <Dumbbell size={18} />
+          }
+          label="Exercises"
+          value={totalExercises.toString()}
+        />
+
+        <SummaryCard
+          icon={
+            <CheckCircle2 size={18} />
+          }
+          label="Planned sets"
+          value={routineExercises
+            .reduce(
+              (
+                total,
+                item,
+              ) =>
+                total +
+                item.targetSets,
+              0,
+            )
+            .toString()}
+        />
+
+        <SummaryCard
+          icon={
+            <Save size={18} />
+          }
+          label="Estimated session"
+          value={`~${estimatedMinutes} min`}
+        />
       </section>
 
-      {/* Save */}
+      {/* Save bar */}
+      <div className="sticky bottom-4 z-20">
+        <Card className="flex flex-col gap-4 border-[var(--border-strong)] bg-[var(--surface)]/95 p-4 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:flex-row sm:items-center sm:justify-between sm:p-5">
+          <div className="flex items-center gap-3">
+            <div className="hidden h-9 w-9 items-center justify-center rounded-xl bg-[var(--success-soft)] text-[var(--success)] sm:flex">
+              <CheckCircle2 size={18} />
+            </div>
 
-      <div className="flex justify-end">
-        <button
-          type="button"
-          onClick={() =>
-            void saveRoutine()
-          }
-          disabled={
-            isSaving ||
-            !name.trim() ||
-            routineExercises.length ===
-            0
-          }
-          className="rounded-xl bg-[var(--primary)] px-7 py-3.5 font-semibold text-white transition hover:bg-[var(--primary-hover)] disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          {isSaving
-            ? "Saving..."
-            : isEditing
-              ? "Save Changes"
-              : "Save Routine"}
-        </button>
+            <div>
+              <p className="text-sm font-bold text-[var(--text)]">
+                {isEditing
+                  ? "Ready to save your changes?"
+                  : "Happy with your routine?"}
+              </p>
+
+              <p className="text-xs text-[var(--text-muted)]">
+                {totalExercises}{" "}
+                {totalExercises === 1
+                  ? "exercise"
+                  : "exercises"}{" "}
+                · ~{estimatedMinutes} min
+              </p>
+            </div>
+          </div>
+
+          <div className="flex gap-2">
+            <Button
+              variant="ghost"
+              onClick={handleBack}
+              disabled={isSaving}
+              className="flex-1 sm:flex-none"
+            >
+              Cancel
+            </Button>
+
+            <Button
+              loading={isSaving}
+              disabled={
+                !name.trim() ||
+                totalExercises === 0
+              }
+              onClick={() =>
+                void saveRoutine()
+              }
+              className="flex-1 sm:flex-none"
+            >
+              <Save size={17} />
+              {isEditing
+                ? "Save changes"
+                : "Save routine"}
+            </Button>
+          </div>
+        </Card>
       </div>
     </main>
+  );
+}
+
+function SummaryCard({
+  icon,
+  label,
+  value,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+}) {
+  return (
+    <Card className="p-5">
+      <div className="flex items-center gap-2 text-[var(--primary)]">
+        {icon}
+
+        <span className="text-xs font-bold uppercase tracking-[0.15em] text-[var(--text-muted)]">
+          {label}
+        </span>
+      </div>
+
+      <p className="mt-3 text-2xl font-black tracking-tight text-[var(--text)]">
+        {value}
+      </p>
+    </Card>
   );
 }

@@ -1,25 +1,31 @@
 import {
   ArrowLeft,
+  ArrowRight,
   Dumbbell,
   TriangleAlert,
 } from "lucide-react";
+
 import {
   useEffect,
   useMemo,
   useState,
 } from "react";
+
 import {
   useNavigate,
   useParams,
 } from "react-router-dom";
 
-import { workoutSessionsApi } from "../api/workoutSessions";
+import {
+  workoutSessionsApi,
+} from "../api/workoutSessions";
 
 import ExerciseCard from "../components/workout/ExerciseCard";
 import RestTimerPanel from "../components/workout/RestTimerPanel";
 import WorkoutFinishCard from "../components/workout/WorkoutFinishCard";
 import WorkoutSessionHeader from "../components/workout/WorkoutSessionHeader";
 
+import type { Routine } from "../types/Routine";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 
@@ -28,18 +34,42 @@ import { useRestTimer } from "../hooks/useRestTimer";
 import { useWorkoutSession } from "../hooks/useWorkoutSession";
 import { useWorkoutTimer } from "../hooks/useWorkoutTimer";
 import { useRoutineStore } from "../stores/routineStore";
-
-import type { Routine } from "../types/Routine";
+import { useActiveWorkoutStore } from "../stores/activeWorkoutStore";
+import { authClient } from "../lib/auth-client";
 
 export default function WorkoutSessionPage() {
   const navigate = useNavigate();
-  const { routineId } = useParams<{
+
+  const {
+    routineId,
+  } = useParams<{
     routineId: string;
   }>();
+
+  const {
+    data: session,
+    isPending: sessionPending,
+  } = authClient.useSession();
 
   const customRoutines =
     useRoutineStore(
       (state) => state.customRoutines,
+    );
+
+  const activeWorkout =
+    useActiveWorkoutStore(
+      (state) => state.activeWorkout,
+    );
+
+  const startWorkout =
+    useActiveWorkoutStore(
+      (state) => state.startWorkout,
+    );
+
+  const clearActiveWorkout =
+    useActiveWorkoutStore(
+      (state) =>
+        state.clearActiveWorkout,
     );
 
   const allRoutines = useMemo(
@@ -51,8 +81,59 @@ export default function WorkoutSessionPage() {
   );
 
   const routine = allRoutines.find(
-    (item) => item.id === routineId,
+    (item) =>
+      item.id === routineId,
   );
+
+  useEffect(() => {
+    if (
+      sessionPending ||
+      !session?.user ||
+      !routine ||
+      !routineId
+    ) {
+      return;
+    }
+
+    const current =
+      useActiveWorkoutStore.getState()
+        .activeWorkout;
+
+    /*
+     * No active workout:
+     * create one for this route.
+     */
+    if (!current) {
+      startWorkout(
+        routine,
+        session.user.id,
+      );
+
+      return;
+    }
+
+    /*
+     * Active workout belongs to another user.
+     * This can happen when accounts change on the
+     * same browser. Start a clean workout for the
+     * current account.
+     */
+    if (
+      current.userId !==
+      session.user.id
+    ) {
+      startWorkout(
+        routine,
+        session.user.id,
+      );
+    }
+  }, [
+    routine,
+    routineId,
+    session?.user,
+    sessionPending,
+    startWorkout,
+  ]);
 
   useEffect(() => {
     window.scrollTo({
@@ -62,37 +143,83 @@ export default function WorkoutSessionPage() {
     });
   }, []);
 
+  if (sessionPending) {
+    return <SessionLoading />;
+  }
+
+  if (!session?.user) {
+    return null;
+  }
+
   if (!routine) {
     return (
-      <main className="mx-auto flex min-h-[70vh] max-w-2xl items-center justify-center">
-        <Card className="w-full p-10 text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--primary-soft)] text-[var(--primary)]">
-            <Dumbbell size={28} />
-          </div>
-
-          <h1 className="mt-6 text-3xl font-black tracking-tight text-[var(--text)]">
-            Workout not found
-          </h1>
-
-          <p className="mx-auto mt-3 max-w-md text-[var(--text-muted)]">
-            The routine you're trying to
-            start doesn't exist or is no longer
-            available.
-          </p>
-
-          <Button
-            variant="secondary"
-            onClick={() =>
-              navigate("/workouts")
-            }
-            className="mt-7"
-          >
-            <ArrowLeft size={17} />
-            Back to workouts
-          </Button>
-        </Card>
-      </main>
+      <MissingWorkout
+        onBack={() =>
+          navigate("/workouts")
+        }
+      />
     );
+  }
+
+  /*
+   * If the currently active workout is another
+   * routine owned by this user, don't silently
+   * overwrite it.
+   */
+  const activeBelongsToUser =
+    activeWorkout?.userId ===
+    session.user.id;
+
+  const activeIsDifferentRoutine =
+    Boolean(
+      activeWorkout &&
+      activeBelongsToUser &&
+      activeWorkout.routineId !==
+      routine.id,
+    );
+
+  if (activeIsDifferentRoutine) {
+    return (
+      <WorkoutConflict
+        currentRoutine={
+          allRoutines.find(
+            (item) =>
+              item.id ===
+              activeWorkout!.routineId,
+          )?.name ??
+          "Current workout"
+        }
+        requestedRoutine={
+          routine.name
+        }
+        onResumeCurrent={() =>
+          navigate(
+            `/workout/${activeWorkout!.routineId}`,
+          )
+        }
+        onStartNew={() => {
+          clearActiveWorkout();
+
+          startWorkout(
+            routine,
+            session.user.id,
+          );
+        }}
+        onBack={() =>
+          navigate("/workouts")
+        }
+      />
+    );
+  }
+
+  if (
+    !activeWorkout ||
+    activeWorkout.routineId !==
+    routine.id ||
+    activeWorkout.userId !==
+    session.user.id
+  ) {
+    return <SessionLoading />;
   }
 
   return (
@@ -105,19 +232,17 @@ export default function WorkoutSessionPage() {
   );
 }
 
-type WorkoutSessionProps = {
-  routine: Routine;
-  onBack: () => void;
-};
-
 function WorkoutSession({
   routine,
   onBack,
-}: WorkoutSessionProps) {
+}: {
+  routine: Routine;
+  onBack: () => void;
+}) {
+
   const navigate = useNavigate();
 
   const {
-    startedAt,
     workoutExercises,
     completedSets,
     totalSets,
@@ -129,13 +254,14 @@ function WorkoutSession({
     commitReps,
     toggleSet,
     createSession,
-  } = useWorkoutSession(routine);
+  } =
+    useWorkoutSession();
 
   const {
     isPaused,
     formattedTime,
     togglePause,
-  } = useWorkoutTimer(startedAt);
+  } = useWorkoutTimer();
 
   const {
     restTime,
@@ -146,6 +272,12 @@ function WorkoutSession({
     removeTime,
   } = useRestTimer();
 
+  const clearActiveWorkout =
+    useActiveWorkoutStore(
+      (state) =>
+        state.clearActiveWorkout,
+    );
+
   const [
     isFinishing,
     setIsFinishing,
@@ -154,47 +286,9 @@ function WorkoutSession({
   const [
     saveError,
     setSaveError,
-  ] = useState<string | null>(null);
-
-  const hasProgress =
-    completedSets > 0 ||
-    workoutExercises.some(
-      (exercise) =>
-        exercise.sets.some(
-          (set) =>
-            set.weight > 0 ||
-            set.reps > 0,
-        ),
-    );
-
-  /*
-   * Protect an active workout from accidental
-   * browser refresh/tab closing.
-   */
-  useEffect(() => {
-    if (!hasProgress) {
-      return;
-    }
-
-    function handleBeforeUnload(
-      event: BeforeUnloadEvent,
-    ) {
-      event.preventDefault();
-      event.returnValue = "";
-    }
-
-    window.addEventListener(
-      "beforeunload",
-      handleBeforeUnload,
-    );
-
-    return () => {
-      window.removeEventListener(
-        "beforeunload",
-        handleBeforeUnload,
-      );
-    };
-  }, [hasProgress]);
+  ] = useState<string | null>(
+    null,
+  );
 
   function handleToggleSet(
     exerciseId: string,
@@ -212,7 +306,8 @@ function WorkoutSession({
     }
 
     const set = exercise.sets.find(
-      (item) => item.id === setId,
+      (item) =>
+        item.id === setId,
     );
 
     if (!set) {
@@ -224,11 +319,6 @@ function WorkoutSession({
       setId,
     );
 
-    /*
-     * Starting the rest timer when a set is
-     * completed keeps the timer tied to the
-     * user's actual workout action.
-     */
     if (!set.completed) {
       startRestTimer(
         exercise.restSeconds,
@@ -268,6 +358,7 @@ function WorkoutSession({
       );
 
       stopRestTimer();
+      clearActiveWorkout();
 
       navigate("/history", {
         replace: true,
@@ -288,29 +379,16 @@ function WorkoutSession({
     }
   }
 
-  function handleBack() {
-    if (!hasProgress) {
-      onBack();
-      return;
-    }
-
-    const confirmed =
-      window.confirm(
-        "You have an active workout. Leave without saving it?",
-      );
-
-    if (confirmed) {
-      stopRestTimer();
-      onBack();
-    }
+  function handleExit() {
+    stopRestTimer();
+    onBack();
   }
 
   return (
-    <main className="mx-auto max-w-5xl space-y-6 pb-12">
-      {/* Navigation */}
+    <main className="mx-auto max-w-5xl space-y-6 pb-10">
       <button
         type="button"
-        onClick={handleBack}
+        onClick={handleExit}
         className="
           inline-flex
           items-center
@@ -320,33 +398,32 @@ function WorkoutSession({
           text-[var(--text-muted)]
           transition-colors
           hover:text-[var(--primary)]
-          focus-visible:outline-none
-          focus-visible:ring-2
-          focus-visible:ring-[var(--primary)]
         "
       >
         <ArrowLeft size={17} />
-        Exit workout
+        Leave workout
       </button>
 
-      {/* Header */}
       <WorkoutSessionHeader
         routineName={routine.name}
         exerciseCount={
           workoutExercises.length
         }
-        completedSets={completedSets}
+        completedSets={
+          completedSets
+        }
         totalSets={totalSets}
         progress={progress}
         totalVolume={totalVolume}
-        formattedTime={formattedTime}
+        formattedTime={
+          formattedTime
+        }
         isPaused={isPaused}
         onTogglePause={
           togglePause
         }
       />
 
-      {/* Save error */}
       {saveError && (
         <Card
           role="alert"
@@ -363,7 +440,7 @@ function WorkoutSession({
                 Your workout wasn't saved
               </p>
 
-              <p className="mt-1 text-sm leading-relaxed text-[var(--danger)]">
+              <p className="mt-1 text-sm text-[var(--danger)]">
                 {saveError}
               </p>
             </div>
@@ -371,7 +448,6 @@ function WorkoutSession({
         </Card>
       )}
 
-      {/* Rest timer */}
       {restTime !== null && (
         <RestTimerPanel
           restTime={restTime}
@@ -390,7 +466,6 @@ function WorkoutSession({
         />
       )}
 
-      {/* Exercises */}
       <section
         aria-label="Workout exercises"
         className="space-y-5"
@@ -424,7 +499,6 @@ function WorkoutSession({
         )}
       </section>
 
-      {/* Finish */}
       <WorkoutFinishCard
         completedSets={
           completedSets
@@ -435,6 +509,131 @@ function WorkoutSession({
           void finishWorkout()
         }
       />
+    </main>
+  );
+}
+
+function MissingWorkout({
+  onBack,
+}: {
+  onBack: () => void;
+}) {
+  return (
+    <main className="mx-auto flex min-h-[65vh] max-w-2xl items-center justify-center">
+      <Card className="w-full p-10 text-center">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--primary-soft)] text-[var(--primary)]">
+          <Dumbbell size={28} />
+        </div>
+
+        <h1 className="mt-6 text-3xl font-black text-[var(--text)]">
+          Workout not found
+        </h1>
+
+        <p className="mx-auto mt-3 max-w-md text-[var(--text-muted)]">
+          The routine you're trying to
+          start doesn't exist or is no
+          longer available.
+        </p>
+
+        <Button
+          variant="secondary"
+          onClick={onBack}
+          className="mt-7"
+        >
+          <ArrowLeft size={17} />
+          Back to workouts
+        </Button>
+      </Card>
+    </main>
+  );
+}
+
+function WorkoutConflict({
+  currentRoutine,
+  requestedRoutine,
+  onResumeCurrent,
+  onStartNew,
+  onBack,
+}: {
+  currentRoutine: string;
+  requestedRoutine: string;
+  onResumeCurrent: () => void;
+  onStartNew: () => void;
+  onBack: () => void;
+}) {
+  return (
+    <main className="mx-auto flex min-h-[65vh] max-w-2xl items-center justify-center">
+      <Card className="w-full p-8 md:p-10">
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--warning-soft)] text-[var(--warning)]">
+          <TriangleAlert size={25} />
+        </div>
+
+        <p className="mt-6 text-xs font-bold uppercase tracking-[0.2em] text-[var(--primary)]">
+          Workout already active
+        </p>
+
+        <h1 className="mt-2 text-3xl font-black tracking-tight text-[var(--text)]">
+          Finish what you started?
+        </h1>
+
+        <p className="mt-3 leading-relaxed text-[var(--text-muted)]">
+          You're currently working on{" "}
+          <strong className="font-bold text-[var(--text)]">
+            {currentRoutine}
+          </strong>
+          . You tried to open{" "}
+          <strong className="font-bold text-[var(--text)]">
+            {requestedRoutine}
+          </strong>
+          .
+        </p>
+
+        <div className="mt-7 grid gap-3 sm:grid-cols-2">
+          <Button
+            onClick={
+              onResumeCurrent
+            }
+          >
+            Resume current
+            <ArrowRight size={17} />
+          </Button>
+
+          <Button
+            variant="secondary"
+            onClick={onStartNew}
+          >
+            Discard & start new
+          </Button>
+        </div>
+
+        <button
+          type="button"
+          onClick={onBack}
+          className="mx-auto mt-5 block text-sm font-semibold text-[var(--text-muted)] hover:text-[var(--text)]"
+        >
+          Back to workouts
+        </button>
+      </Card>
+    </main>
+  );
+}
+
+function SessionLoading() {
+  return (
+    <main
+      role="status"
+      aria-label="Loading workout"
+      className="mx-auto max-w-5xl space-y-6"
+    >
+      <span className="sr-only">
+        Loading workout
+      </span>
+
+      <div className="h-5 w-36 animate-pulse rounded bg-[var(--surface-soft)]" />
+
+      <div className="h-64 animate-pulse rounded-[var(--radius-xl)] bg-[var(--surface-soft)]" />
+
+      <div className="h-96 animate-pulse rounded-[var(--radius-xl)] bg-[var(--surface-soft)]" />
     </main>
   );
 }

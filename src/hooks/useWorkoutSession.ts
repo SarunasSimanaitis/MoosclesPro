@@ -1,13 +1,16 @@
-import {
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useMemo, useRef } from "react";
 
-import type { Routine } from "../types/Routine";
 import type { WorkoutExercise } from "../types/WorkoutExercise";
 import type { WorkoutSession } from "../types/WorkoutSession";
 import type { WorkoutSet } from "../types/WorkoutSet";
+
+import {
+  getActiveWorkoutCompletedSets,
+  getActiveWorkoutTotalSets,
+  getActiveWorkoutVolume,
+} from "../lib/activeWorkout";
+
+import { useActiveWorkoutStore } from "../stores/activeWorkoutStore";
 
 type UseWorkoutSessionResult = {
   startedAt: string;
@@ -50,78 +53,59 @@ type UseWorkoutSessionResult = {
   ) => WorkoutSession;
 };
 
-export function useWorkoutSession(
-  routine: Routine,
-): UseWorkoutSessionResult {
-  const [startedAt] = useState(
-    () => new Date().toISOString(),
-  );
+export function useWorkoutSession(): UseWorkoutSessionResult {
+  const activeWorkout =
+    useActiveWorkoutStore(
+      (state) => state.activeWorkout,
+    );
 
-  const [
-    workoutExercises,
-    setWorkoutExercises,
-  ] = useState<WorkoutExercise[]>(() =>
-    createWorkoutExercises(routine),
-  );
+  const updateExercises =
+    useActiveWorkoutStore(
+      (state) => state.updateExercises,
+    );
 
-  /*
-   * These refs make auto-fill a one-time
-   * action for each exercise.
-   *
-   * Once the initial values are committed,
-   * later edits affect only the selected set.
-   */
   const autoFilledWeightExercises =
     useRef(new Set<string>());
 
   const autoFilledRepExercises =
     useRef(new Set<string>());
 
+  const workoutExercises =
+    activeWorkout?.exercises ?? [];
+
+  const startedAt =
+    activeWorkout?.startedAt ??
+    new Date().toISOString();
+
   const completedSets = useMemo(
     () =>
-      workoutExercises.reduce(
-        (total, exercise) =>
-          total +
-          exercise.sets.filter(
-            (set) => set.completed,
-          ).length,
-        0,
+      getActiveWorkoutCompletedSets(
+        activeWorkout,
       ),
-    [workoutExercises],
+    [activeWorkout],
   );
 
   const totalSets = useMemo(
     () =>
-      workoutExercises.reduce(
-        (total, exercise) =>
-          total + exercise.sets.length,
-        0,
+      getActiveWorkoutTotalSets(
+        activeWorkout,
       ),
-    [workoutExercises],
+    [activeWorkout],
   );
 
   const progress =
     totalSets > 0
-      ? (completedSets / totalSets) *
+      ? (completedSets /
+          totalSets) *
         100
       : 0;
 
   const totalVolume = useMemo(
     () =>
-      workoutExercises.reduce(
-        (total, exercise) =>
-          total +
-          exercise.sets.reduce(
-            (exerciseTotal, set) =>
-              exerciseTotal +
-              (set.completed
-                ? set.weight * set.reps
-                : 0),
-            0,
-          ),
-        0,
+      getActiveWorkoutVolume(
+        activeWorkout,
       ),
-    [workoutExercises],
+    [activeWorkout],
   );
 
   function updateWeight(
@@ -129,19 +113,23 @@ export function useWorkoutSession(
     setId: string,
     weight: number,
   ) {
-    const normalizedWeight = Number.isFinite(
-      weight,
-    )
-      ? Math.max(0, weight)
-      : 0;
+    const normalizedWeight =
+      Number.isFinite(weight)
+        ? Math.max(0, weight)
+        : 0;
 
-    updateSet(
-      exerciseId,
-      setId,
-      (set) => ({
-        ...set,
-        weight: normalizedWeight,
-      }),
+    updateExercises(
+      (currentExercises) =>
+        updateSet(
+          currentExercises,
+          exerciseId,
+          setId,
+          (set) => ({
+            ...set,
+            weight:
+              normalizedWeight,
+          }),
+        ),
     );
   }
 
@@ -157,7 +145,7 @@ export function useWorkoutSession(
       return;
     }
 
-    setWorkoutExercises(
+    updateExercises(
       (currentExercises) =>
         currentExercises.map(
           (exercise) => {
@@ -181,14 +169,14 @@ export function useWorkoutSession(
               return exercise;
             }
 
-            const shouldAutoFill =
+            const hasEmptyWeights =
               exercise.sets.some(
                 (set) =>
                   set.id !== setId &&
                   set.weight === 0,
               );
 
-            if (!shouldAutoFill) {
+            if (!hasEmptyWeights) {
               return exercise;
             }
 
@@ -220,22 +208,25 @@ export function useWorkoutSession(
     setId: string,
     reps: number,
   ) {
-    const normalizedReps = Number.isFinite(
-      reps,
-    )
-      ? Math.max(
-          0,
-          Math.floor(reps),
-        )
-      : 0;
+    const normalizedReps =
+      Number.isFinite(reps)
+        ? Math.max(
+            0,
+            Math.floor(reps),
+          )
+        : 0;
 
-    updateSet(
-      exerciseId,
-      setId,
-      (set) => ({
-        ...set,
-        reps: normalizedReps,
-      }),
+    updateExercises(
+      (currentExercises) =>
+        updateSet(
+          currentExercises,
+          exerciseId,
+          setId,
+          (set) => ({
+            ...set,
+            reps: normalizedReps,
+          }),
+        ),
     );
   }
 
@@ -251,7 +242,7 @@ export function useWorkoutSession(
       return;
     }
 
-    setWorkoutExercises(
+    updateExercises(
       (currentExercises) =>
         currentExercises.map(
           (exercise) => {
@@ -275,14 +266,14 @@ export function useWorkoutSession(
               return exercise;
             }
 
-            const shouldAutoFill =
+            const hasEmptyReps =
               exercise.sets.some(
                 (set) =>
                   set.id !== setId &&
                   set.reps === 0,
               );
 
-            if (!shouldAutoFill) {
+            if (!hasEmptyReps) {
               return exercise;
             }
 
@@ -313,58 +304,42 @@ export function useWorkoutSession(
     exerciseId: string,
     setId: string,
   ) {
-    updateSet(
-      exerciseId,
-      setId,
-      (set) => ({
-        ...set,
-        completed: !set.completed,
-      }),
+    updateExercises(
+      (currentExercises) =>
+        updateSet(
+          currentExercises,
+          exerciseId,
+          setId,
+          (set) => ({
+            ...set,
+            completed:
+              !set.completed,
+          }),
+        ),
     );
   }
 
   function createSession(
     completedAt = new Date().toISOString(),
   ): WorkoutSession {
+    const current =
+      useActiveWorkoutStore.getState()
+        .activeWorkout;
+
+    if (!current) {
+      throw new Error(
+        "No active workout is available.",
+      );
+    }
+
     return {
-      id: crypto.randomUUID(),
-      routineId: routine.id,
-      startedAt,
+      id: current.id,
+      routineId: current.routineId,
+      startedAt: current.startedAt,
       completedAt,
-      exercises: workoutExercises,
+      exercises:
+        current.exercises,
     };
-  }
-
-  function updateSet(
-    exerciseId: string,
-    setId: string,
-    updater: (
-      set: WorkoutSet,
-    ) => WorkoutSet,
-  ) {
-    setWorkoutExercises(
-      (currentExercises) =>
-        currentExercises.map(
-          (exercise) => {
-            if (
-              exercise.exercise.id !==
-              exerciseId
-            ) {
-              return exercise;
-            }
-
-            return {
-              ...exercise,
-              sets: exercise.sets.map(
-                (set) =>
-                  set.id === setId
-                    ? updater(set)
-                    : set,
-              ),
-            };
-          },
-        ),
-    );
   }
 
   return {
@@ -383,36 +358,32 @@ export function useWorkoutSession(
   };
 }
 
-function createWorkoutExercises(
-  routine: Routine,
+function updateSet(
+  exercises: WorkoutExercise[],
+  exerciseId: string,
+  setId: string,
+  updater: (
+    set: WorkoutSet,
+  ) => WorkoutSet,
 ): WorkoutExercise[] {
-  return routine.exercises.map(
-    (routineExercise) => ({
-      exercise:
-        routineExercise.exercise,
+  return exercises.map(
+    (exercise) => {
+      if (
+        exercise.exercise.id !==
+        exerciseId
+      ) {
+        return exercise;
+      }
 
-      targetSets:
-        routineExercise.targetSets,
-
-      targetReps:
-        routineExercise.targetReps,
-
-      restSeconds:
-        routineExercise.restSeconds,
-
-      sets: Array.from(
-        {
-          length:
-            routineExercise.targetSets,
-        },
-        (_, index) => ({
-          id: crypto.randomUUID(),
-          order: index + 1,
-          weight: 0,
-          reps: 0,
-          completed: false,
-        }),
-      ),
-    }),
+      return {
+        ...exercise,
+        sets: exercise.sets.map(
+          (set) =>
+            set.id === setId
+              ? updater(set)
+              : set,
+        ),
+      };
+    },
   );
 }

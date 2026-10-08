@@ -38,9 +38,8 @@ export default async function handler(request: Request) {
 
     const { user } = authResult;
 
-    await ensureWorkoutIndexes();
-
     try {
+      await ensureWorkoutIndexes();
       const sessions =
         await database
           .collection<StoredWorkoutSession>(

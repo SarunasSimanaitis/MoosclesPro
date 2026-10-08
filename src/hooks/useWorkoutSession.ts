@@ -2,13 +2,7 @@ import { useMemo, useRef } from "react";
 
 import type { WorkoutExercise } from "../types/WorkoutExercise";
 import type { WorkoutSession } from "../types/WorkoutSession";
-import type { WorkoutSet } from "../types/WorkoutSet";
-
-import {
-  getActiveWorkoutCompletedSets,
-  getActiveWorkoutTotalSets,
-  getActiveWorkoutVolume,
-} from "../lib/activeWorkout";
+import { updateWorkoutSet, calculateWorkoutMetrics, buildWorkoutSession, normalizeWeight, normalizeReps } from "../lib/workoutEngine";
 
 import { useActiveWorkoutStore } from "../stores/activeWorkoutStore";
 
@@ -77,50 +71,23 @@ export function useWorkoutSession(): UseWorkoutSessionResult {
     activeWorkout?.startedAt ??
     new Date().toISOString();
 
-  const completedSets = useMemo(
-    () =>
-      getActiveWorkoutCompletedSets(
-        activeWorkout,
-      ),
-    [activeWorkout],
+  const metrics = useMemo(
+    () => calculateWorkoutMetrics(workoutExercises),
+    [workoutExercises],
   );
 
-  const totalSets = useMemo(
-    () =>
-      getActiveWorkoutTotalSets(
-        activeWorkout,
-      ),
-    [activeWorkout],
-  );
-
-  const progress =
-    totalSets > 0
-      ? (completedSets /
-          totalSets) *
-        100
-      : 0;
-
-  const totalVolume = useMemo(
-    () =>
-      getActiveWorkoutVolume(
-        activeWorkout,
-      ),
-    [activeWorkout],
-  );
+  const { completedSets, totalSets, progress, totalVolume } = metrics;
 
   function updateWeight(
     exerciseId: string,
     setId: string,
     weight: number,
   ) {
-    const normalizedWeight =
-      Number.isFinite(weight)
-        ? Math.max(0, weight)
-        : 0;
+    const normalizedWeight = normalizeWeight(weight);
 
     updateExercises(
       (currentExercises) =>
-        updateSet(
+        updateWorkoutSet(
           currentExercises,
           exerciseId,
           setId,
@@ -208,17 +175,11 @@ export function useWorkoutSession(): UseWorkoutSessionResult {
     setId: string,
     reps: number,
   ) {
-    const normalizedReps =
-      Number.isFinite(reps)
-        ? Math.max(
-            0,
-            Math.floor(reps),
-          )
-        : 0;
+    const normalizedReps = normalizeReps(reps);
 
     updateExercises(
       (currentExercises) =>
-        updateSet(
+        updateWorkoutSet(
           currentExercises,
           exerciseId,
           setId,
@@ -306,7 +267,7 @@ export function useWorkoutSession(): UseWorkoutSessionResult {
   ) {
     updateExercises(
       (currentExercises) =>
-        updateSet(
+        updateWorkoutSet(
           currentExercises,
           exerciseId,
           setId,
@@ -332,14 +293,7 @@ export function useWorkoutSession(): UseWorkoutSessionResult {
       );
     }
 
-    return {
-      id: current.id,
-      routineId: current.routineId,
-      startedAt: current.startedAt,
-      completedAt,
-      exercises:
-        current.exercises,
-    };
+    return buildWorkoutSession(current, completedAt);
   }
 
   return {

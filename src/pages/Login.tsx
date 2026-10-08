@@ -111,7 +111,6 @@ export default function Login() {
               {loading ? "Signing in..." : "Sign in"}
             </Button>
           </form>
-        </Card>
 
           <p className="mt-6 text-center text-sm text-[var(--text-muted)]">
             Don't have an account?{" "}

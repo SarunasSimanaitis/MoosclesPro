@@ -127,7 +127,6 @@ export default function Register() {
               {loading ? "Creating account..." : "Create account"}
             </Button>
           </form>
-        </Card>
 
           <p className="mt-6 text-center text-sm text-[var(--text-muted)]">
             Already have an account?{" "}

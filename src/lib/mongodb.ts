@@ -51,7 +51,7 @@ export function ensureWorkoutIndexes(): Promise<void> {
       .createIndex({ userId: 1, updatedAt: -1 }),
     database
       .collection("routines")
-      .createIndex({ userId: 1, id: 1 }, { unique: true }),
+      .createIndex({ userId: 1, id: 1 }),
   ]).then(() => undefined);
 
   return globalMongo.__moosclesMongoIndexes;

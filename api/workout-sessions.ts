@@ -48,6 +48,48 @@ export default {
 
       switch (request.method) {
         case "GET": {
+          const sessionId =
+            new URL(request.url).searchParams.get(
+              "id",
+            );
+
+          if (sessionId) {
+            const session =
+              await collection.findOne(
+                {
+                  id: sessionId,
+                  userId: user.id,
+                },
+                {
+                  projection: {
+                    _id: 0,
+                    id: 1,
+                    routineId: 1,
+                    startedAt: 1,
+                    completedAt: 1,
+                    exercises: 1,
+                    createdAt: 1,
+                  },
+                },
+              );
+
+            if (!session) {
+              return Response.json(
+                {
+                  error:
+                    "Workout session not found.",
+                },
+                {
+                  status: 404,
+                },
+              );
+            }
+
+            return Response.json(
+              session,
+            );
+          }
+
           const sessions =
             await collection
               .find(
@@ -185,6 +227,31 @@ export default {
               createdAt:
                 new Date(),
             };
+
+          const existingSession =
+            await collection.findOne(
+              {
+                id: workoutSession.id,
+                userId: user.id,
+              },
+              {
+                projection: {
+                  _id: 0,
+                  id: 1,
+                  routineId: 1,
+                  startedAt: 1,
+                  completedAt: 1,
+                  exercises: 1,
+                  createdAt: 1,
+                },
+              },
+            );
+
+          if (existingSession) {
+            return Response.json(
+              existingSession,
+            );
+          }
 
           await collection.insertOne(
             workoutSession,

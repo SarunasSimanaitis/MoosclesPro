@@ -12,6 +12,16 @@ export const workoutSessionsApi = {
     );
   },
 
+  get(
+    sessionId: string,
+  ): Promise<WorkoutSession> {
+    return apiRequest<WorkoutSession>(
+      `${ENDPOINT}?id=${encodeURIComponent(
+        sessionId,
+      )}`,
+    );
+  },
+
   create(
     session: WorkoutSession,
   ): Promise<WorkoutSession> {

@@ -52,9 +52,11 @@ export default function WorkoutDetails() {
     );
 
   const [
-    sessions,
-    setSessions,
-  ] = useState<WorkoutSession[]>([]);
+    session,
+    setSession,
+  ] = useState<WorkoutSession | null>(
+    null,
+  );
 
   const [
     isLoading,
@@ -74,11 +76,19 @@ export default function WorkoutDetails() {
         setIsLoading(true);
         setError(null);
 
+        if (!sessionId) {
+          throw new Error(
+            "Workout session ID is missing.",
+          );
+        }
+
         const data =
-          await workoutSessionsApi.list();
+          await workoutSessionsApi.get(
+            sessionId,
+          );
 
         if (!cancelled) {
-          setSessions(data);
+          setSession(data);
         }
       } catch (requestError) {
         console.error(
@@ -113,24 +123,18 @@ export default function WorkoutDetails() {
     [customRoutines],
   );
 
-  const session = useMemo(
-    () =>
-      sessions.find(
-        (item) =>
-          item.id === sessionId,
-      ),
-    [sessionId, sessions],
-  );
+  const sessionRoutineId =
+    session?.routineId;
 
   const routineName = useMemo(
     () =>
       allRoutines.find(
         (routine) =>
           routine.id ===
-          session?.routineId,
+          sessionRoutineId,
       )?.name ??
       "Unknown Routine",
-    [allRoutines, session?.routineId],
+    [allRoutines, sessionRoutineId],
   );
 
   if (isLoading) {

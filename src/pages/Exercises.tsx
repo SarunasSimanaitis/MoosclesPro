@@ -1,5 +1,6 @@
 import {
   Dumbbell,
+  Filter,
   Search,
   SlidersHorizontal,
   X,
@@ -11,10 +12,9 @@ import Badge from "../components/ui/Badge";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import Input from "../components/ui/Input";
+import PageHeader from "../components/ui/PageHeader";
 import Select from "../components/ui/Select";
-
 import { exercises } from "../data/exercises";
-
 import type {
   Equipment,
   ExerciseCategory,
@@ -22,141 +22,51 @@ import type {
 } from "../types/Exercise";
 
 const muscleGroups: MuscleGroup[] = [
-  "Chest",
-  "Back",
-  "Shoulders",
-  "Biceps",
-  "Triceps",
-  "Forearms",
-  "Quadriceps",
-  "Hamstrings",
-  "Glutes",
-  "Calves",
-  "Core",
-  "Cardio",
-  "Full Body",
+  "Chest","Back","Shoulders","Biceps","Triceps","Forearms",
+  "Quadriceps","Hamstrings","Glutes","Calves","Core","Cardio","Full Body",
 ];
 
 const equipmentTypes: Equipment[] = [
-  "Barbell",
-  "Dumbbell",
-  "Cable",
-  "Machine",
-  "Bodyweight",
-  "Kettlebell",
-  "Resistance Band",
-  "EZ Bar",
-  "Smith Machine",
-  "Other",
+  "Barbell","Dumbbell","Cable","Machine","Bodyweight",
+  "Kettlebell","Resistance Band","EZ Bar","Smith Machine","Other",
 ];
 
 const categories: ExerciseCategory[] = [
-  "Strength",
-  "Hypertrophy",
-  "Cardio",
-  "Mobility",
+  "Strength","Hypertrophy","Cardio","Mobility",
 ];
 
 export default function Exercises() {
   const navigate = useNavigate();
+  const [search, setSearch] = useState("");
+  const [muscleFilter, setMuscleFilter] = useState<MuscleGroup | "All">("All");
+  const [equipmentFilter, setEquipmentFilter] = useState<Equipment | "All">("All");
+  const [categoryFilter, setCategoryFilter] = useState<ExerciseCategory | "All">("All");
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
-  const [search, setSearch] =
-    useState("");
+  const filtered = useMemo(() => {
+    const query = search.trim().toLowerCase();
 
-  const [
-    muscleFilter,
-    setMuscleFilter,
-  ] = useState<
-    MuscleGroup | "All"
-  >("All");
+    return exercises.filter((exercise) => {
+      const searchable = [
+        exercise.name,
+        exercise.muscleGroup,
+        exercise.equipment,
+        exercise.category,
+        ...exercise.primaryMuscles,
+        ...exercise.secondaryMuscles,
+      ].join(" ").toLowerCase();
 
-  const [
-    equipmentFilter,
-    setEquipmentFilter,
-  ] = useState<
-    Equipment | "All"
-  >("All");
-
-  const [
-    categoryFilter,
-    setCategoryFilter,
-  ] = useState<
-    ExerciseCategory | "All"
-  >("All");
-
-  const [
-    filtersOpen,
-    setFiltersOpen,
-  ] = useState(false);
-
-  const filteredExercises =
-    useMemo(() => {
-      const query =
-        search.trim().toLowerCase();
-
-      return exercises.filter(
-        (exercise) => {
-          const matchesSearch =
-            query === "" ||
-            exercise.name
-              .toLowerCase()
-              .includes(query) ||
-            exercise.muscleGroup
-              .toLowerCase()
-              .includes(query) ||
-            exercise.equipment
-              .toLowerCase()
-              .includes(query) ||
-            exercise.category
-              .toLowerCase()
-              .includes(query) ||
-            exercise.primaryMuscles.some(
-              (muscle) =>
-                muscle
-                  .toLowerCase()
-                  .includes(query),
-            ) ||
-            exercise.secondaryMuscles.some(
-              (muscle) =>
-                muscle
-                  .toLowerCase()
-                  .includes(query),
-            );
-
-          const matchesMuscle =
-            muscleFilter === "All" ||
-            exercise.muscleGroup ===
-              muscleFilter;
-
-          const matchesEquipment =
-            equipmentFilter ===
-              "All" ||
-            exercise.equipment ===
-              equipmentFilter;
-
-          const matchesCategory =
-            categoryFilter ===
-              "All" ||
-            exercise.category ===
-              categoryFilter;
-
-          return (
-            matchesSearch &&
-            matchesMuscle &&
-            matchesEquipment &&
-            matchesCategory
-          );
-        },
+      return (
+        (!query || searchable.includes(query)) &&
+        (muscleFilter === "All" || exercise.muscleGroup === muscleFilter) &&
+        (equipmentFilter === "All" || exercise.equipment === equipmentFilter) &&
+        (categoryFilter === "All" || exercise.category === categoryFilter)
       );
-    }, [
-      search,
-      muscleFilter,
-      equipmentFilter,
-      categoryFilter,
-    ]);
+    });
+  }, [search, muscleFilter, equipmentFilter, categoryFilter]);
 
   const hasFilters =
-    search.trim() !== "" ||
+    search.trim() ||
     muscleFilter !== "All" ||
     equipmentFilter !== "All" ||
     categoryFilter !== "All";
@@ -169,103 +79,44 @@ export default function Exercises() {
   }
 
   return (
-    <main className="mx-auto max-w-6xl space-y-7 sm:space-y-9">
-      {/* Header */}
-      <section>
-        <p className="text-sm font-semibold uppercase tracking-[0.25em] text-[var(--primary)]">
-          Exercise Library
-        </p>
+    <main className="space-y-6 sm:space-y-8">
+      <PageHeader
+        eyebrow="Exercise library"
+        icon={<Dumbbell size={15} />}
+        title="Exercises"
+        description="Search for a movement, then tap in for the details."
+      />
 
-        <div className="mt-3 flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
-          <div>
-            <h1 className="text-3xl font-black tracking-tight text-[var(--text)] sm:text-4xl md:text-5xl">
-              Find your exercise
-            </h1>
-
-            <p className="mt-3 max-w-2xl text-base leading-relaxed text-[var(--text-muted)] sm:text-lg">
-              Explore exercises by muscle
-              group, equipment, and training
-              goal.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
-            <Dumbbell size={17} />
-
-            <span>
-              {exercises.length} exercises
-              available
-            </span>
-          </div>
-        </div>
-      </section>
-
-      {/* Search + filters */}
-      <Card className="p-4 sm:p-5 md:p-6">
+      <Card className="p-4 sm:p-5">
         <Input
           type="search"
           value={search}
-          onChange={(event) =>
-            setSearch(
-              event.target.value,
-            )
-          }
-          placeholder="Search exercises, muscles, equipment..."
-          className="bg-[var(--surface-soft)]"
+          onChange={(event) => setSearch(event.target.value)}
+          placeholder="Search exercises"
+          leadingIcon={<Search size={18} />}
+          aria-label="Search exercises"
         />
 
-        <div className="mt-4 flex items-center justify-between md:hidden">
+        <div className="mt-3 flex items-center justify-between gap-3">
           <button
             type="button"
-            onClick={() =>
-              setFiltersOpen(
-                (open) => !open,
-              )
-            }
-            aria-expanded={
-              filtersOpen
-            }
-            className="
-              inline-flex
-              items-center
-              gap-2
-              rounded-[var(--radius-md)]
-              px-2
-              py-2
-              text-sm
-              font-semibold
-              text-[var(--text-muted)]
-              transition-colors
-              hover:text-[var(--primary)]
-              focus-visible:outline-none
-              focus-visible:ring-2
-              focus-visible:ring-[var(--primary)]
-            "
+            onClick={() => setFiltersOpen((open) => !open)}
+            className="inline-flex min-h-11 items-center gap-2 rounded-[var(--radius-md)] px-3 text-sm font-bold text-[var(--text-muted)] hover:bg-[var(--surface-soft)] hover:text-[var(--text)] md:hidden"
+            aria-expanded={filtersOpen}
           >
-            <SlidersHorizontal
-              size={17}
-            />
+            <SlidersHorizontal size={17} />
             Filters
           </button>
+
+          <p className="text-xs font-semibold text-[var(--text-muted)] sm:text-sm">
+            {filtered.length} of {exercises.length} exercises
+          </p>
 
           {hasFilters && (
             <button
               type="button"
               onClick={clearFilters}
-              className="
-                inline-flex
-                items-center
-                gap-1.5
-                rounded-[var(--radius-md)]
-                px-2
-                py-2
-                text-sm
-                font-semibold
-                text-[var(--primary)]
-                focus-visible:outline-none
-                focus-visible:ring-2
-                focus-visible:ring-[var(--primary)]
-              "
+              className="inline-flex min-h-11 items-center gap-1.5 rounded-[var(--radius-md)] px-2 text-sm font-bold text-[var(--primary)]"
             >
               <X size={15} />
               Clear
@@ -273,104 +124,55 @@ export default function Exercises() {
           )}
         </div>
 
-        <div
-          className={`
-            ${
-              filtersOpen
-                ? "mt-5 grid"
-                : "hidden"
-            }
-            gap-4
-            md:mt-5
-            md:grid
-            md:grid-cols-3
-          `}
-        >
+        <div className={`mt-4 grid gap-3 md:grid-cols-3 ${filtersOpen ? "grid" : "hidden md:grid"}`}>
           <Select
-            label="Muscle group"
+            label="Muscle"
             value={muscleFilter}
             options={muscleGroups}
-            allLabel="All muscle groups"
-            onChange={(value) =>
-              setMuscleFilter(
-                value as
-                  | MuscleGroup
-                  | "All",
-              )
-            }
+            allLabel="All muscles"
+            onChange={(value) => setMuscleFilter(value as MuscleGroup | "All")}
           />
-
           <Select
             label="Equipment"
             value={equipmentFilter}
             options={equipmentTypes}
-            allLabel="All equipment types"
-            onChange={(value) =>
-              setEquipmentFilter(
-                value as
-                  | Equipment
-                  | "All",
-              )
-            }
+            allLabel="All equipment"
+            onChange={(value) => setEquipmentFilter(value as Equipment | "All")}
           />
-
           <Select
-            label="Category"
+            label="Type"
             value={categoryFilter}
             options={categories}
-            allLabel="All categories"
-            onChange={(value) =>
-              setCategoryFilter(
-                value as
-                  | ExerciseCategory
-                  | "All",
-              )
-            }
+            allLabel="All types"
+            onChange={(value) => setCategoryFilter(value as ExerciseCategory | "All")}
           />
         </div>
-
-        {hasFilters && (
-          <div className="mt-5 hidden md:block">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={clearFilters}
-              className="px-0"
-            >
-              <X size={15} />
-              Clear filters
-            </Button>
-          </div>
-        )}
       </Card>
 
-      {/* Results */}
-      <section>
-        <div className="mb-5 flex items-center justify-between">
-          <p className="text-sm text-[var(--text-muted)]">
-            Showing{" "}
-            <span className="font-bold text-[var(--text)]">
-              {filteredExercises.length}
-            </span>{" "}
-            {filteredExercises.length ===
-            1
-              ? "exercise"
-              : "exercises"}
+      {filtered.length === 0 ? (
+        <Card className="border-dashed p-8 text-center sm:p-10">
+          <Filter size={24} className="mx-auto text-[var(--text-muted)]" />
+          <h2 className="mt-4 text-xl font-black">No matches</h2>
+          <p className="mt-2 text-sm text-[var(--text-muted)]">
+            Try a different search or clear the filters.
           </p>
-        </div>
-
-        {filteredExercises.length >
-        0 ? (
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {filteredExercises.map(
-              (exercise) => (
-                <Card
-                  key={exercise.id}
-                  hover
-                  className="flex flex-col p-6"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${
+          <Button variant="secondary" className="mt-5" onClick={clearFilters}>
+            Clear filters
+          </Button>
+        </Card>
+      ) : (
+        <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          {filtered.map((exercise) => (
+            <button
+              key={exercise.id}
+              type="button"
+              onClick={() => navigate(`/exercises/${exercise.id}`)}
+              className="group text-left"
+            >
+              <Card hover className="h-full p-4 sm:p-5">
+                <div className="flex items-start justify-between gap-3">
+                  <div
+                    className={`flex h-11 w-11 items-center justify-center rounded-2xl ${
                       exercise.category === "Strength"
                         ? "bg-[var(--primary-soft)] text-[var(--primary)]"
                         : exercise.category === "Hypertrophy"
@@ -378,112 +180,30 @@ export default function Exercises() {
                           : exercise.category === "Mobility"
                             ? "bg-[var(--violet-soft)] text-[var(--violet)]"
                             : "bg-[var(--rose-soft)] text-[var(--rose)]"
-                    }`}>
-                      <Dumbbell size={22} />
-                    </div>
-
-                    <Badge
-                      variant={
-                        exercise.category ===
-                        "Strength"
-                          ? "primary"
-                          : exercise.category ===
-                              "Hypertrophy"
-                            ? "success"
-                            : "default"
-                      }
-                    >
-                      {exercise.category}
-                    </Badge>
+                    }`}
+                  >
+                    <Dumbbell size={21} />
                   </div>
+                  <Badge>{exercise.category}</Badge>
+                </div>
 
-                  <h2 className="mt-6 text-xl font-black text-[var(--text)]">
-                    {exercise.name}
-                  </h2>
+                <h2 className="mt-5 text-lg font-black group-hover:text-[var(--primary)] sm:text-xl">
+                  {exercise.name}
+                </h2>
 
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    <Badge>
-                      {
-                        exercise.muscleGroup
-                      }
-                    </Badge>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Badge>{exercise.muscleGroup}</Badge>
+                  <Badge>{exercise.equipment}</Badge>
+                </div>
 
-                    <Badge>
-                      {
-                        exercise.equipment
-                      }
-                    </Badge>
-                  </div>
-
-                  <div className="mt-6">
-                    <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]">
-                      Primary muscles
-                    </p>
-
-                    <p className="mt-2 text-sm font-medium leading-relaxed text-[var(--text)]">
-                      {exercise.primaryMuscles.join(
-                        " · ",
-                      )}
-                    </p>
-                  </div>
-
-                  {exercise.secondaryMuscles
-                    .length > 0 && (
-                    <div className="mt-4">
-                      <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]">
-                        Secondary
-                      </p>
-
-                      <p className="mt-2 text-sm text-[var(--text-muted)]">
-                        {exercise.secondaryMuscles.join(
-                          " · ",
-                        )}
-                      </p>
-                    </div>
-                  )}
-
-                  <div className="mt-auto pt-6">
-                    <Button
-                      variant="secondary"
-                      className="w-full"
-                      onClick={() =>
-                        navigate(
-                          `/exercises/${exercise.id}`,
-                        )
-                      }
-                    >
-                      View Exercise
-                    </Button>
-                  </div>
-                </Card>
-              ),
-            )}
-          </div>
-        ) : (
-          <Card className="p-12 text-center">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--surface-soft)] text-[var(--text-muted)]">
-              <Search size={24} />
-            </div>
-
-            <h2 className="mt-5 text-xl font-bold text-[var(--text)]">
-              No exercises found
-            </h2>
-
-            <p className="mt-2 text-[var(--text-muted)]">
-              Try changing your search or
-              filters.
-            </p>
-
-            <Button
-              variant="secondary"
-              onClick={clearFilters}
-              className="mt-6"
-            >
-              Clear filters
-            </Button>
-          </Card>
-        )}
-      </section>
+                <p className="mt-5 text-sm leading-relaxed text-[var(--text-muted)]">
+                  {exercise.primaryMuscles.join(" · ")}
+                </p>
+              </Card>
+            </button>
+          ))}
+        </section>
+      )}
     </main>
   );
 }

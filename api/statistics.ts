@@ -18,8 +18,9 @@ const ALLOWED_METHODS = [
   "GET",
 ];
 
-export default {
-  async fetch(request: Request) {
+export const runtime = "nodejs";
+
+export default async function handler(request: Request) {
     if (request.method !== "GET") {
       return methodNotAllowedResponse(
         ALLOWED_METHODS,
@@ -116,5 +117,4 @@ export default {
         "Failed to load statistics.",
       );
     }
-  },
-};
+}

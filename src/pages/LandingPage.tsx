@@ -48,12 +48,12 @@ const benefits = [
 
 export default function LandingPage() {
   return (
-    <div className="mx-auto max-w-7xl space-y-20 pb-16 sm:space-y-24">
+    <div className="mx-auto max-w-6xl space-y-14 pb-12 sm:space-y-16">
       {/* Hero */}
 
       <section className="relative overflow-hidden pt-8 md:pt-14">
 
-        <div className="relative grid items-center gap-14 lg:grid-cols-[1.05fr_0.95fr]">
+        <div className="relative grid items-center gap-10 lg:grid-cols-[1.05fr_0.95fr]">
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-sm font-semibold text-[var(--text-muted)] shadow-sm">
               <Sparkles
@@ -63,7 +63,7 @@ export default function LandingPage() {
               Training made measurable.
             </div>
 
-            <h1 className="mt-7 max-w-4xl text-4xl font-black tracking-tight text-[var(--text)] sm:text-5xl md:text-6xl lg:text-7xl">
+            <h1 className="mt-7 max-w-4xl text-4xl font-black tracking-tight text-[var(--text)] sm:text-5xl md:text-6xl">
               Train smarter.
               <span className="block text-[var(--primary)]">
                 Keep progressing.
@@ -177,7 +177,7 @@ export default function LandingPage() {
             Everything in one place
           </p>
 
-          <h2 className="mt-3 text-4xl font-black tracking-tight text-[var(--text)] md:text-5xl">
+          <h2 className="mt-3 text-3xl font-black tracking-tight text-[var(--text)] sm:text-4xl md:text-5xl">
             Your training should be easy to follow.
           </h2>
 
@@ -198,7 +198,7 @@ export default function LandingPage() {
               <Card
                 key={title}
                 hover
-                className="p-7"
+                className="p-6"
               >
                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--primary-soft)] text-[var(--primary)]">
                   <Icon size={23} />
@@ -225,7 +225,7 @@ export default function LandingPage() {
             Built around your training
           </p>
 
-          <h2 className="mt-3 text-4xl font-black tracking-tight text-[var(--text)] md:text-5xl">
+          <h2 className="mt-3 text-3xl font-black tracking-tight text-[var(--text)] sm:text-4xl md:text-5xl">
             Less friction.
             <span className="block">
               More consistency.
@@ -292,7 +292,7 @@ export default function LandingPage() {
 
       {/* CTA */}
 
-      <section className="overflow-hidden rounded-[var(--radius-xl)] bg-[var(--text)] p-7 text-[var(--surface)] sm:p-9 md:p-12">
+      <section className="overflow-hidden rounded-[var(--radius-xl)] bg-[var(--feature-background)] p-6 text-[var(--feature-text)] sm:p-8 md:p-10">
         <div className="max-w-3xl">
           <p className="text-sm font-semibold uppercase tracking-[0.25em] text-[var(--primary)]">
             Start training
@@ -302,7 +302,7 @@ export default function LandingPage() {
             Your next workout starts here.
           </h2>
 
-          <p className="mt-4 max-w-2xl text-lg leading-relaxed text-[var(--surface)]/70">
+          <p className="mt-4 max-w-2xl text-lg leading-relaxed text-[var(--feature-muted)]">
             Create your account, build a routine, and
             start turning your training into something you
             can actually measure.

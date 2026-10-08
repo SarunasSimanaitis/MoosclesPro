@@ -42,13 +42,17 @@ export default function Dashboard() {
   const [isRetryingAuth, setIsRetryingAuth] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const userId = session?.user?.id;
   const firstName = useMemo(
     () => getFirstName(session?.user?.name),
     [session?.user?.name],
   );
 
   useEffect(() => {
-    if (isSessionPending || !session?.user) return;
+    if (isSessionPending || !userId) {
+      setIsLoading(false);
+      return;
+    }
 
     let cancelled = false;
 
@@ -67,7 +71,7 @@ export default function Dashboard() {
             setIsRetryingAuth(true);
             const refreshed = await authClient.getSession();
 
-            if (refreshed.data?.user) {
+            if (refreshed.data?.user?.id === userId) {
               setDashboardData(await dashboardApi.get());
             } else {
               setError("Your session could not be verified. Please sign in again.");
@@ -93,7 +97,7 @@ export default function Dashboard() {
     return () => {
       cancelled = true;
     };
-  }, [isSessionPending, session?.user]);
+  }, [isSessionPending, userId]);
 
   if (isSessionPending || isLoading || isRetryingAuth) {
     return <DashboardSkeleton />;

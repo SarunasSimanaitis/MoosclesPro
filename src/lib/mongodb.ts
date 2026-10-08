@@ -29,7 +29,11 @@ const globalMongo = globalThis as GlobalMongo;
 
 export const mongoClient =
   globalMongo.__moosclesMongoClient ??
-  new MongoClient(mongodbUri);
+  new MongoClient(mongodbUri, {
+    connectTimeoutMS: 10_000,
+    serverSelectionTimeoutMS: 10_000,
+    socketTimeoutMS: 20_000,
+  });
 
 if (env.NODE_ENV !== "production") {
   globalMongo.__moosclesMongoClient = mongoClient;

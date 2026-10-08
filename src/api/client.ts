@@ -48,6 +48,7 @@ export async function apiRequest<T>(
       ...options,
       headers,
       credentials: "include",
+      signal: options.signal ?? AbortSignal.timeout(15_000),
       body:
         options.body !== undefined
           ? JSON.stringify(options.body)

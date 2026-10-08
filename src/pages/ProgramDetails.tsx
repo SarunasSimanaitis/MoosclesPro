@@ -248,10 +248,7 @@ export default function ProgramDetails() {
           </div>
 
           <p className="mt-6 leading-relaxed text-[var(--text-muted)]">
-            This program gives you a structured
-            weekly training schedule while keeping
-            each individual session focused and
-            manageable.
+            A simple weekly plan with focused sessions and clear targets.
           </p>
 
           <div className="mt-7 space-y-3">
@@ -445,14 +442,11 @@ export default function ProgramDetails() {
           </p>
 
           <h2 className="mt-4 text-3xl font-black tracking-tight text-[var(--text)] md:text-4xl">
-            Want something built around you?
+            Need a different plan?
           </h2>
 
           <p className="mt-4 leading-relaxed text-[var(--text-muted)]">
-            Personalized training will eventually
-            take your goals, experience, schedule,
-            available equipment, and training
-            preferences into account.
+            Personalized training is coming later.
           </p>
 
           <Button

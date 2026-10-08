@@ -178,17 +178,17 @@ export default function Session() {
   }
 
   return (
-    <main className="mx-auto max-w-4xl space-y-8">
+    <main className="mx-auto max-w-3xl space-y-7 sm:space-y-8">
       <section>
         <p className="text-sm font-bold uppercase tracking-[0.25em] text-[var(--primary)]">
           Active session
         </p>
 
-        <h1 className="mt-3 text-4xl font-black tracking-tight text-[var(--text)] md:text-5xl">
+        <h1 className="mt-3 text-3xl font-black tracking-tight text-[var(--text)] sm:text-4xl md:text-5xl">
           Continue training
         </h1>
 
-        <p className="mt-3 max-w-2xl text-lg leading-relaxed text-[var(--text-muted)]">
+        <p className="mt-3 max-w-2xl text-base leading-relaxed text-[var(--text-muted)] sm:text-lg">
           Your active workout is saved while
           you move around the app, so your sets
           stay exactly where you left them.
@@ -196,7 +196,7 @@ export default function Session() {
       </section>
 
       <Card className="overflow-hidden">
-        <div className="relative bg-[var(--feature-background)] p-7 md:p-9">
+        <div className="relative bg-[var(--feature-background)] p-6 sm:p-8">
 
 
           <div className="relative">
@@ -255,7 +255,7 @@ export default function Session() {
           </div>
         </div>
 
-        <div className="p-6 md:p-7">
+        <div className="p-5 sm:p-7">
           <div className="grid gap-3 sm:grid-cols-3">
             <SessionMetric
               icon={<Dumbbell size={16} />}

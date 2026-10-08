@@ -153,15 +153,14 @@ export default function Mindset() {
           Mindset
         </p>
 
-        <h1 className="mt-4 max-w-3xl text-4xl font-black tracking-tight text-[var(--text)] md:text-6xl">
+        <h1 className="mt-4 max-w-3xl text-3xl font-black tracking-tight text-[var(--text)] sm:text-4xl md:text-5xl">
           Train your body.
           <br />
           Build your mindset.
         </h1>
 
         <p className="mt-5 max-w-2xl text-base leading-relaxed text-[var(--text-muted)] sm:text-lg">
-          A place for progress, motivation, meals, routines, ideas and the
-          moments that keep you moving forward.
+          Simple reminders for the work between workouts.
         </p>
       </section>
 
@@ -174,12 +173,12 @@ export default function Mindset() {
             </p>
 
             <h2 className="mt-2 text-3xl font-black text-[var(--text)]">
-              Keep moving forward.
+              A little extra motivation.
             </h2>
           </div>
 
           <p className="hidden text-sm text-[var(--text-muted)] md:block">
-            Inspiration from the MoosclesPro community
+            Motivation for the days you need it.
           </p>
         </div>
 
@@ -347,9 +346,9 @@ export default function Mindset() {
 
           <button
             type="button"
-            className="shrink-0 rounded-xl bg-[var(--primary)] px-6 py-3 font-semibold text-white transition hover:bg-[var(--primary-hover)]"
+            className="shrink-0 rounded-[var(--radius-md)] bg-[var(--surface-soft)] px-5 py-3 font-semibold text-[var(--text-muted)]" disabled
           >
-            Create a post
+            Coming soon
           </button>
         </div>
       </section>

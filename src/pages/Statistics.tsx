@@ -107,21 +107,21 @@ export default function Statistics() {
           label="Volume"
           value={statistics.overview.volume.toLocaleString()}
           suffix="kg"
-          tone="violet"
+          tone="primary"
         />
         <StatTile
           icon={<Clock3 size={20} />}
           label="Training time"
           value={statistics.overview.trainingHours.toLocaleString(undefined, { maximumFractionDigits: 1 })}
           suffix="hours"
-          tone="accent"
+          tone="success"
         />
         <StatTile
           icon={<Flame size={20} />}
           label="Streak"
           value={statistics.overview.streak.toString()}
           suffix={statistics.overview.streak === 1 ? "day" : "days"}
-          tone="rose"
+          tone="danger"
         />
       </section>
 
@@ -161,7 +161,7 @@ export default function Statistics() {
                 </span>
                 <div className="flex h-36 w-full items-end rounded-[var(--radius-md)] bg-[var(--surface-soft)] p-1">
                   <div
-                    className={`w-full rounded-[var(--radius-sm)] ${highest ? "bg-[var(--primary)]" : "bg-[var(--accent)]"}`}
+                    className={`w-full rounded-[var(--radius-sm)] ${highest ? "bg-[var(--primary)]" : "bg-[var(--success)]"}`}
                     style={{ height: `${height}%` }}
                   />
                 </div>
@@ -224,9 +224,9 @@ function StatTile({
 }) {
   const styles = {
     primary: ["var(--primary-soft)", "var(--primary)"],
-    violet: ["var(--violet-soft)", "var(--violet)"],
-    accent: ["var(--accent-soft)", "var(--accent)"],
-    rose: ["var(--rose-soft)", "var(--rose)"],
+    violet: ["var(--primary-soft)", "var(--primary)"],
+    accent: ["var(--success-soft)", "var(--success)"],
+    rose: ["var(--danger-soft)", "var(--danger)"],
   }[tone];
 
   return (
@@ -270,9 +270,9 @@ function ExerciseRanking({
   tone: "primary" | "violet";
 }) {
   const color =
-    tone === "primary" ? "var(--primary)" : "var(--violet)";
+    tone === "primary" ? "var(--primary)" : "var(--primary)";
   const bg =
-    tone === "primary" ? "var(--primary-soft)" : "var(--violet-soft)";
+    tone === "primary" ? "var(--primary-soft)" : "var(--primary-soft)";
 
   return (
     <Card className="p-5 sm:p-7">

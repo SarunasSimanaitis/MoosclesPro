@@ -504,7 +504,7 @@ function RoutineEditor({
   }
 
   return (
-    <main className="mx-auto max-w-5xl space-y-7 pb-10">
+    <main className="mx-auto max-w-5xl space-y-6 pb-10">
       {/* Back */}
       <button
         type="button"
@@ -577,7 +577,7 @@ function RoutineEditor({
       )}
 
       {/* Routine details */}
-      <Card className="p-6 md:p-8">
+      <Card className="p-5 sm:p-7">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--primary-soft)] text-[var(--primary)]">
             <Dumbbell size={19} />
@@ -611,7 +611,7 @@ function RoutineEditor({
       </Card>
 
       {/* Exercises */}
-      <Card className="p-6 md:p-8">
+      <Card className="p-5 sm:p-7">
         <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--primary)]">
@@ -668,7 +668,7 @@ function RoutineEditor({
 
         {routineExercises.length >
         0 ? (
-          <div className="mt-6 space-y-4">
+          <div className="mt-5 space-y-3">
             {routineExercises.map(
               (
                 routineExercise,

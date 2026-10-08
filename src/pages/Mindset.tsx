@@ -145,7 +145,7 @@ export default function Mindset() {
   };
 
   return (
-    <main className="space-y-10">
+    <main className="mx-auto max-w-6xl space-y-7 sm:space-y-9">
       {/* Hero */}
       <section>
         <p className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.25em] text-[var(--primary)]">
@@ -166,7 +166,7 @@ export default function Mindset() {
 
       {/* Feed header */}
       <section>
-        <div className="mb-6 flex items-end justify-between gap-6">
+        <div className="mb-6 flex items-end justify-between gap-5 sm:p-6">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--primary)]">
               Community
@@ -183,7 +183,7 @@ export default function Mindset() {
         </div>
 
         {/* Feed */}
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {posts.map((post) => {
             const isLiked = likedPosts.includes(post.id);
             const isSaved = savedPosts.includes(post.id);
@@ -193,7 +193,7 @@ export default function Mindset() {
                 key={post.id}
                 className="group overflow-hidden rounded-[2rem] border border-[var(--border)] bg-[var(--surface)] shadow-sm transition-shadow duration-300 hover:shadow-xl">
                 {/* Image */}
-                <div className="relative h-[330px] overflow-hidden rounded-t-[2rem] bg-black">
+                <div className="relative h-[280px] overflow-hidden rounded-t-[2rem] bg-black">
                   <img
                     src={post.imageUrl}
                     alt=""
@@ -324,34 +324,6 @@ export default function Mindset() {
         </div>
       </section>
 
-      {/* Community CTA */}
-      <section className="overflow-hidden rounded-[2rem] border border-[var(--border)] bg-[var(--text)] p-8 text-[var(--surface)] md:p-12">
-        <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
-          <div className="max-w-3xl">
-            <p className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.2em] text-[var(--primary)]">
-              <Sparkles size={16} />
-              Coming later
-            </p>
-
-            <h2 className="mt-4 text-3xl font-black md:text-4xl">
-              Your progress could inspire someone else.
-            </h2>
-
-            <p className="mt-4 leading-relaxed text-[var(--text-muted)]">
-              Share gym photos, meals, personal milestones, motivational
-              thoughts and the moments that keep you moving. Progress doesn't
-              have to happen alone.
-            </p>
-          </div>
-
-          <button
-            type="button"
-            className="shrink-0 rounded-[var(--radius-md)] bg-[var(--surface-soft)] px-5 py-3 font-semibold text-[var(--text-muted)]" disabled
-          >
-            Coming soon
-          </button>
-        </div>
-      </section>
     </main>
   );
 }

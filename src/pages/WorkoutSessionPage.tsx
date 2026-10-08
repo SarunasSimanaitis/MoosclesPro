@@ -72,6 +72,7 @@ export default function WorkoutSessionPage() {
     );
 
   const [isStarting, setIsStarting] = useState(false);
+  const userId = session?.user?.id;
 
   const allRoutines = useMemo(
     () => [
@@ -87,14 +88,14 @@ export default function WorkoutSessionPage() {
   );
 
   useEffect(() => {
-    if (sessionPending || !session?.user?.id || !routine || !routineId) {
+    if (sessionPending || !userId || !routine || !routineId) {
       return;
     }
 
     let cancelled = false;
     const current = useActiveWorkoutStore.getState().activeWorkout;
 
-    if (current?.userId === session.user.id) {
+    if (current?.userId === userId) {
       return;
     }
 
@@ -108,11 +109,11 @@ export default function WorkoutSessionPage() {
 
         const latest = useActiveWorkoutStore.getState().activeWorkout;
 
-        if (latest?.userId === session!.user!.id) {
+        if (latest?.userId === userId) {
           return;
         }
 
-        const created = startWorkout(routine!, session!.user!.id);
+        const created = startWorkout(routine!, userId);
 
         if (previous) {
           updateExercises(() =>
@@ -140,7 +141,7 @@ export default function WorkoutSessionPage() {
   }, [
     routine,
     routineId,
-    session?.user?.id,
+    userId,
     sessionPending,
     startWorkout,
     updateExercises,

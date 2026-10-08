@@ -191,7 +191,7 @@ export default function Statistics() {
           description="Exercises contributing the most total weight."
           exercises={statistics.topVolumeExercises}
           valueFormatter={(item) => `${item.volume.toLocaleString()} kg`}
-          tone="violet"
+          tone="primary"
         />
       </section>
 
@@ -220,14 +220,12 @@ function StatTile({
   label: string;
   value: string;
   suffix: string;
-  tone: "primary" | "violet" | "accent" | "rose";
+  tone: "primary" | "success";
 }) {
-  const styles = {
-    primary: ["var(--primary-soft)", "var(--primary)"],
-    violet: ["var(--primary-soft)", "var(--primary)"],
-    accent: ["var(--success-soft)", "var(--success)"],
-    rose: ["var(--danger-soft)", "var(--danger)"],
-  }[tone];
+  const styles =
+    tone === "success"
+      ? ["var(--success-soft)", "var(--success)"]
+      : ["var(--primary-soft)", "var(--primary)"];
 
   return (
     <Card className="p-5">
@@ -267,7 +265,7 @@ function ExerciseRanking({
   description: string;
   exercises: ExerciseStatistic[];
   valueFormatter: (exercise: ExerciseStatistic) => string;
-  tone: "primary" | "violet";
+  tone: "primary" | "success";
 }) {
   const color =
     tone === "primary" ? "var(--primary)" : "var(--primary)";

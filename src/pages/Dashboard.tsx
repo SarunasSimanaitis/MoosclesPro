@@ -21,7 +21,7 @@ import { authClient } from "../lib/auth-client";
 const WEEKLY_GOAL_TARGET = 5;
 
 function getFirstName(name?: string | null) {
-  return name?.trim().split(/s+/)[0] || "there";
+  return name?.trim().split(/\s+/)[0] || "there";
 }
 
 function formatVolume(value: number) {
@@ -156,9 +156,9 @@ export default function Dashboard() {
 
       <section className="grid gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-4">
         <DashboardStat icon={<Flame size={20} />} label="Streak" value={stats.streak} suffix={stats.streak === 1 ? "day" : "days"} tone="primary" />
-        <DashboardStat icon={<Dumbbell size={20} />} label="Workouts" value={stats.workouts} suffix="completed" tone="accent" />
-        <DashboardStat icon={<TrendingUp size={20} />} label="Volume" value={formatVolume(stats.volume)} suffix="kg" tone="violet" />
-        <DashboardStat icon={<Target size={20} />} label="Training time" value={formatHours(stats.hours)} suffix={stats.hours === 1 ? "hour" : "hours"} tone="rose" />
+        <DashboardStat icon={<Dumbbell size={20} />} label="Workouts" value={stats.workouts} suffix="completed" tone="success" />
+        <DashboardStat icon={<TrendingUp size={20} />} label="Volume" value={formatVolume(stats.volume)} suffix="kg" tone="primary" />
+        <DashboardStat icon={<Target size={20} />} label="Training time" value={formatHours(stats.hours)} suffix={stats.hours === 1 ? "hour" : "hours"} tone="danger" />
       </section>
 
       <section className="grid gap-4 lg:grid-cols-[1.35fr_0.65fr]">
@@ -177,7 +177,7 @@ export default function Dashboard() {
                   : "Create a simple routine once, then come back and press start whenever you're ready."}
               </p>
             </div>
-            <div className="hidden h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)] sm:flex">
+            <div className="hidden h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[var(--success-soft)] text-[var(--success)] sm:flex">
               <Dumbbell size={22} />
             </div>
           </div>
@@ -200,8 +200,8 @@ export default function Dashboard() {
           </NavLink>
         </Card>
 
-        <Card className="border-[var(--accent)]/25 bg-[var(--accent-soft)] p-5 sm:p-7">
-          <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--accent)]">
+        <Card className="border-[var(--success)]/25 bg-[var(--success-soft)] p-5 sm:p-7">
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--success)]">
             This week
           </p>
           <div className="mt-3 flex items-end justify-between gap-3">
@@ -211,7 +211,7 @@ export default function Dashboard() {
                 of {weeklyTarget} workouts
               </p>
             </div>
-            <span className="text-sm font-black text-[var(--accent)]">
+            <span className="text-sm font-black text-[var(--success)]">
               {weeklyPercentage}%
             </span>
           </div>
@@ -234,14 +234,14 @@ export default function Dashboard() {
       <section className="grid gap-4 sm:grid-cols-2">
         <QuickLink
           icon={<Dumbbell size={20} />}
-          title="Browse exercises"
+          title="Find an exercise"
           description="Find a movement and see how to perform it."
           href="/exercises"
           tone="violet"
         />
         <QuickLink
           icon={<History size={20} />}
-          title="Review your training"
+          title="See your history"
           description="Look back at completed sessions and volume."
           href="/history"
           tone="rose"
@@ -266,9 +266,9 @@ function DashboardStat({
 }) {
   const styles = {
     primary: ["var(--primary-soft)", "var(--primary)"],
-    accent: ["var(--accent-soft)", "var(--accent)"],
-    violet: ["var(--violet-soft)", "var(--violet)"],
-    rose: ["var(--rose-soft)", "var(--rose)"],
+    accent: ["var(--success-soft)", "var(--success)"],
+    violet: ["var(--primary-soft)", "var(--primary)"],
+    rose: ["var(--danger-soft)", "var(--danger)"],
   }[tone];
 
   return (
@@ -313,8 +313,8 @@ function QuickLink({
   tone: "violet" | "rose";
 }) {
   const styles = tone === "violet"
-    ? ["var(--violet-soft)", "var(--violet)"]
-    : ["var(--rose-soft)", "var(--rose)"];
+    ? ["var(--primary-soft)", "var(--primary)"]
+    : ["var(--danger-soft)", "var(--danger)"];
 
   return (
     <NavLink

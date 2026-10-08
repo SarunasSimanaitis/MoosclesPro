@@ -221,11 +221,11 @@ export default function Workouts() {
 
   return (
     <main
-      className="space-y-14"
+      className="mx-auto max-w-6xl space-y-8 sm:space-y-10"
       onClick={closeMenu}
     >
       {/* Hero */}
-      <section className="relative overflow-hidden rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--surface)] px-6 py-10 shadow-[var(--shadow-sm)] md:px-10 md:py-14">
+      <section className="relative overflow-hidden rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--surface)] px-5 py-7 shadow-[var(--shadow-sm)] sm:px-8 sm:py-10 md:px-10 md:py-14">
         <div
           aria-hidden="true"
           className="absolute -right-32 -top-32 h-72 w-72 rounded-full bg-[var(--primary)] opacity-10 blur-3xl"
@@ -237,7 +237,7 @@ export default function Workouts() {
             Training
           </p>
 
-          <h1 className="mt-4 text-4xl font-black tracking-tight text-[var(--text)] md:text-6xl">
+          <h1 className="mt-4 text-3xl font-black tracking-tight text-[var(--text)] sm:text-4xl md:text-5xl">
             Train with a plan
             <br />
             that fits your life.
@@ -318,7 +318,7 @@ export default function Workouts() {
         />
 
         {programs.length > 0 ? (
-          <div className="grid gap-6 lg:grid-cols-2">
+          <div className="grid gap-4 sm:gap-5 lg:grid-cols-2">
             {programs.map(
               (program) => (
                 <ProgramCard

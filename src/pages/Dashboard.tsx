@@ -264,7 +264,7 @@ export default function Dashboard() {
   );
 
   return (
-    <div className="space-y-10">
+    <div className="mx-auto max-w-6xl space-y-7 sm:space-y-10">
       <section>
         <p className="text-sm font-semibold uppercase tracking-[0.25em] text-[var(--primary)]">
           Dashboard
@@ -272,7 +272,7 @@ export default function Dashboard() {
 
         <div className="mt-3 flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
           <div>
-            <h1 className="text-4xl font-black tracking-tight text-[var(--text)] md:text-5xl">
+            <h1 className="text-3xl font-black tracking-tight text-[var(--text)] sm:text-4xl md:text-5xl">
               Welcome back,{" "}
               {firstName}.
             </h1>
@@ -295,7 +295,7 @@ export default function Dashboard() {
 
       <section
         aria-label="Training overview"
-        className="grid gap-5 md:grid-cols-2 xl:grid-cols-4"
+        className="grid gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-4"
       >
         <StatCard
           icon={<Flame size={20} />}
@@ -339,7 +339,7 @@ export default function Dashboard() {
       </section>
 
       <section className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
-        <Card className="relative overflow-hidden p-8 md:p-10">
+        <Card className="relative overflow-hidden p-6 sm:p-8 md:p-10">
           <div
             aria-hidden="true"
             className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[var(--primary)] opacity-10 blur-3xl"

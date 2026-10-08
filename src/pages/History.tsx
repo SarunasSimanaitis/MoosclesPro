@@ -223,7 +223,7 @@ export default function History() {
   }
 
   return (
-    <main className="mx-auto max-w-6xl space-y-10">
+    <main className="mx-auto max-w-5xl space-y-7 sm:space-y-9">
       {/* Header */}
       <section>
         <p className="flex items-center gap-2 text-sm font-bold uppercase tracking-[0.25em] text-[var(--primary)]">
@@ -233,11 +233,11 @@ export default function History() {
 
         <div className="mt-3 flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
           <div>
-            <h1 className="text-4xl font-black tracking-tight text-[var(--text)] md:text-5xl">
+            <h1 className="text-3xl font-black tracking-tight text-[var(--text)] sm:text-4xl md:text-5xl">
               Workout History
             </h1>
 
-            <p className="mt-3 max-w-2xl text-lg leading-relaxed text-[var(--text-muted)]">
+            <p className="mt-3 max-w-2xl text-base leading-relaxed text-[var(--text-muted)] sm:text-lg">
               Look back at the work you've
               put in and keep building on it.
             </p>
@@ -258,7 +258,7 @@ export default function History() {
       {/* Overview */}
       <section
         aria-label="History overview"
-        className="grid gap-4 sm:grid-cols-3"
+        className="grid gap-3 sm:grid-cols-3"
       >
         <HistoryMetric
           label="Workouts"

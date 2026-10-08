@@ -16,6 +16,7 @@ import {
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import PageHeader from "../components/ui/PageHeader";
+import StatCard from "../components/ui/StatCard";
 
 export default function Statistics() {
   const [statistics, setStatistics] = useState<StatisticsData | null>(null);
@@ -95,34 +96,10 @@ export default function Statistics() {
       />
 
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <StatTile
-          icon={<Dumbbell size={20} />}
-          label="Workouts"
-          value={statistics.overview.workouts.toString()}
-          suffix="completed"
-          tone="primary"
-        />
-        <StatTile
-          icon={<TrendingUp size={20} />}
-          label="Volume"
-          value={statistics.overview.volume.toLocaleString()}
-          suffix="kg"
-          tone="primary"
-        />
-        <StatTile
-          icon={<Clock3 size={20} />}
-          label="Training time"
-          value={statistics.overview.trainingHours.toLocaleString(undefined, { maximumFractionDigits: 1 })}
-          suffix="hours"
-          tone="success"
-        />
-        <StatTile
-          icon={<Flame size={20} />}
-          label="Streak"
-          value={statistics.overview.streak.toString()}
-          suffix={statistics.overview.streak === 1 ? "day" : "days"}
-          tone="success"
-        />
+        <StatCard icon={<Dumbbell size={20} />} label="Workouts" value={statistics.overview.workouts.toString()} suffix="completed" />
+        <StatCard icon={<TrendingUp size={20} />} label="Volume" value={statistics.overview.volume.toLocaleString()} suffix="kg" />
+        <StatCard icon={<Clock3 size={20} />} label="Training time" value={statistics.overview.trainingHours.toLocaleString(undefined, { maximumFractionDigits: 1 })} suffix="hours" tone="success" />
+        <StatCard icon={<Flame size={20} />} label="Streak" value={statistics.overview.streak.toString()} suffix={statistics.overview.streak === 1 ? "day" : "days"} tone="success" />
       </section>
 
       <Card className="p-5 sm:p-7">
@@ -206,40 +183,6 @@ export default function Statistics() {
           </Card>
         )}
     </main>
-  );
-}
-
-function StatTile({
-  icon,
-  label,
-  value,
-  suffix,
-  tone,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  suffix: string;
-  tone: "primary" | "success";
-}) {
-  const styles =
-    tone === "success"
-      ? ["var(--success-soft)", "var(--success)"]
-      : ["var(--primary-soft)", "var(--primary)"];
-
-  return (
-    <Card className="p-5">
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-sm font-semibold text-[var(--text-muted)]">{label}</p>
-        <div className="flex h-10 w-10 items-center justify-center rounded-2xl" style={{ backgroundColor: styles[0], color: styles[1] }}>
-          {icon}
-        </div>
-      </div>
-      <div className="mt-5 flex items-baseline gap-2">
-        <span className="text-3xl font-black tracking-tight">{value}</span>
-        <span className="text-sm font-semibold text-[var(--text-muted)]">{suffix}</span>
-      </div>
-    </Card>
   );
 }
 

@@ -25,6 +25,7 @@ export default function Navbar() {
 
   const name = session?.user?.name?.trim() || "Account";
   const initial = name.charAt(0).toUpperCase() || "A";
+  const ExerciseIcon = publicNavigation[0].icon;
 
   return (
     <header className="sticky top-0 z-50 border-b border-[var(--border)] bg-[var(--background)]/95 backdrop-blur-xl">
@@ -145,7 +146,7 @@ export default function Navbar() {
                 onClick={() => setMenuOpen(false)}
                 className="flex min-h-12 items-center gap-3 rounded-[var(--radius-md)] px-4 text-sm font-semibold text-[var(--text-muted)] hover:bg-[var(--surface-soft)] hover:text-[var(--text)]"
               >
-                <publicNavigation[0].icon size={18} />
+                <ExerciseIcon size={18} />
                 Exercise library
               </NavLink>
 

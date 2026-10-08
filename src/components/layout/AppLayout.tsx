@@ -11,8 +11,10 @@ export default function AppLayout() {
       <Navbar />
       <DesktopSidebar />
 
-      <main className="min-w-0 px-4 py-5 pb-28 sm:px-5 sm:py-8 lg:pl-72 lg:pr-8 lg:py-8">
-        <Outlet />
+      <main className="min-w-0 px-4 py-5 pb-28 sm:px-6 sm:py-7 lg:px-8 lg:py-8 xl:pl-[17rem]">
+        <div className="mx-auto w-full max-w-[80rem]">
+          <Outlet />
+        </div>
       </main>
 
       <ActiveWorkoutBar />

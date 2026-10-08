@@ -470,7 +470,6 @@ export default function Select({
             border-[var(--border)]
             bg-[var(--surface)]
             p-1.5
-            shadow-[var(--shadow-lg)]
           "
         >
           <ul

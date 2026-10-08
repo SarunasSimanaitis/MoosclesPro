@@ -169,7 +169,7 @@ export default function Exercises() {
   }
 
   return (
-    <main className="space-y-10">
+    <main className="mx-auto max-w-6xl space-y-7 sm:space-y-9">
       {/* Header */}
       <section>
         <p className="text-sm font-semibold uppercase tracking-[0.25em] text-[var(--primary)]">
@@ -178,11 +178,11 @@ export default function Exercises() {
 
         <div className="mt-3 flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
           <div>
-            <h1 className="text-4xl font-black tracking-tight text-[var(--text)] md:text-5xl">
+            <h1 className="text-3xl font-black tracking-tight text-[var(--text)] sm:text-4xl md:text-5xl">
               Find your exercise
             </h1>
 
-            <p className="mt-3 max-w-2xl text-lg leading-relaxed text-[var(--text-muted)]">
+            <p className="mt-3 max-w-2xl text-base leading-relaxed text-[var(--text-muted)] sm:text-lg">
               Explore exercises by muscle
               group, equipment, and training
               goal.
@@ -201,7 +201,7 @@ export default function Exercises() {
       </section>
 
       {/* Search + filters */}
-      <Card className="p-5 md:p-6">
+      <Card className="p-4 sm:p-5 md:p-6">
         <Input
           type="search"
           value={search}
@@ -361,7 +361,7 @@ export default function Exercises() {
 
         {filteredExercises.length >
         0 ? (
-          <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {filteredExercises.map(
               (exercise) => (
                 <Card

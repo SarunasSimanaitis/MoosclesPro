@@ -504,7 +504,7 @@ function RoutineEditor({
   }
 
   return (
-    <main className="mx-auto max-w-5xl space-y-8 pb-10">
+    <main className="mx-auto max-w-5xl space-y-7 pb-10">
       {/* Back */}
       <button
         type="button"
@@ -535,13 +535,13 @@ function RoutineEditor({
 
         <div className="mt-3 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
           <div>
-            <h1 className="text-4xl font-black tracking-tight text-[var(--text)] md:text-5xl">
+            <h1 className="text-3xl font-black tracking-tight text-[var(--text)] sm:text-4xl md:text-5xl">
               {isEditing
                 ? "Edit your routine"
                 : "Create your routine"}
             </h1>
 
-            <p className="mt-3 max-w-2xl text-lg leading-relaxed text-[var(--text-muted)]">
+            <p className="mt-3 max-w-2xl text-base leading-relaxed text-[var(--text-muted)] sm:text-lg">
               {isEditing
                 ? "Fine-tune the workout, then save your changes."
                 : "Build a workout around your own goals, equipment, and training style."}

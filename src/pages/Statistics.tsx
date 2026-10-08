@@ -160,7 +160,7 @@ export default function Statistics() {
           Performance
         </p>
 
-        <h1 className="mt-3 text-4xl font-black tracking-tight text-[var(--text)] md:text-5xl">
+        <h1 className="mt-3 text-3xl font-black tracking-tight text-[var(--text)] sm:text-4xl md:text-5xl">
           Statistics
         </h1>
 
@@ -174,7 +174,7 @@ export default function Statistics() {
       {/* Overview */}
       <section
         aria-label="Training overview"
-        className="grid gap-5 md:grid-cols-2 xl:grid-cols-4"
+        className="grid gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-4"
       >
         <StatCard
           icon={<Dumbbell size={20} />}
@@ -221,7 +221,7 @@ export default function Statistics() {
       </section>
 
       {/* Consistency */}
-      <Card className="p-7 md:p-8">
+      <Card className="p-5 sm:p-7 md:p-8">
         <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-start">
           <div>
             <p className="flex items-center gap-2 text-sm font-bold uppercase tracking-[0.2em] text-[var(--primary)]">

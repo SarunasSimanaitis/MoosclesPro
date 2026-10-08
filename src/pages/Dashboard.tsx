@@ -49,10 +49,7 @@ export default function Dashboard() {
   );
 
   useEffect(() => {
-    if (isSessionPending || !userId) {
-      setIsLoading(false);
-      return;
-    }
+    if (isSessionPending || !userId) return;
 
     let cancelled = false;
 

@@ -198,7 +198,6 @@ export default function Modal({
           border
           border-[var(--border)]
           bg-[var(--surface)]
-          shadow-[var(--shadow-lg)]
           outline-none
           sm:max-h-[calc(100dvh-2.5rem)]
         `}

@@ -5,7 +5,7 @@ import {
   internalServerErrorResponse,
 } from "../src/lib/api.js";
 
-import { database } from "../src/lib/mongodb.js";
+import { database, ensureWorkoutIndexes } from "../src/lib/mongodb.js";
 
 import {
   calculateOverview,
@@ -44,6 +44,8 @@ export default async function handler(request: Request) {
     }
 
     const { user } = authResult;
+
+    await ensureWorkoutIndexes();
 
     try {
       const sessionsCollection =

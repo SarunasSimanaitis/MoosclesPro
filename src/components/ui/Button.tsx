@@ -77,9 +77,9 @@ export default function Button({
       text-sm
     `,
     md: `
-      min-h-11
+      min-h-12
       px-5
-      py-2.5
+      py-3
       text-sm
     `,
     lg: `
@@ -100,6 +100,7 @@ export default function Button({
       }
       className={`
         inline-flex
+        touch-manipulation
         items-center
         justify-center
         gap-2

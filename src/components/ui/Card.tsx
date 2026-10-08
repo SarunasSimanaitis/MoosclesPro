@@ -19,6 +19,7 @@ export default function Card({
     <div
       {...props}
       className={`
+        overflow-hidden
         rounded-[var(--radius-xl)]
         border
         border-[var(--border)]
@@ -31,6 +32,7 @@ export default function Card({
             hover:-translate-y-0.5
             hover:border-[var(--border-strong)]
             hover:shadow-[var(--shadow-md)]
+            active:translate-y-0
           `
           : ""}
         ${className}

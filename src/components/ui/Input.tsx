@@ -75,6 +75,7 @@ export default function Input({
           }
           aria-describedby={describedBy}
           className={`
+            min-h-12
             w-full
             rounded-[var(--radius-md)]
             border
@@ -83,7 +84,7 @@ export default function Input({
                 ? "border-[var(--danger)]"
                 : "border-[var(--border-strong)]"
             }
-            bg-[var(--surface)]
+            bg-[var(--surface-soft)]
             px-4
             py-3
             text-[var(--text)]
@@ -91,6 +92,7 @@ export default function Input({
             transition-[border-color,box-shadow,background-color]
             duration-200
             placeholder:text-[var(--text-muted)]
+            focus:bg-[var(--surface)]
             focus:border-[var(--primary)]
             focus:ring-2
             focus:ring-[var(--focus-ring)]

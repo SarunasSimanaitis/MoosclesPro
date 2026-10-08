@@ -25,10 +25,11 @@ export default function MobileTabBar() {
         inset-x-0
         bottom-0
         z-40
-        border-t
+        border
         border-[var(--border)]
-        bg-[var(--background)]/95
+        bg-[var(--surface)]/96
         pb-[env(safe-area-inset-bottom)]
+        shadow-[var(--shadow-lg)]
         backdrop-blur-xl
         md:hidden
       "

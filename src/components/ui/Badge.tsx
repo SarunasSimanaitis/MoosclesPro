@@ -57,6 +57,7 @@ export default function Badge({
       {...props}
       className={`
         inline-flex
+        min-h-7
         items-center
         rounded-full
         border

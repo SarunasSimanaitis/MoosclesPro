@@ -22,7 +22,7 @@ export default function ProgressBar({
   return (
     <div
       className={`
-        h-3
+        h-2.5
         overflow-hidden
         rounded-full
         bg-[var(--surface-soft)]

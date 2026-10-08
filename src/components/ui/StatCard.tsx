@@ -16,9 +16,9 @@ export default function StatCard({
   suffix,
 }: StatCardProps) {
   return (
-    <Card className="p-6">
+    <Card className="p-5 sm:p-6">
       {icon && (
-        <div className="flex h-10 w-10 items-center justify-center rounded-[var(--radius-md)] bg-[var(--primary-soft)] text-[var(--primary)]">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-md)] bg-[var(--primary-soft)] text-[var(--primary)]">
           {icon}
         </div>
       )}

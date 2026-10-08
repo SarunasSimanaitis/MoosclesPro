@@ -4,7 +4,7 @@ import Navbar from "../navigation/Navbar";
 
 export default function AppLayout() {
   return (
-    <div className="min-h-screen bg-[var(--background)] text-[var(--text)]">
+    <div className="app-shell min-h-screen text-[var(--text)]">
       <Navbar />
 
       <main className="min-w-0 px-4 py-6 sm:px-6 sm:py-8">

@@ -14,11 +14,14 @@ const env = (
 const mongodbUri = env.MONGODB_URI;
 
 if (!mongodbUri) {
-  throw new Error("MONGODB_URI is not configured.");
+  throw new Error(
+    "MONGODB_URI is not configured. Add your MongoDB Atlas connection string to the Vercel project environment variables.",
+  );
 }
 
 type GlobalMongo = typeof globalThis & {
   __moosclesMongoClient?: MongoClient;
+  __moosclesMongoConnection?: Promise<void>;
   __moosclesMongoIndexes?: Promise<void>;
 };
 
@@ -34,25 +37,47 @@ if (env.NODE_ENV !== "production") {
 
 export const database = mongoClient.db("moosclespro");
 
+export function connectMongo(): Promise<void> {
+  if (!globalMongo.__moosclesMongoConnection) {
+    globalMongo.__moosclesMongoConnection = mongoClient
+      .connect()
+      .then(() => undefined)
+      .catch((error: unknown) => {
+        globalMongo.__moosclesMongoConnection = undefined;
+        throw error;
+      });
+  }
+
+  return globalMongo.__moosclesMongoConnection;
+}
+
 export function ensureWorkoutIndexes(): Promise<void> {
   if (globalMongo.__moosclesMongoIndexes) {
     return globalMongo.__moosclesMongoIndexes;
   }
 
-  globalMongo.__moosclesMongoIndexes = Promise.all([
-    database
-      .collection("workoutSessions")
-      .createIndex({ userId: 1, completedAt: -1 }),
-    database
-      .collection("workoutSessions")
-      .createIndex({ userId: 1, routineId: 1, completedAt: -1 }),
-    database
-      .collection("routines")
-      .createIndex({ userId: 1, updatedAt: -1 }),
-    database
-      .collection("routines")
-      .createIndex({ userId: 1, id: 1 }),
-  ]).then(() => undefined);
+  globalMongo.__moosclesMongoIndexes = connectMongo()
+    .then(() =>
+      Promise.all([
+        database
+          .collection("workoutSessions")
+          .createIndex({ userId: 1, completedAt: -1 }),
+        database
+          .collection("workoutSessions")
+          .createIndex({ userId: 1, routineId: 1, completedAt: -1 }),
+        database
+          .collection("routines")
+          .createIndex({ userId: 1, updatedAt: -1 }),
+        database
+          .collection("routines")
+          .createIndex({ userId: 1, id: 1 }),
+      ]),
+    )
+    .then(() => undefined)
+    .catch((error: unknown) => {
+      globalMongo.__moosclesMongoIndexes = undefined;
+      throw error;
+    });
 
   return globalMongo.__moosclesMongoIndexes;
 }

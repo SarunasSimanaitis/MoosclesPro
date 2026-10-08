@@ -21,34 +21,37 @@ MoosclesPro is a focused workout tracking and logging app built around one simpl
 
 ## Architecture
 
-The project is intentionally split into clear boundaries:
-
 - **React + TypeScript + Vite** — browser application
 - **Tailwind CSS** — shared responsive design system
 - **Zustand** — active workout client state
 - **Vercel Web API handlers** — HTTP/server boundary
 - **Better Auth** — authentication and sessions
-- **MongoDB** — routines and immutable completed workout sessions
-
-See `docs/ARCHITECTURE.md` for the detailed domain and runtime model.
+- **MongoDB Atlas** — accounts, routines and completed workout sessions
 
 ## Development
 
-NaN
+```bash
+npm install
+npm run dev
+```
 
-Production checks:
+## Production checks
 
-NaN
-
-The GitHub Actions quality check runs the same lint/build validation against pull requests.
+```bash
+npm run lint
+npm run build
+```
 
 ## Deployment
 
-Vercel serves the Vite application and the `api/` Web API handlers. Better Auth is mounted at `/api/auth/*` using a catch-all route, while the Node runtime is used for MongoDB and authentication.
+Vercel serves the Vite application and the `api/` Web API handlers. Better Auth is mounted at `/api/auth/*`; MongoDB and authentication run on the Node.js runtime.
 
-Required environment variables:
+Set these variables in **Vercel → Project Settings → Environment Variables** for each deployment environment:
 
-- `MONGODB_URI`
-- `BETTER_AUTH_SECRET`
+- `MONGODB_URI` — MongoDB Atlas connection string, including the database user and password.
+- `BETTER_AUTH_SECRET` — a unique, random secret of at least 32 characters.
+- `BETTER_AUTH_URL` — the canonical production origin, for example `https://your-domain.vercel.app`. Set the matching origin for Preview if you use preview deployments.
+
+In MongoDB Atlas, ensure the database user has read/write access to the application database and the Atlas Network Access rules permit connections from your Vercel deployment. Never prefix these server secrets with `VITE_`.
 
 The application uses Node 24 for CI and Vercel deployments.

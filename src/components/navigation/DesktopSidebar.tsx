@@ -14,26 +14,14 @@ export default function DesktopSidebar() {
   return (
     <aside className="fixed inset-y-[4.25rem] left-0 z-40 hidden w-[15rem] border-r border-[var(--border)] bg-[var(--surface)] xl:block">
       <div className="flex h-full flex-col px-3 py-5">
-        <div className="px-3">
-          <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--text-subtle)]">
-            Your space
-          </p>
-          <p className="mt-1 text-sm leading-relaxed text-[var(--text-muted)]">
-            Everything you need to train.
-          </p>
-        </div>
-
-        <nav className="mt-6 space-y-1" aria-label="Main navigation">
+        <nav className="space-y-1" aria-label="Main navigation">
           {authenticatedNavigation.map((item) => (
             <SidebarLink key={item.path} item={item} />
           ))}
         </nav>
 
-        <div className="mt-6 border-t border-[var(--border)] pt-5">
-          <p className="px-3 text-xs font-bold uppercase tracking-[0.16em] text-[var(--text-subtle)]">
-            Explore
-          </p>
-          <div className="mt-2 space-y-1">
+        <div className="mt-5 border-t border-[var(--border)] pt-4">
+          <div className="space-y-1">
             {publicNavigation.map((item) => (
               <SidebarLink key={item.path} item={item} />
             ))}

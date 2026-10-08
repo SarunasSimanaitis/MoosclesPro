@@ -12,13 +12,15 @@ export const workoutSessionsApi = {
     );
   },
 
-  get(
-    sessionId: string,
-  ): Promise<WorkoutSession> {
+  get(sessionId: string): Promise<WorkoutSession> {
     return apiRequest<WorkoutSession>(
-      `${ENDPOINT}?id=${encodeURIComponent(
-        sessionId,
-      )}`,
+      `${ENDPOINT}?id=${encodeURIComponent(sessionId)}`,
+    );
+  },
+
+  latestForRoutine(routineId: string): Promise<WorkoutSession | null> {
+    return apiRequest<WorkoutSession | null>(
+      `${ENDPOINT}?routineId=${encodeURIComponent(routineId)}&limit=1`,
     );
   },
 

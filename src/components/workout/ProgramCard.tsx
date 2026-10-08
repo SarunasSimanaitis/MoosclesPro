@@ -35,20 +35,6 @@ export default function ProgramCard({
           md:p-8
         "
       >
-        <div
-          aria-hidden="true"
-          className="
-            absolute
-            -right-16
-            -top-16
-            h-40
-            w-40
-            rounded-full
-            bg-[var(--primary)]
-            opacity-15
-            blur-2xl
-          "
-        />
 
         <div className="relative">
           <div className="flex items-start justify-between gap-4">

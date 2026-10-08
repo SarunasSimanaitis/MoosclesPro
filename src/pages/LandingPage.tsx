@@ -52,7 +52,6 @@ export default function LandingPage() {
       {/* Hero */}
 
       <section className="relative overflow-hidden pt-8 md:pt-14">
-        <div className="absolute -right-40 -top-40 h-96 w-96 rounded-full bg-[var(--primary)]/10 blur-3xl" />
 
         <div className="relative grid items-center gap-14 lg:grid-cols-[1.05fr_0.95fr]">
           <div>
@@ -109,7 +108,6 @@ export default function LandingPage() {
           {/* Product preview */}
 
           <div className="relative">
-            <div className="absolute -inset-6 rounded-[3rem] bg-[var(--primary)]/5 blur-2xl" />
 
             <Card className="relative overflow-hidden p-5 md:p-6">
               <div className="rounded-[1.5rem] bg-[var(--text)] p-5 text-[var(--surface)] md:p-6">

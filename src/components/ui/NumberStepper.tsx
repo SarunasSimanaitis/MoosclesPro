@@ -240,6 +240,7 @@ export default function NumberStepper({
           bg-transparent
           px-2
           min-h-11
+          min-h-11
           py-2
           text-center
           font-semibold

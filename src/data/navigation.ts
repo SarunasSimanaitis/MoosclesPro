@@ -4,7 +4,6 @@ import {
   History,
   House,
   NotebookTabs,
-  PlayCircle,
   Sparkles,
 } from "lucide-react";
 
@@ -15,66 +14,18 @@ export type NavigationItem = {
 };
 
 export const publicNavigation: NavigationItem[] = [
-  {
-    label: "Exercises",
-    path: "/exercises",
-    icon: NotebookTabs,
-  },
-  {
-    label: "Mindset",
-    path: "/mindset",
-    icon: Sparkles,
-  },
+  { label: "Exercises", path: "/exercises", icon: NotebookTabs },
+  { label: "Mindset", path: "/mindset", icon: Sparkles },
 ];
 
 export const authenticatedNavigation: NavigationItem[] = [
-  {
-    label: "Dashboard",
-    path: "/dashboard",
-    icon: House,
-  },
-  {
-    label: "Workouts",
-    path: "/workouts",
-    icon: Dumbbell,
-  },
-  {
-    label: "Session",
-    path: "/session",
-    icon: PlayCircle,
-  },
-  {
-    label: "History",
-    path: "/history",
-    icon: History,
-  },
-  {
-    label: "Statistics",
-    path: "/statistics",
-    icon: ChartColumn,
-  },
-  ...publicNavigation,
+  { label: "Home", path: "/dashboard", icon: House },
+  { label: "Workouts", path: "/workouts", icon: Dumbbell },
+  { label: "History", path: "/history", icon: History },
+  { label: "Statistics", path: "/statistics", icon: ChartColumn },
 ];
 
-export const mobileNavigation: NavigationItem[] = [
-  {
-    label: "Home",
-    path: "/dashboard",
-    icon: House,
-  },
-  {
-    label: "Workouts",
-    path: "/workouts",
-    icon: Dumbbell,
-  },
-  {
-    label: "History",
-    path: "/history",
-    icon: History,
-  },
-  {
-    label: "Stats",
-    path: "/statistics",
-    icon: ChartColumn,
-  },
-];
+export const mobileNavigation = authenticatedNavigation.map((item) => ({
+  ...item,
+  label: item.label === "Statistics" ? "Stats" : item.label,
+}));

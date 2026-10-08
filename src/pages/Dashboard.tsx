@@ -156,10 +156,10 @@ export default function Dashboard() {
       />
 
       <section className="grid gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <DashboardStat icon={<Flame size={20} />} label="Streak" value={stats.streak} suffix={stats.streak === 1 ? "day" : "days"} tone="success" />
-        <DashboardStat icon={<Dumbbell size={20} />} label="Workouts" value={stats.workouts} suffix="completed" tone="success" />
-        <DashboardStat icon={<TrendingUp size={20} />} label="Volume" value={formatVolume(stats.volume)} suffix="kg" tone="primary" />
-        <DashboardStat icon={<Target size={20} />} label="Training time" value={formatHours(stats.hours)} suffix={stats.hours === 1 ? "hour" : "hours"} tone="primary" />
+        <StatCard icon={<Flame size={20} />} label="Streak" value={stats.streak.toString()} suffix={stats.streak === 1 ? "day" : "days"} tone="success" />
+        <StatCard icon={<Dumbbell size={20} />} label="Workouts" value={stats.workouts.toString()} suffix="completed" tone="success" />
+        <StatCard icon={<TrendingUp size={20} />} label="Volume" value={formatVolume(stats.volume)} suffix="kg" />
+        <StatCard icon={<Target size={20} />} label="Training time" value={formatHours(stats.hours)} suffix={stats.hours === 1 ? "hour" : "hours"} />
       </section>
 
       <section className="grid gap-4 lg:grid-cols-[1.35fr_0.65fr]">

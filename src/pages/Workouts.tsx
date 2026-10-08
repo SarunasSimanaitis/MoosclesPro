@@ -226,10 +226,7 @@ export default function Workouts() {
     >
       {/* Hero */}
       <section className="relative overflow-hidden rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--surface)] px-5 py-7 shadow-[var(--shadow-sm)] sm:px-8 sm:py-10 md:px-10 md:py-14">
-        <div
-          aria-hidden="true"
-          className="absolute -right-32 -top-32 h-72 w-72 rounded-full bg-[var(--primary)] opacity-10 blur-3xl"
-        />
+
 
         <div className="relative max-w-3xl">
           <p className="flex items-center gap-2 text-sm font-bold uppercase tracking-[0.25em] text-[var(--primary)]">

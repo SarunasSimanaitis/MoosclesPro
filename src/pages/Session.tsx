@@ -197,10 +197,7 @@ export default function Session() {
 
       <Card className="overflow-hidden">
         <div className="relative bg-[var(--feature-background)] p-7 md:p-9">
-          <div
-            aria-hidden="true"
-            className="absolute -right-20 -top-20 h-56 w-56 rounded-full bg-[var(--primary)] opacity-10 blur-3xl"
-          />
+
 
           <div className="relative">
             <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">

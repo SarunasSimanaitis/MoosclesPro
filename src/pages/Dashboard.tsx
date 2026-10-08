@@ -340,10 +340,7 @@ export default function Dashboard() {
 
       <section className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
         <Card className="relative overflow-hidden p-6 sm:p-8 md:p-10">
-          <div
-            aria-hidden="true"
-            className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[var(--primary)] opacity-10 blur-3xl"
-          />
+
 
           <div className="relative">
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--primary)]">
@@ -471,10 +468,7 @@ export default function Dashboard() {
       </section>
 
       <section className="relative overflow-hidden rounded-[var(--radius-xl)] bg-[var(--feature-background)] p-8 shadow-[var(--shadow-md)] md:p-10">
-        <div
-          aria-hidden="true"
-          className="absolute -right-24 -top-24 h-72 w-72 rounded-full bg-[var(--primary)] opacity-10 blur-3xl"
-        />
+
 
         <div className="relative">
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--primary)]">

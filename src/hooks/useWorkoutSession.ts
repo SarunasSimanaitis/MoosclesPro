@@ -64,8 +64,10 @@ export function useWorkoutSession(): UseWorkoutSessionResult {
   const autoFilledRepExercises =
     useRef(new Set<string>());
 
-  const workoutExercises =
-    activeWorkout?.exercises ?? [];
+  const workoutExercises = useMemo(
+    () => activeWorkout?.exercises ?? [],
+    [activeWorkout?.exercises],
+  );
 
   const startedAt =
     activeWorkout?.startedAt ??

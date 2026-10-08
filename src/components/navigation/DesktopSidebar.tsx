@@ -1,13 +1,4 @@
-import {
-  BarChart3,
-  ChevronRight,
-  Dumbbell,
-  History,
-  House,
-  NotebookTabs,
-  Settings,
-  Sparkles,
-} from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 
 import { authenticatedNavigation, publicNavigation } from "../../data/navigation";

@@ -93,9 +93,10 @@ export default function WorkoutSessionPage() {
     }
 
     let cancelled = false;
+    const currentUserId = userId;
     const current = useActiveWorkoutStore.getState().activeWorkout;
 
-    if (current?.userId === userId) {
+    if (current?.userId === currentUserId) {
       return;
     }
 
@@ -109,11 +110,11 @@ export default function WorkoutSessionPage() {
 
         const latest = useActiveWorkoutStore.getState().activeWorkout;
 
-        if (latest?.userId === userId) {
+        if (latest?.userId === currentUserId) {
           return;
         }
 
-        const created = startWorkout(routine!, userId);
+        const created = startWorkout(routine!, currentUserId);
 
         if (previous) {
           updateExercises(() =>

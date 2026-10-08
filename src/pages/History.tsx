@@ -508,13 +508,14 @@ function HistoryMetric({
   label,
   value,
   suffix,
+  tone,
 }: {
   label: string;
   value: number | string;
   suffix: string;
   tone: "primary" | "violet" | "accent";
 }) {
-  const tone = {
+  const toneStyles = {
     primary: {
       bg: "var(--primary-soft)",
       text: "var(--primary)",
@@ -533,24 +534,23 @@ function HistoryMetric({
     <Card className="p-5">
       <div className="flex items-center justify-between gap-3">
         <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">
-        {label}
-      </p>
-
-      <div className="mt-2 flex items-baseline gap-2">
-        <span className="text-2xl font-black text-[var(--text)]">
-          {value}
-        </span>
+          {label}
+        </p>
 
         <span
           className="rounded-full px-2.5 py-1 text-[10px] font-bold"
           style={{
-            backgroundColor: tone.bg,
-            color: tone.text,
+            backgroundColor: toneStyles.bg,
+            color: toneStyles.text,
           }}
         >
           {suffix}
         </span>
       </div>
+
+      <p className="mt-3 text-2xl font-black text-[var(--text)]">
+        {value}
+      </p>
     </Card>
   );
 }

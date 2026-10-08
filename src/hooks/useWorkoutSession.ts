@@ -311,33 +311,3 @@ export function useWorkoutSession(): UseWorkoutSessionResult {
     createSession,
   };
 }
-
-function updateSet(
-  exercises: WorkoutExercise[],
-  exerciseId: string,
-  setId: string,
-  updater: (
-    set: WorkoutSet,
-  ) => WorkoutSet,
-): WorkoutExercise[] {
-  return exercises.map(
-    (exercise) => {
-      if (
-        exercise.exercise.id !==
-        exerciseId
-      ) {
-        return exercise;
-      }
-
-      return {
-        ...exercise,
-        sets: exercise.sets.map(
-          (set) =>
-            set.id === setId
-              ? updater(set)
-              : set,
-        ),
-      };
-    },
-  );
-}

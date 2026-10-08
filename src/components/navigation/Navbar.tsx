@@ -7,6 +7,7 @@ import {
   Sun,
   X,
 } from "lucide-react";
+import type { ReactNode } from "react";
 import { useState } from "react";
 import {
   NavLink,
@@ -89,23 +90,19 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-[var(--border)] bg-[var(--background)]/92 backdrop-blur-xl">
-      <div className="mx-auto flex h-[4.5rem] max-w-[1900px] items-center justify-between gap-6 px-5 lg:px-10">
-        {/* Brand */}
+      <div className="mx-auto flex min-h-[4.25rem] max-w-[1900px] items-center justify-between gap-3 px-4 sm:h-[4.5rem] sm:px-5 lg:px-10">
         <NavLink
-          to={
-            isLoggedIn
-              ? "/dashboard"
-              : "/"
-          }
+          to={isLoggedIn ? "/dashboard" : "/"}
           onClick={closeMobileMenu}
           className="
             shrink-0
-            text-2xl
+            text-xl
             font-black
             tracking-tight
             text-[var(--text)]
             transition-opacity
             hover:opacity-80
+            sm:text-2xl
           "
           aria-label="MoosclesPro home"
         >
@@ -115,45 +112,31 @@ export default function Navbar() {
           </span>
         </NavLink>
 
-        {/* Desktop navigation */}
         <nav
           aria-label="Primary navigation"
           className="hidden flex-1 items-center justify-center gap-1 md:flex"
         >
-          {navigation.map(
-            (link) => (
-              <DesktopNavItem
-                key={link.path}
-                link={link}
-              />
-            ),
-          )}
+          {navigation.map((link) => (
+            <DesktopNavItem
+              key={link.path}
+              link={link}
+            />
+          ))}
         </nav>
 
-        {/* Right actions */}
-        <div className="relative flex shrink-0 items-center gap-2">
+        <div className="relative flex shrink-0 items-center gap-1.5">
           {!isPending &&
             (isLoggedIn ? (
               <AccountMenu
                 userName={userName}
-                userInitial={
-                  userInitial
-                }
+                userInitial={userInitial}
                 open={accountOpen}
-                onToggle={
-                  toggleAccountMenu
-                }
+                onToggle={toggleAccountMenu}
                 onSettings={() => {
-                  setAccountOpen(
-                    false,
-                  );
-                  navigate(
-                    "/settings",
-                  );
+                  setAccountOpen(false);
+                  navigate("/settings");
                 }}
-                onSignOut={
-                  handleSignOut
-                }
+                onSignOut={handleSignOut}
               />
             ) : (
               <PublicActions />
@@ -163,7 +146,7 @@ export default function Navbar() {
             variant="ghost"
             size="sm"
             onClick={toggleTheme}
-            className="h-10 w-10 rounded-xl p-0"
+            className="h-11 w-11 min-h-11 rounded-xl p-0"
             aria-label={
               theme === "light"
                 ? "Switch to dark mode"
@@ -171,36 +154,25 @@ export default function Navbar() {
             }
           >
             {theme === "light" ? (
-              <Moon
-                size={18}
-                strokeWidth={1.8}
-              />
+              <Moon size={18} strokeWidth={1.8} />
             ) : (
-              <Sun
-                size={18}
-                strokeWidth={1.8}
-              />
+              <Sun size={18} strokeWidth={1.8} />
             )}
           </Button>
 
-          {/* Mobile menu */}
           <Button
             variant="secondary"
             size="sm"
             onClick={() =>
-              setMobileOpen(
-                (open) => !open,
-              )
+              setMobileOpen((open) => !open)
             }
-            className="h-10 w-10 rounded-xl p-0 md:hidden"
+            className="h-11 w-11 min-h-11 rounded-xl p-0 md:hidden"
             aria-label={
               mobileOpen
-                ? "Close navigation"
-                : "Open navigation"
+                ? "Close menu"
+                : "Open menu"
             }
-            aria-expanded={
-              mobileOpen
-            }
+            aria-expanded={mobileOpen}
             aria-controls="mobile-navigation"
           >
             {mobileOpen ? (
@@ -212,61 +184,50 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile navigation */}
       {mobileOpen && (
         <div
           id="mobile-navigation"
           className="border-t border-[var(--border)] bg-[var(--background)] md:hidden"
         >
           <nav
-            aria-label="Mobile navigation"
-            className="mx-auto max-w-[1900px] px-5 py-4"
+            aria-label="More navigation"
+            className="mx-auto max-w-[1900px] px-4 py-4 sm:px-5"
           >
+            <div className="mb-3 px-1">
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]">
+                More
+              </p>
+            </div>
+
             <div className="space-y-1">
-              {navigation.map(
-                (link) => (
+              {!isLoggedIn &&
+                publicNavigation.map((link) => (
                   <MobileNavItem
                     key={link.path}
                     link={link}
-                    onClick={
-                      closeMobileMenu
-                    }
+                    onClick={closeMobileMenu}
                   />
-                ),
-              )}
-            </div>
+                ))}
 
-            {!isPending &&
-              (isLoggedIn ? (
-                <div className="mt-4 border-t border-[var(--border)] pt-4">
-                  <div className="mb-3 flex items-center gap-3 rounded-[var(--radius-md)] bg-[var(--surface)] p-4">
-                    <Avatar
-                      initial={
-                        userInitial
-                      }
+              {isLoggedIn && (
+                <>
+                  {publicNavigation.map((link) => (
+                    <MobileNavItem
+                      key={link.path}
+                      link={link}
+                      onClick={closeMobileMenu}
                     />
-
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-bold text-[var(--text)]">
-                        {userName}
-                      </p>
-
-                      <p className="text-xs text-[var(--text-muted)]">
-                        Your account
-                      </p>
-                    </div>
-                  </div>
+                  ))}
 
                   <button
                     type="button"
                     onClick={() => {
                       closeMobileMenu();
-                      navigate(
-                        "/settings",
-                      );
+                      navigate("/settings");
                     }}
                     className="
                       flex
+                      min-h-11
                       w-full
                       items-center
                       gap-3
@@ -287,11 +248,10 @@ export default function Navbar() {
 
                   <button
                     type="button"
-                    onClick={
-                      handleSignOut
-                    }
+                    onClick={handleSignOut}
                     className="
                       flex
+                      min-h-11
                       w-full
                       items-center
                       gap-3
@@ -308,51 +268,68 @@ export default function Navbar() {
                     <LogOut size={18} />
                     Log out
                   </button>
-                </div>
-              ) : (
-                <div className="mt-4 grid gap-2 border-t border-[var(--border)] pt-4">
-                  <NavLink
-                    to="/login"
-                    onClick={
-                      closeMobileMenu
-                    }
-                    className="
-                      rounded-[var(--radius-md)]
-                      px-4
-                      py-3
-                      text-sm
-                      font-semibold
-                      text-[var(--text-muted)]
-                      transition-colors
-                      hover:bg-[var(--surface)]
-                      hover:text-[var(--text)]
-                    "
-                  >
-                    Log in
-                  </NavLink>
+                </>
+              )}
+            </div>
 
-                  <NavLink
-                    to="/register"
-                    onClick={
-                      closeMobileMenu
-                    }
-                    className="
-                      rounded-[var(--radius-md)]
-                      bg-[var(--primary)]
-                      px-4
-                      py-3
-                      text-center
-                      text-sm
-                      font-semibold
-                      text-[var(--primary-foreground)]
-                      transition-colors
-                      hover:bg-[var(--primary-hover)]
-                    "
-                  >
-                    Create account
-                  </NavLink>
+            {!isPending && isLoggedIn && (
+              <div className="mt-4 flex items-center gap-3 border-t border-[var(--border)] px-1 pt-4">
+                <Avatar initial={userInitial} />
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-bold text-[var(--text)]">
+                    {userName}
+                  </p>
+                  <p className="text-xs text-[var(--text-muted)]">
+                    Account
+                  </p>
                 </div>
-              ))}
+              </div>
+            )}
+
+            {!isPending && !isLoggedIn && (
+              <div className="mt-4 grid gap-2 border-t border-[var(--border)] pt-4">
+                <NavLink
+                  to="/login"
+                  onClick={closeMobileMenu}
+                  className="
+                    flex
+                    min-h-11
+                    items-center
+                    justify-center
+                    rounded-[var(--radius-md)]
+                    border
+                    border-[var(--border-strong)]
+                    px-4
+                    py-3
+                    text-sm
+                    font-semibold
+                    text-[var(--text)]
+                  "
+                >
+                  Log in
+                </NavLink>
+
+                <NavLink
+                  to="/register"
+                  onClick={closeMobileMenu}
+                  className="
+                    flex
+                    min-h-11
+                    items-center
+                    justify-center
+                    rounded-[var(--radius-md)]
+                    bg-[var(--primary)]
+                    px-4
+                    py-3
+                    text-sm
+                    font-semibold
+                    text-[var(--primary-foreground)]
+                  "
+                >
+                  Create account
+                </NavLink>
+              </div>
+            )}
           </nav>
         </div>
       )}
@@ -372,33 +349,26 @@ function DesktopNavItem({
       to={link.path}
       className={({ isActive }) =>
         `
-        group
-        relative
-        flex
-        items-center
-        gap-2
-        rounded-[var(--radius-md)]
-        px-4
-        py-2.5
-        text-sm
-        font-semibold
-        transition-colors
-        ${
-          isActive
+          group
+          relative
+          flex
+          items-center
+          gap-2
+          rounded-[var(--radius-md)]
+          px-3
+          py-2.5
+          text-sm
+          font-semibold
+          transition-colors
+          ${isActive
             ? "bg-[var(--primary-soft)] text-[var(--primary)]"
             : "text-[var(--text-muted)] hover:bg-[var(--surface)] hover:text-[var(--text)]"
-        }
-      `
+          }
+        `
       }
     >
-      <Icon
-        size={17}
-        strokeWidth={1.8}
-      />
-
-      <span>
-        {link.label}
-      </span>
+      <Icon size={17} strokeWidth={1.8} />
+      <span>{link.label}</span>
     </NavLink>
   );
 }
@@ -418,28 +388,24 @@ function MobileNavItem({
       onClick={onClick}
       className={({ isActive }) =>
         `
-        flex
-        items-center
-        gap-3
-        rounded-[var(--radius-md)]
-        px-4
-        py-3
-        text-sm
-        font-semibold
-        transition-colors
-        ${
-          isActive
+          flex
+          min-h-11
+          items-center
+          gap-3
+          rounded-[var(--radius-md)]
+          px-4
+          py-3
+          text-sm
+          font-semibold
+          transition-colors
+          ${isActive
             ? "bg-[var(--primary-soft)] text-[var(--primary)]"
             : "text-[var(--text-muted)] hover:bg-[var(--surface)] hover:text-[var(--text)]"
-        }
-      `
+          }
+        `
       }
     >
-      <Icon
-        size={18}
-        strokeWidth={1.8}
-      />
-
+      <Icon size={18} strokeWidth={1.8} />
       {link.label}
     </NavLink>
   );
@@ -469,6 +435,7 @@ function AccountMenu({
         aria-expanded={open}
         className="
           flex
+          min-h-11
           items-center
           gap-2.5
           rounded-[var(--radius-md)]
@@ -487,19 +454,12 @@ function AccountMenu({
         "
       >
         <Avatar initial={userInitial} />
-
         <span className="hidden max-w-28 truncate text-sm font-semibold text-[var(--text)] lg:block">
           {userName}
         </span>
-
         <ChevronDown
           size={16}
-          className={`
-            text-[var(--text-muted)]
-            transition-transform
-            duration-200
-            ${open ? "rotate-180" : ""}
-          `}
+          className={`text-[var(--text-muted)] transition-transform duration-200 ${open ? "rotate-180" : ""}`}
         />
       </button>
 
@@ -525,7 +485,6 @@ function AccountMenu({
             <p className="truncate text-sm font-bold text-[var(--text)]">
               {userName}
             </p>
-
             <p className="mt-0.5 text-xs text-[var(--text-muted)]">
               Account
             </p>
@@ -534,23 +493,15 @@ function AccountMenu({
           <div className="my-1 border-t border-[var(--border)]" />
 
           <MenuButton
-            icon={
-              <Settings size={17} />
-            }
+            icon={<Settings size={17} />}
             label="Settings"
-            onClick={
-              onSettings
-            }
+            onClick={onSettings}
           />
 
           <MenuButton
-            icon={
-              <LogOut size={17} />
-            }
+            icon={<LogOut size={17} />}
             label="Log out"
-            onClick={
-              onSignOut
-            }
+            onClick={onSignOut}
             danger
           />
         </div>
@@ -565,7 +516,7 @@ function MenuButton({
   onClick,
   danger = false,
 }: {
-  icon: React.ReactNode;
+  icon: ReactNode;
   label: string;
   onClick: () => void;
   danger?: boolean;
@@ -577,6 +528,7 @@ function MenuButton({
       onClick={onClick}
       className={`
         flex
+        min-h-11
         w-full
         items-center
         gap-3
@@ -585,7 +537,6 @@ function MenuButton({
         py-2.5
         text-sm
         font-semibold
-        transition-colors
         ${
           danger
             ? "text-[var(--danger)] hover:bg-[var(--danger-soft)]"
@@ -604,34 +555,13 @@ function PublicActions() {
     <div className="hidden items-center gap-1 sm:flex">
       <NavLink
         to="/login"
-        className="
-          rounded-[var(--radius-md)]
-          px-4
-          py-2.5
-          text-sm
-          font-semibold
-          text-[var(--text-muted)]
-          transition-colors
-          hover:bg-[var(--surface)]
-          hover:text-[var(--text)]
-        "
+        className="rounded-[var(--radius-md)] px-4 py-2.5 text-sm font-semibold text-[var(--text-muted)] transition-colors hover:bg-[var(--surface)] hover:text-[var(--text)]"
       >
         Log in
       </NavLink>
-
       <NavLink
         to="/register"
-        className="
-          rounded-[var(--radius-md)]
-          bg-[var(--primary)]
-          px-4
-          py-2.5
-          text-sm
-          font-semibold
-          text-[var(--primary-foreground)]
-          transition-colors
-          hover:bg-[var(--primary-hover)]
-        "
+        className="min-h-11 flex items-center rounded-[var(--radius-md)] bg-[var(--primary)] px-4 py-2.5 text-sm font-semibold text-[var(--primary-foreground)] transition-colors hover:bg-[var(--primary-hover)]"
       >
         Create account
       </NavLink>
@@ -647,19 +577,7 @@ function Avatar({
   return (
     <span
       aria-hidden="true"
-      className="
-        flex
-        h-8
-        w-8
-        shrink-0
-        items-center
-        justify-center
-        rounded-full
-        bg-[var(--primary-soft)]
-        text-xs
-        font-black
-        text-[var(--primary)]
-      "
+      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--primary-soft)] text-xs font-black text-[var(--primary)]"
     >
       {initial}
     </span>

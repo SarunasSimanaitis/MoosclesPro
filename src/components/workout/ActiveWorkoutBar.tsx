@@ -180,10 +180,11 @@ export default function ActiveWorkoutBar() {
     <div
       className="
         fixed
-        bottom-4
-        left-4
-        right-4
+        bottom-[5.25rem]
+        left-3
+        right-3
         z-50
+        sm:bottom-4
         sm:left-auto
         sm:right-6
         sm:w-[min(30rem,calc(100vw-3rem))]
@@ -266,8 +267,8 @@ export default function ActiveWorkoutBar() {
                 }
                 className="
                   flex
-                  h-9
-                  w-9
+                  h-11
+                  w-11
                   items-center
                   justify-center
                   rounded-xl
@@ -292,7 +293,7 @@ export default function ActiveWorkoutBar() {
                 onClick={resumeWorkout}
                 className="
                   inline-flex
-                  h-9
+                  h-11
                   items-center
                   gap-1.5
                   rounded-xl
@@ -315,8 +316,8 @@ export default function ActiveWorkoutBar() {
                 aria-label="Discard workout"
                 className="
                   flex
-                  h-9
-                  w-9
+                  h-11
+                  w-11
                   items-center
                   justify-center
                   rounded-xl

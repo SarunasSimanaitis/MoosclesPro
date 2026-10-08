@@ -405,7 +405,44 @@ export default function WorkoutDetails() {
                   </div>
                 </div>
 
-                <div className="overflow-x-auto border-t border-[var(--border)]">
+                <div className="border-t border-[var(--border)] md:hidden">
+                  <div className="divide-y divide-[var(--border)]">
+                    {exercise.sets.map((set) => (
+                      <div key={set.id} className="p-4">
+                        <div className="flex items-center justify-between gap-3">
+                          <div>
+                            <p className="text-xs font-bold uppercase tracking-[0.12em] text-[var(--text-muted)]">
+                              Set {set.order}
+                            </p>
+                            <p className="mt-1 font-black text-[var(--text)]">
+                              {formatNumber(set.weight)} kg × {set.reps}
+                            </p>
+                          </div>
+
+                          {set.completed ? (
+                            <span className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-[var(--radius-md)] bg-[var(--success-soft)] px-3 text-sm font-semibold text-[var(--success)]">
+                              <CheckCircle2 size={15} />
+                              Done
+                            </span>
+                          ) : (
+                            <span className="inline-flex min-h-11 shrink-0 items-center rounded-[var(--radius-md)] bg-[var(--surface-soft)] px-3 text-sm font-semibold text-[var(--text-muted)]">
+                              Skipped
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="mt-3 flex items-center justify-between text-xs font-semibold text-[var(--text-muted)]">
+                          <span>Volume</span>
+                          <span className="text-[var(--text)]">
+                            {formatNumber(set.weight * set.reps)} kg
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="hidden overflow-x-auto border-t border-[var(--border)] md:block">
                   <table className="w-full min-w-[560px] border-collapse">
                     <thead>
                       <tr className="bg-[var(--surface-soft)] text-left text-xs font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">

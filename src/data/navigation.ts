@@ -55,3 +55,26 @@ export const authenticatedNavigation: NavigationItem[] = [
   },
   ...publicNavigation,
 ];
+
+export const mobileNavigation: NavigationItem[] = [
+  {
+    label: "Home",
+    path: "/dashboard",
+    icon: House,
+  },
+  {
+    label: "Workouts",
+    path: "/workouts",
+    icon: Dumbbell,
+  },
+  {
+    label: "History",
+    path: "/history",
+    icon: History,
+  },
+  {
+    label: "Stats",
+    path: "/statistics",
+    icon: ChartColumn,
+  },
+];

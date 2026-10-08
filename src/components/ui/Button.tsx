@@ -71,7 +71,7 @@ export default function Button({
     string
   > = {
     sm: `
-      min-h-10
+      min-h-11
       px-3.5
       py-2
       text-sm
@@ -104,6 +104,7 @@ export default function Button({
         justify-center
         gap-2
         rounded-[var(--radius-md)]
+        touch-manipulation
         border
         border-transparent
         font-semibold

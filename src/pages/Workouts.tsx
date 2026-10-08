@@ -132,7 +132,7 @@ export default function Workouts() {
           </div>
           <div className="hidden items-center gap-2 text-sm font-semibold text-[var(--text-muted)] sm:flex">
             <Users size={16} />
-            Ready-made plans
+            Ready-made
           </div>
         </div>
 
@@ -150,7 +150,7 @@ export default function Workouts() {
       <section>
         <div className="mb-4 flex items-end justify-between gap-3">
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--accent)]">Your workouts</p>
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--success)]">Your workouts</p>
             <h2 className="mt-1 text-2xl font-black tracking-tight sm:text-3xl">My routines</h2>
           </div>
           <span className="text-sm font-semibold text-[var(--text-muted)]">
@@ -178,7 +178,7 @@ export default function Workouts() {
         ) : (
           <Card className="border-dashed p-7 sm:p-10">
             <div className="grid gap-5 sm:grid-cols-[auto_1fr_auto] sm:items-center">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)]">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--success-soft)] text-[var(--success)]">
                 <Dumbbell size={25} />
               </div>
               <div>
@@ -208,7 +208,7 @@ export default function Workouts() {
 function Tip({ icon, title, text }: { icon: React.ReactNode; title: string; text: string }) {
   return (
     <Card className="p-5">
-      <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[var(--violet-soft)] text-[var(--violet)]">
+      <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[var(--primary-soft)] text-[var(--primary)]">
         {icon}
       </div>
       <h3 className="mt-4 font-black">{title}</h3>

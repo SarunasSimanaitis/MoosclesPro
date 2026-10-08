@@ -212,7 +212,8 @@ export default {
         "Failed to load dashboard data.",
       );
     }
-}
+  },
+};
 
 function getMondayStart(
   date: Date,
@@ -239,5 +240,4 @@ function getMondayStart(
   );
 
   return result;
-  },
-};
+}

@@ -8,7 +8,7 @@ import {
 import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 
-import { publicNavigation } from "../../data/navigation";
+import { authenticatedNavigation, publicNavigation } from "../../data/navigation";
 import { useTheme } from "../../hooks/useTheme";
 import { authClient } from "../../lib/auth-client";
 import Button from "../ui/Button";
@@ -61,6 +61,23 @@ export default function Navbar() {
           </nav>
         )}
 
+        {loggedIn && (
+          <nav className="hidden items-center gap-1 md:flex xl:hidden" aria-label="Primary navigation">
+            {authenticatedNavigation.map((item) => (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                className={({ isActive }) =>
+                  `inline-flex min-h-11 items-center gap-2 rounded-[var(--radius-md)] px-3 text-sm font-semibold ${isActive ? "bg-[var(--primary-soft)] text-[var(--primary)]" : "text-[var(--text-muted)] hover:bg-[var(--surface)] hover:text-[var(--text)]"}`
+                }
+              >
+                <item.icon size={17} />
+                {item.label}
+              </NavLink>
+            ))}
+          </nav>
+        )}
+
         <div className="flex items-center gap-1.5">
           {!isPending && loggedIn && (
             <div className="hidden items-center gap-2 pr-1 sm:flex">
@@ -68,6 +85,14 @@ export default function Navbar() {
                 {initial}
               </span>
               <span className="hidden max-w-28 truncate text-sm font-semibold lg:block">{name}</span>
+              <button
+                type="button"
+                onClick={() => navigate("/settings")}
+                className="hidden min-h-11 items-center gap-2 rounded-[var(--radius-md)] px-3 text-sm font-semibold text-[var(--text-muted)] hover:bg-[var(--surface)] hover:text-[var(--text)] xl:hidden lg:flex"
+              >
+                <Settings size={16} />
+                Settings
+              </button>
             </div>
           )}
 

@@ -285,18 +285,14 @@ function Summary({
   tone: "primary" | "success";
 }) {
   const color =
-    tone === "primary"
-      ? "var(--primary)"
-      : tone === "success"
-        ? "var(--primary)"
-        : "var(--success)";
+    tone === "success"
+      ? "var(--success)"
+      : "var(--primary)";
 
   const bg =
-    tone === "primary"
-      ? "var(--primary-soft)"
-      : tone === "violet"
-        ? "var(--primary-soft)"
-        : "var(--success-soft)";
+    tone === "success"
+      ? "var(--success-soft)"
+      : "var(--primary-soft)";
 
   return (
     <Card className="p-5">

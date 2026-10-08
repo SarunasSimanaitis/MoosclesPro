@@ -419,18 +419,18 @@ export default function Select({
           text-sm
           font-medium
           outline-none
-          transition-[background-color,border-color,box-shadow]
+          transition-[background-color,border-color]
           duration-200
           ${
             open || isActive
-              ? "border-[var(--primary)] bg-[var(--surface)] shadow-[0_0_0_3px_var(--primary-soft)]"
+              ? "border-[var(--primary)] bg-[var(--surface)]"
               : "border-[var(--border-strong)] bg-[var(--surface-soft)] hover:border-[var(--text-subtle)]"
           }
           disabled:cursor-not-allowed
           disabled:opacity-50
           focus-visible:border-[var(--primary)]
           focus-visible:ring-2
-          focus-visible:ring-[var(--focus-ring)]
+          focus-visible:ring-[var(--primary)]
         `}
       >
         <span
@@ -470,7 +470,6 @@ export default function Select({
             border-[var(--border)]
             bg-[var(--surface)]
             p-1.5
-            shadow-[var(--shadow-lg)]
           "
         >
           <ul

@@ -1,58 +1,54 @@
 # MoosclesPro
 
-A simple fitness tracker built with React, TypeScript, Tailwind CSS, MongoDB, and Better Auth.
+MoosclesPro is a focused workout tracking and logging app built around one simple loop:
 
-MoosclesPro is designed around one idea: **make training easy to follow**. Choose a workout, log your sets, finish the session, and see your progress without unnecessary clutter.
+**plan a workout → log every set → finish the session → learn from the history.**
 
-**Live demo:** https://mooscles-pro.vercel.app/
+## Product
 
-## What it does
-
-- Dashboard with weekly goals and training overview
-- Ready-made training programs
-- Custom workout routines
-- Set-by-set workout logging
-- Rest timer and resumable active workouts
+- Dashboard with current training overview
+- Reusable workout routines and ready-made programs
+- Set-by-set logging for weight, reps and completion
+- Previous-performance prefill when starting a routine
+- Accurate workout and rest timers
+- Resumable active workouts stored locally
+- Completed workout history and session details
+- Training statistics, volume and streaks
 - Exercise library with search and filters
-- Workout history and session details
-- Training statistics and streaks
 - Light and dark themes
-- Responsive mobile and desktop layouts
-- User authentication and user-scoped workout data
+- Responsive desktop and mobile layouts
+- Session-based authentication and user-scoped MongoDB data
 
-## Tech
+## Architecture
 
-**Frontend:** React, TypeScript, Vite, Tailwind CSS, React Router, Lucide React
+The project is intentionally split into clear boundaries:
 
-**Backend:** Vercel API routes, MongoDB, Better Auth
+- **React + TypeScript + Vite** — browser application
+- **Tailwind CSS** — shared responsive design system
+- **Zustand** — active workout client state
+- **Vercel Web API handlers** — HTTP/server boundary
+- **Better Auth** — authentication and sessions
+- **MongoDB** — routines and immutable completed workout sessions
 
-## Run locally
+See `docs/ARCHITECTURE.md` for the detailed domain and runtime model.
 
-Clone the repository:
+## Development
 
-```bash
-git clone https://github.com/SarunasSimanaitis/MoosclesPro.git
-cd MoosclesPro
-```
+NaN
 
-Install dependencies:
+Production checks:
 
-```bash
-npm install
-```
+NaN
 
-Start the development server:
+The GitHub Actions quality check runs the same lint/build validation against pull requests.
 
-```bash
-npm run dev
-```
+## Deployment
 
-Build for production:
+Vercel serves the Vite application and the `api/` Web API handlers. Better Auth is mounted at `/api/auth/*` using a catch-all route, while the Node runtime is used for MongoDB and authentication.
 
-```bash
-npm run build
-```
+Required environment variables:
 
-## Project direction
+- `MONGODB_URI`
+- `BETTER_AUTH_SECRET`
 
-MoosclesPro is being rebuilt around a mobile-first, low-friction interface: clear actions, comfortable touch targets, consistent layouts, and only the information that helps you train.
+The application uses Node 24 for CI and Vercel deployments.

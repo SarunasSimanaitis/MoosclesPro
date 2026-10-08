@@ -268,7 +268,6 @@ function ThemeOption({
             ? `
               bg-[var(--surface)]
               text-[var(--text)]
-              shadow-[var(--shadow-sm)]
             `
             : `
               text-[var(--text-muted)]

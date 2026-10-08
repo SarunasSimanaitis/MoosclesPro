@@ -105,7 +105,6 @@ export default function RestTimerPanel({
             border-[var(--primary)]
             bg-[var(--primary-soft)]
             p-4
-            shadow-[var(--shadow-md)]
             sm:p-5
             ${
               isFloating
@@ -116,7 +115,7 @@ export default function RestTimerPanel({
         >
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex min-w-0 items-center gap-3">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--surface)] text-[var(--primary)] shadow-[var(--shadow-sm)]">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--surface)] text-[var(--primary)]">
                 <Bell
                   size={19}
                   strokeWidth={2}

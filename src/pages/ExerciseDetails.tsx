@@ -265,7 +265,6 @@ export default function ExerciseDetails() {
                   text-sm
                   font-semibold
                   text-[var(--background)]
-                  shadow-[var(--shadow-md)]
                   transition-opacity
                   hover:opacity-90
                   focus-visible:outline-none

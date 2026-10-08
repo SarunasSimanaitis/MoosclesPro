@@ -50,8 +50,8 @@ export default function Input({
             min-h-12 w-full rounded-[var(--radius-md)] border
             ${error ? "border-[var(--danger)]" : "border-[var(--border-strong)]"}
             bg-[var(--surface-soft)] px-4 py-3 text-[var(--text)]
-            outline-none transition-[background-color,border-color,box-shadow] duration-200
-            focus:bg-[var(--surface)] focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--focus-ring)]
+            outline-none transition-[background-color,border-color] duration-200
+            focus:bg-[var(--surface)] focus:border-[var(--primary)]
             disabled:opacity-50 ${leadingIcon ? "pl-11" : ""} ${className}
           `}
         />

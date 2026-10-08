@@ -10,6 +10,7 @@ export type ActiveWorkout = {
   userId: string;
   routineId: string;
   startedAt: string;
+  updatedAt: string;
   exercises: WorkoutExercise[];
   isPaused: boolean;
   pauseStartedAt: number | null;
@@ -18,127 +19,105 @@ export type ActiveWorkout = {
 
 type ActiveWorkoutState = {
   activeWorkout: ActiveWorkout | null;
-
-  startWorkout: (
-    routine: Routine,
-    userId: string,
-  ) => ActiveWorkout;
-
-  updateExercises: (
-    updater: (
-      exercises: WorkoutExercise[],
-    ) => WorkoutExercise[],
-  ) => void;
-
+  startWorkout: (routine: Routine, userId: string) => ActiveWorkout;
+  updateExercises: (updater: (exercises: WorkoutExercise[]) => WorkoutExercise[]) => void;
   togglePause: () => void;
-
   clearActiveWorkout: () => void;
 };
 
-export const useActiveWorkoutStore =
-  create<ActiveWorkoutState>()(
-    persist(
-      (set) => ({
-        activeWorkout: null,
+export const useActiveWorkoutStore = create<ActiveWorkoutState>()(
+  persist(
+    (set) => ({
+      activeWorkout: null,
 
-        startWorkout: (
-          routine,
+      startWorkout: (routine, userId) => {
+        const now = new Date().toISOString();
+
+        const workout: ActiveWorkout = {
+          id: crypto.randomUUID(),
           userId,
-        ) => {
-          const workout: ActiveWorkout = {
-            id: crypto.randomUUID(),
-            userId,
-            routineId: routine.id,
-            startedAt:
-              new Date().toISOString(),
-            exercises:
-              createWorkoutExercises(
-                routine,
-              ),
-            isPaused: false,
-            pauseStartedAt: null,
-            totalPausedMs: 0,
+          routineId: routine.id,
+          startedAt: now,
+          updatedAt: now,
+          exercises: createWorkoutExercises(routine),
+          isPaused: false,
+          pauseStartedAt: null,
+          totalPausedMs: 0,
+        };
+
+        set({ activeWorkout: workout });
+        return workout;
+      },
+
+      updateExercises: (updater) => {
+        set((state) => {
+          if (!state.activeWorkout) return state;
+
+          return {
+            activeWorkout: {
+              ...state.activeWorkout,
+              exercises: updater(state.activeWorkout.exercises),
+              updatedAt: new Date().toISOString(),
+            },
           };
+        });
+      },
 
-          set({
-            activeWorkout: workout,
-          });
+      togglePause: () => {
+        set((state) => {
+          const active = state.activeWorkout;
+          if (!active) return state;
 
-          return workout;
-        },
+          const updatedAt = new Date().toISOString();
 
-        updateExercises: (
-          updater,
-        ) => {
-          set((state) => {
-            if (!state.activeWorkout) {
-              return state;
-            }
-
-            return {
-              activeWorkout: {
-                ...state.activeWorkout,
-                exercises: updater(
-                  state.activeWorkout
-                    .exercises,
-                ),
-              },
-            };
-          });
-        },
-
-        togglePause: () => {
-          set((state) => {
-            const active =
-              state.activeWorkout;
-
-            if (!active) {
-              return state;
-            }
-
-            if (active.isPaused) {
-              const pauseDuration =
-                active.pauseStartedAt !==
-                null
-                  ? Date.now() -
-                    active.pauseStartedAt
-                  : 0;
-
-              return {
-                activeWorkout: {
-                  ...active,
-                  isPaused: false,
-                  pauseStartedAt: null,
-                  totalPausedMs:
-                    active.totalPausedMs +
-                    pauseDuration,
-                },
-              };
-            }
+          if (active.isPaused) {
+            const pauseDuration =
+              active.pauseStartedAt !== null
+                ? Math.max(0, Date.now() - active.pauseStartedAt)
+                : 0;
 
             return {
               activeWorkout: {
                 ...active,
-                isPaused: true,
-                pauseStartedAt:
-                  Date.now(),
+                isPaused: false,
+                pauseStartedAt: null,
+                totalPausedMs: active.totalPausedMs + pauseDuration,
+                updatedAt,
               },
             };
-          });
-        },
+          }
 
-        clearActiveWorkout: () => {
-          set({
-            activeWorkout: null,
-          });
-        },
-      }),
-      {
-        name: "mooscles-active-workout",
-        partialize: (state) => ({
-          activeWorkout:
-            state.activeWorkout,
-        }),
+          return {
+            activeWorkout: {
+              ...active,
+              isPaused: true,
+              pauseStartedAt: Date.now(),
+              updatedAt,
+            },
+          };
+        });
       },
-    ),
-  );
+
+      clearActiveWorkout: () => set({ activeWorkout: null }),
+    }),
+    {
+      name: "mooscles-active-workout",
+      version: 2,
+      partialize: (state) => ({ activeWorkout: state.activeWorkout }),
+      migrate: (persisted) => {
+        const state = persisted as ActiveWorkoutState;
+        if (!state?.activeWorkout) return state;
+
+        return {
+          ...state,
+          activeWorkout: {
+            ...state.activeWorkout,
+            updatedAt:
+              state.activeWorkout.updatedAt ??
+              state.activeWorkout.startedAt,
+          },
+        };
+      },
+    },
+  ),
+);

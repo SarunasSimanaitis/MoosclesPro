@@ -1,4 +1,4 @@
-import { database } from "../src/lib/mongodb.js";
+import { database, ensureWorkoutIndexes } from "../src/lib/mongodb.js";
 
 import {
   internalServerErrorResponse,
@@ -28,8 +28,9 @@ const ALLOWED_METHODS = [
   "DELETE",
 ];
 
-export default {
-  async fetch(request: Request) {
+export const runtime = "nodejs";
+
+export default async function handler(request: Request) {
     const authResult =
       await requireSession(
         request,
@@ -42,6 +43,7 @@ export default {
     const { user } = authResult;
 
     try {
+      await ensureWorkoutIndexes();
       const collection =
         database.collection<StoredRoutine>(
           "routines",
@@ -420,8 +422,7 @@ export default {
 
       return internalServerErrorResponse();
     }
-  },
-};
+}
 
 type RoutineCandidate = {
   id: string;

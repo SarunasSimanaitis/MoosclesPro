@@ -299,7 +299,7 @@ function FilterButton({
       onClick={onClick}
       className={`min-h-10 rounded-[var(--radius-sm)] px-2 text-xs font-bold transition-colors sm:text-sm ${
         active
-          ? "bg-[var(--surface)] text-[var(--text)] shadow-[var(--shadow-sm)]"
+          ? "bg-[var(--surface)] text-[var(--text)]"
           : "text-[var(--text-muted)] hover:text-[var(--text)]"
       }`}
     >

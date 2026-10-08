@@ -5,7 +5,7 @@ import {
   internalServerErrorResponse,
 } from "../src/lib/api.js";
 
-import { database } from "../src/lib/mongodb.js";
+import { database, ensureWorkoutIndexes } from "../src/lib/mongodb.js";
 
 import {
   calculateExerciseStatistics,
@@ -18,8 +18,9 @@ const ALLOWED_METHODS = [
   "GET",
 ];
 
-export default {
-  async fetch(request: Request) {
+export const runtime = "nodejs";
+
+export default async function handler(request: Request) {
     if (request.method !== "GET") {
       return methodNotAllowedResponse(
         ALLOWED_METHODS,
@@ -38,6 +39,7 @@ export default {
     const { user } = authResult;
 
     try {
+      await ensureWorkoutIndexes();
       const sessions =
         await database
           .collection<StoredWorkoutSession>(
@@ -116,5 +118,4 @@ export default {
         "Failed to load statistics.",
       );
     }
-  },
-};
+}

@@ -197,7 +197,6 @@ export default function ActiveWorkoutBar() {
           border
           border-[var(--primary)]
           bg-[var(--surface)]
-          shadow-[var(--shadow-lg)]
         "
       >
         <div className="p-4">

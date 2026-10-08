@@ -5,7 +5,7 @@ import {
   internalServerErrorResponse,
 } from "../src/lib/api.js";
 
-import { database } from "../src/lib/mongodb.js";
+import { database, ensureWorkoutIndexes } from "../src/lib/mongodb.js";
 
 import {
   calculateOverview,
@@ -25,8 +25,9 @@ const ALLOWED_METHODS = [
   "GET",
 ];
 
-export default {
-  async fetch(request: Request) {
+export const runtime = "nodejs";
+
+export default async function handler(request: Request) {
     if (request.method !== "GET") {
       return methodNotAllowedResponse(
         ALLOWED_METHODS,
@@ -45,6 +46,7 @@ export default {
     const { user } = authResult;
 
     try {
+      await ensureWorkoutIndexes();
       const sessionsCollection =
         database.collection<StoredWorkoutSession>(
           "workoutSessions",
@@ -209,8 +211,7 @@ export default {
         "Failed to load dashboard data.",
       );
     }
-  },
-};
+}
 
 function getMondayStart(
   date: Date,

@@ -217,7 +217,7 @@ export default function WorkoutDetails() {
       </Link>
 
       {/* Header */}
-      <section className="relative overflow-hidden rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-[var(--shadow-sm)] md:p-8">
+      <section className="relative overflow-hidden rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--surface)] p-6 md:p-8">
 
 
         <div className="relative">

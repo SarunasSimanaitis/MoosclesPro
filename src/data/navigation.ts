@@ -25,7 +25,3 @@ export const authenticatedNavigation: NavigationItem[] = [
   { label: "Statistics", path: "/statistics", icon: ChartColumn },
 ];
 
-export const mobileNavigation = authenticatedNavigation.map((item) => ({
-  ...item,
-  label: item.label === "Statistics" ? "Stats" : item.label,
-}));

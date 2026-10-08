@@ -1,7 +1,5 @@
 import {
   ArrowRight,
-  CheckCircle2,
-  Clock3,
   Dumbbell,
   MoreHorizontal,
   Plus,
@@ -202,18 +200,6 @@ export default function Workouts() {
         <Tip icon={<MoreHorizontal size={18} />} title="Adjust anytime" text="Edit or duplicate a routine when your training changes." />
       </section>
     </main>
-  );
-}
-
-function Tip({ icon, title, text }: { icon: React.ReactNode; title: string; text: string }) {
-  return (
-    <Card className="p-5">
-      <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[var(--primary-soft)] text-[var(--primary)]">
-        {icon}
-      </div>
-      <h3 className="mt-4 font-black">{title}</h3>
-      <p className="mt-1 text-sm leading-relaxed text-[var(--text-muted)]">{text}</p>
-    </Card>
   );
 }
 

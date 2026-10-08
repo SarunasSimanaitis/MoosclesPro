@@ -53,7 +53,7 @@ export default function RoutineExerciseEditor({
     formatRest(restSeconds);
 
   return (
-    <article className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-5 md:p-6">
+    <article className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-5 sm:p-6">
       <div className="flex items-start gap-4">
         <div
           aria-hidden="true"
@@ -62,7 +62,7 @@ export default function RoutineExerciseEditor({
           <GripVertical size={18} />
         </div>
 
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--primary-soft)] text-sm font-black text-[var(--primary)]">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--primary-soft)] text-sm font-black text-[var(--primary)]">
           {index + 1}
         </div>
 
@@ -322,7 +322,7 @@ export default function RoutineExerciseEditor({
               }}
               aria-label={`${exercise.name} custom rest seconds`}
               className="
-                w-28
+                w-full sm:w-28
                 rounded-[var(--radius-md)]
                 border
                 border-[var(--border-strong)]

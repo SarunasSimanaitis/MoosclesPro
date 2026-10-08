@@ -282,12 +282,12 @@ function Summary({
   label: string;
   value: string;
   suffix: string;
-  tone: "primary" | "violet" | "accent";
+  tone: "primary" | "success";
 }) {
   const color =
     tone === "primary"
       ? "var(--primary)"
-      : tone === "violet"
+      : tone === "success"
         ? "var(--primary)"
         : "var(--success)";
 

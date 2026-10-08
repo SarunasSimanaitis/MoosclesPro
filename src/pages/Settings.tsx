@@ -47,9 +47,8 @@ export default function Settings() {
           Settings
         </h1>
 
-        <p className="mt-3 max-w-2xl text-lg leading-relaxed text-[var(--text-muted)]">
-          Manage your account and tailor
-          MoosclesPro to your preferences.
+        <p className="mt-3 max-w-2xl text-base leading-relaxed text-[var(--text-muted)] sm:text-lg">
+          Manage your account and appearance.
         </p>
       </section>
 
@@ -100,7 +99,7 @@ export default function Settings() {
             <Palette size={19} />
           }
           eyebrow="Appearance"
-          title="Make it feel like yours"
+          title="Appearance"
         />
 
         <Card className="p-6 md:p-8">
@@ -111,8 +110,7 @@ export default function Settings() {
               </h2>
 
               <p className="mt-1 max-w-xl text-sm leading-relaxed text-[var(--text-muted)]">
-                Choose how MoosclesPro should
-                look on this device.
+                Choose a light or dark theme.
               </p>
             </div>
 
@@ -178,7 +176,7 @@ export default function Settings() {
             <ShieldCheck size={19} />
           }
           eyebrow="Security"
-          title="Account security"
+          title="Security"
         />
 
         <Card className="p-6 md:p-8">
@@ -212,7 +210,7 @@ export default function Settings() {
             <Palette size={19} />
           }
           eyebrow="Application"
-          title="About MoosclesPro"
+          title="About"
         />
 
         <Card className="p-6 md:p-8">

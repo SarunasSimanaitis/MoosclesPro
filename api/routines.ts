@@ -30,7 +30,8 @@ const ALLOWED_METHODS = [
 
 export const runtime = "nodejs";
 
-export default async function handler(request: Request) {
+export default {
+  async fetch(request: Request) {
     const authResult =
       await requireSession(
         request,
@@ -422,7 +423,8 @@ export default async function handler(request: Request) {
 
       return internalServerErrorResponse();
     }
-}
+  },
+};
 
 type RoutineCandidate = {
   id: string;

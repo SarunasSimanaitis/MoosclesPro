@@ -159,7 +159,7 @@ export default function Mindset() {
           Build your mindset.
         </h1>
 
-        <p className="mt-5 max-w-2xl text-lg leading-relaxed text-[var(--text-muted)]">
+        <p className="mt-5 max-w-2xl text-base leading-relaxed text-[var(--text-muted)] sm:text-lg">
           A place for progress, motivation, meals, routines, ideas and the
           moments that keep you moving forward.
         </p>

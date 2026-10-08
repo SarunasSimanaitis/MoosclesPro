@@ -43,7 +43,7 @@ export default function Settings() {
           Preferences
         </p>
 
-        <h1 className="mt-3 text-4xl font-black tracking-tight text-[var(--text)] md:text-5xl">
+        <h1 className="mt-3 text-3xl font-black tracking-tight text-[var(--text)] sm:text-4xl md:text-5xl">
           Settings
         </h1>
 

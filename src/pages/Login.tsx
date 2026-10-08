@@ -48,7 +48,7 @@ export default function Login() {
   }
 
   return (
-    <main className="relative flex min-h-screen items-center justify-center bg-[var(--background)] px-4 py-8 sm:px-5 sm:py-10">
+    <main className="relative flex min-h-screen items-center justify-center bg-[var(--background)] px-4 py-6 sm:px-5 sm:py-8">
       <Link
         to="/"
         className="absolute left-4 top-4 inline-flex min-h-11 items-center gap-2 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] px-3.5 text-sm font-semibold text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-soft)] hover:text-[var(--text)] sm:left-6 sm:top-6"
@@ -58,7 +58,7 @@ export default function Login() {
       </Link>
 
       <div className="w-full max-w-md">
-        <div className="mb-7 text-center sm:mb-8">
+        <div className="mb-6 text-center sm:mb-7">
           <Link
             to="/"
             className="text-2xl font-black tracking-tight text-[var(--text)] sm:text-3xl"
@@ -66,7 +66,7 @@ export default function Login() {
             Mooscles<span className="text-[var(--primary)]">Pro</span>
           </Link>
 
-          <h1 className="mt-7 text-3xl font-black tracking-tight text-[var(--text)] sm:text-4xl">
+          <h1 className="mt-6 text-3xl font-black tracking-tight text-[var(--text)] sm:text-4xl">
             Welcome back
           </h1>
 
@@ -75,8 +75,8 @@ export default function Login() {
           </p>
         </div>
 
-        <Card className="p-5 sm:p-7">
-          <form onSubmit={handleSubmit} className="space-y-5">
+        <Card className="p-5 sm:p-8">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <Input
               id="email"
               label="Email"

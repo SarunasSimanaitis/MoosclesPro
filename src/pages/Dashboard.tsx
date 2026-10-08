@@ -155,10 +155,10 @@ export default function Dashboard() {
       />
 
       <section className="grid gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <DashboardStat icon={<Flame size={20} />} label="Streak" value={stats.streak} suffix={stats.streak === 1 ? "day" : "days"} tone="primary" />
+        <DashboardStat icon={<Flame size={20} />} label="Streak" value={stats.streak} suffix={stats.streak === 1 ? "day" : "days"} tone="success" />
         <DashboardStat icon={<Dumbbell size={20} />} label="Workouts" value={stats.workouts} suffix="completed" tone="success" />
         <DashboardStat icon={<TrendingUp size={20} />} label="Volume" value={formatVolume(stats.volume)} suffix="kg" tone="primary" />
-        <DashboardStat icon={<Target size={20} />} label="Training time" value={formatHours(stats.hours)} suffix={stats.hours === 1 ? "hour" : "hours"} tone="danger" />
+        <DashboardStat icon={<Target size={20} />} label="Training time" value={formatHours(stats.hours)} suffix={stats.hours === 1 ? "hour" : "hours"} tone="primary" />
       </section>
 
       <section className="grid gap-4 lg:grid-cols-[1.35fr_0.65fr]">
@@ -237,14 +237,14 @@ export default function Dashboard() {
           title="Find an exercise"
           description="Find a movement and see how to perform it."
           href="/exercises"
-          tone="violet"
+          tone="primary"
         />
         <QuickLink
           icon={<History size={20} />}
           title="See your history"
           description="Look back at completed sessions and volume."
           href="/history"
-          tone="rose"
+          tone="success"
         />
       </section>
     </main>
@@ -262,14 +262,12 @@ function DashboardStat({
   label: string;
   value: number | string;
   suffix: string;
-  tone: "primary" | "accent" | "violet" | "rose";
+  tone: "primary" | "success";
 }) {
-  const styles = {
-    primary: ["var(--primary-soft)", "var(--primary)"],
-    accent: ["var(--success-soft)", "var(--success)"],
-    violet: ["var(--primary-soft)", "var(--primary)"],
-    rose: ["var(--danger-soft)", "var(--danger)"],
-  }[tone];
+  const styles =
+    tone === "success"
+      ? ["var(--success-soft)", "var(--success)"]
+      : ["var(--primary-soft)", "var(--primary)"];
 
   return (
     <Card className="p-5 sm:p-6">
@@ -310,11 +308,12 @@ function QuickLink({
   title: string;
   description: string;
   href: string;
-  tone: "violet" | "rose";
+  tone: "primary" | "success";
 }) {
-  const styles = tone === "violet"
-    ? ["var(--primary-soft)", "var(--primary)"]
-    : ["var(--danger-soft)", "var(--danger)"];
+  const styles =
+    tone === "success"
+      ? ["var(--success-soft)", "var(--success)"]
+      : ["var(--primary-soft)", "var(--primary)"];
 
   return (
     <NavLink

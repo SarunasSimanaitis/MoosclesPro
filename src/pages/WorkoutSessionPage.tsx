@@ -26,6 +26,7 @@ import WorkoutFinishCard from "../components/workout/WorkoutFinishCard";
 import WorkoutSessionHeader from "../components/workout/WorkoutSessionHeader";
 
 import type { Routine } from "../types/Routine";
+import { applyPreviousPerformance } from "../lib/workoutEngine";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 
@@ -61,16 +62,16 @@ export default function WorkoutSessionPage() {
       (state) => state.activeWorkout,
     );
 
-  const startWorkout =
-    useActiveWorkoutStore(
-      (state) => state.startWorkout,
-    );
+  const startWorkout = useActiveWorkoutStore((state) => state.startWorkout);
+  const updateExercises = useActiveWorkoutStore((state) => state.updateExercises);
 
   const clearActiveWorkout =
     useActiveWorkoutStore(
       (state) =>
         state.clearActiveWorkout,
     );
+
+  const [isStarting, setIsStarting] = useState(false);
 
   const allRoutines = useMemo(
     () => [
@@ -86,53 +87,63 @@ export default function WorkoutSessionPage() {
   );
 
   useEffect(() => {
-    if (
-      sessionPending ||
-      !session?.user ||
-      !routine ||
-      !routineId
-    ) {
+    if (sessionPending || !session?.user?.id || !routine || !routineId) {
       return;
     }
 
-    const current =
-      useActiveWorkoutStore.getState()
-        .activeWorkout;
+    let cancelled = false;
+    const current = useActiveWorkoutStore.getState().activeWorkout;
 
-    /*
-     * No active workout:
-     * create one for this route.
-     */
-    if (!current) {
-      startWorkout(
-        routine,
-        session.user.id,
-      );
-
+    if (current?.userId === session.user.id) {
       return;
     }
 
-    /*
-     * Active workout belongs to another user.
-     * This can happen when accounts change on the
-     * same browser. Start a clean workout for the
-     * current account.
-     */
-    if (
-      current.userId !==
-      session.user.id
-    ) {
-      startWorkout(
-        routine,
-        session.user.id,
-      );
+    async function start() {
+      setIsStarting(true);
+
+      try {
+        const previous = await workoutSessionsApi.latestForRoutine(routine!.id);
+
+        if (cancelled) return;
+
+        const latest = useActiveWorkoutStore.getState().activeWorkout;
+
+        if (latest?.userId === session!.user!.id) {
+          return;
+        }
+
+        const created = startWorkout(routine!, session!.user!.id);
+
+        if (previous) {
+          updateExercises(() =>
+            applyPreviousPerformance(created.exercises, previous),
+          );
+        }
+      } catch (error) {
+        console.error("Could not load previous workout performance:", error);
+
+        if (!cancelled) {
+          startWorkout(routine!, session!.user!.id);
+        }
+      } finally {
+        if (!cancelled) {
+          setIsStarting(false);
+        }
+      }
     }
+
+    void start();
+
+    return () => {
+      cancelled = true;
+    };
   }, [
     routine,
     routineId,
-    session?.user,
+    session?.user?.id,
     sessionPending,
     startWorkout,
+    updateExercises,
   ]);
 
   useEffect(() => {
@@ -143,7 +154,7 @@ export default function WorkoutSessionPage() {
     });
   }, []);
 
-  if (sessionPending) {
+  if (sessionPending || isStarting) {
     return <SessionLoading />;
   }
 

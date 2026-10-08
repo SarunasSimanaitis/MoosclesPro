@@ -235,13 +235,11 @@ export default function ExerciseDetails() {
                 </div>
 
                 <p className="mt-5 text-sm font-semibold uppercase tracking-[0.2em] text-[var(--text-muted)]">
-                  Exercise Media
+                  Exercise
                 </p>
 
                 <p className="mt-2 max-w-sm text-sm leading-relaxed text-[var(--text-muted)]">
-                  Exercise imagery or video
-                  can be added here when
-                  media is available.
+                  No image is available for this exercise yet.
                 </p>
               </div>
             )}

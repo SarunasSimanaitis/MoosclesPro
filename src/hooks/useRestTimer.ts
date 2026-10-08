@@ -60,12 +60,6 @@ export function useRestTimer(): RestTimer {
       ? null
       : Math.max(0, Math.ceil((endAt - now) / 1000));
 
-  useEffect(() => {
-    if (restTime === 0 && endAt !== null) {
-      setEndAt(null);
-      setRestDuration(0);
-    }
-  }, [endAt, restTime]);
 
   return {
     restTime,

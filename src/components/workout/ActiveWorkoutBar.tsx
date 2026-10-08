@@ -198,7 +198,6 @@ export default function ActiveWorkoutBar() {
           border-[var(--primary)]
           bg-[var(--surface)]
           shadow-[var(--shadow-lg)]
-          backdrop-blur-xl
         "
       >
         <div className="p-4">

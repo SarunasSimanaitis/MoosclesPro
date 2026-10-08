@@ -106,7 +106,6 @@ export default function RestTimerPanel({
             bg-[var(--primary-soft)]
             p-4
             shadow-[var(--shadow-md)]
-            backdrop-blur-xl
             sm:p-5
             ${
               isFloating

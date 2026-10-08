@@ -164,7 +164,6 @@ export default function Modal({
         justify-center
         bg-black/55
         p-3
-        backdrop-blur-sm
         sm:items-center
         sm:p-5
       "

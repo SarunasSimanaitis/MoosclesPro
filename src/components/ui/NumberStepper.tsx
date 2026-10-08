@@ -168,11 +168,11 @@ export default function NumberStepper({
         border
         border-[var(--border-strong)]
         bg-[var(--surface)]
-        transition-[border-color,box-shadow,background-color]
+        transition-[border-color,background-color]
         duration-150
         focus-within:border-[var(--primary)]
         focus-within:ring-2
-        focus-within:ring-[var(--primary-soft)]
+        focus-within:ring-[var(--primary)]
         ${
           disabled
             ? "opacity-50"

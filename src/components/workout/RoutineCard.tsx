@@ -31,9 +31,9 @@ export default function RoutineCard({
   const estimatedMinutes = Math.max(20, routine.exercises.length * 10);
 
   return (
-    <Card hover className="p-4 sm:p-5">
+    <Card hover className="p-5 sm:p-6">
       <div className="flex items-start gap-3">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)]">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[var(--success-soft)] text-[var(--success)]">
           <Dumbbell size={21} />
         </div>
 
@@ -98,7 +98,7 @@ export default function RoutineCard({
       <div className="mt-4 flex items-center justify-between gap-3 border-t border-[var(--border)] pt-4">
         <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--text-muted)]">
           <Clock3 size={14} />
-          Ready to go
+          Ready when you are
         </span>
 
         <Button size="sm" onClick={() => onStart(routine.id)}>

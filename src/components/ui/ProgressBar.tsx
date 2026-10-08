@@ -11,23 +11,10 @@ export default function ProgressBar({
   className = "",
   label = "Progress",
 }: ProgressBarProps) {
-  const percentage =
-    max > 0
-      ? Math.min(
-          100,
-          Math.max(0, (value / max) * 100),
-        )
-      : 0;
-
+  const percentage = max > 0 ? Math.min(100, Math.max(0, (value / max) * 100)) : 0;
   return (
     <div
-      className={`
-        h-2.5
-        overflow-hidden
-        rounded-full
-        bg-[var(--surface-soft)]
-        ${className}
-      `}
+      className={`h-2.5 overflow-hidden rounded-full bg-[var(--surface-soft)] ${className}`}
       role="progressbar"
       aria-label={label}
       aria-valuemin={0}
@@ -35,17 +22,8 @@ export default function ProgressBar({
       aria-valuenow={Math.min(value, max)}
     >
       <div
-        className="
-          h-full
-          rounded-full
-          bg-[var(--primary)]
-          transition-[width]
-          duration-500
-          ease-out
-        "
-        style={{
-          width: `${percentage}%`,
-        }}
+        className="h-full rounded-full bg-[var(--primary)] transition-[width] duration-500 ease-out"
+        style={{ width: `${percentage}%` }}
       />
     </div>
   );

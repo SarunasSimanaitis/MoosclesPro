@@ -1,7 +1,6 @@
 import {
   ArrowRight,
   Dumbbell,
-  MoreHorizontal,
   Plus,
   Users,
 } from "lucide-react";
@@ -194,11 +193,6 @@ export default function Workouts() {
         )}
       </section>
 
-      <section className="grid gap-4 sm:grid-cols-3">
-        <Tip icon={<CheckCircle2 size={18} />} title="Keep it repeatable" text="A good routine is one you can actually follow." />
-        <Tip icon={<Clock3 size={18} />} title="Keep it focused" text="You don't need dozens of exercises to make progress." />
-        <Tip icon={<MoreHorizontal size={18} />} title="Adjust anytime" text="Edit or duplicate a routine when your training changes." />
-      </section>
     </main>
   );
 }

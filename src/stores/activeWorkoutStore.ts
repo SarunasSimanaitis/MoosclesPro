@@ -3,6 +3,7 @@ import { persist } from "zustand/middleware";
 
 import type { Routine } from "../types/Routine";
 import type { WorkoutExercise } from "../types/WorkoutExercise";
+import { createWorkoutExercises } from "../lib/workoutEngine";
 
 export type ActiveWorkout = {
   id: string;
@@ -141,37 +142,3 @@ export const useActiveWorkoutStore =
       },
     ),
   );
-
-function createWorkoutExercises(
-  routine: Routine,
-): WorkoutExercise[] {
-  return routine.exercises.map(
-    (routineExercise) => ({
-      exercise:
-        routineExercise.exercise,
-
-      targetSets:
-        routineExercise.targetSets,
-
-      targetReps:
-        routineExercise.targetReps,
-
-      restSeconds:
-        routineExercise.restSeconds,
-
-      sets: Array.from(
-        {
-          length:
-            routineExercise.targetSets,
-        },
-        (_, index) => ({
-          id: crypto.randomUUID(),
-          order: index + 1,
-          weight: 0,
-          reps: 0,
-          completed: false,
-        }),
-      ),
-    }),
-  );
-}

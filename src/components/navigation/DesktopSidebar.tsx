@@ -26,9 +26,16 @@ export default function DesktopSidebar() {
         </div>
 
         <nav aria-label="Sidebar navigation" className="mt-5 space-y-1">
-          {authenticatedNavigation.map((item) => (
-            <SidebarItem key={item.path} item={item} />
-          ))}
+          {authenticatedNavigation
+            .filter(
+              (item) =>
+                !publicNavigation.some(
+                  (publicItem) => publicItem.path === item.path,
+                ),
+            )
+            .map((item) => (
+              <SidebarItem key={item.path} item={item} />
+            ))}
         </nav>
 
         <div className="mt-6 border-t border-[var(--border)] pt-5">

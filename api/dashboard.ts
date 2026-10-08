@@ -27,7 +27,8 @@ const ALLOWED_METHODS = [
 
 export const runtime = "nodejs";
 
-export default async function handler(request: Request) {
+export default {
+  async fetch(request: Request) {
     if (request.method !== "GET") {
       return methodNotAllowedResponse(
         ALLOWED_METHODS,
@@ -238,4 +239,5 @@ function getMondayStart(
   );
 
   return result;
-}
+  },
+};

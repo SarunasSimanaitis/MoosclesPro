@@ -51,10 +51,9 @@ export default async function handler(request: Request) {
 
       switch (request.method) {
         case "GET": {
-          const sessionId =
-            new URL(request.url).searchParams.get(
-              "id",
-            );
+          const url = new URL(request.url);
+          const sessionId = url.searchParams.get("id");
+          const routineId = url.searchParams.get("routineId");
 
           if (sessionId) {
             const session =
@@ -93,6 +92,32 @@ export default async function handler(request: Request) {
             );
           }
 
+          if (routineId) {
+            const latest = await collection
+              .find(
+                {
+                  userId: user.id,
+                  routineId,
+                },
+                {
+                  projection: {
+                    _id: 0,
+                    id: 1,
+                    routineId: 1,
+                    startedAt: 1,
+                    completedAt: 1,
+                    exercises: 1,
+                    createdAt: 1,
+                  },
+                },
+              )
+              .sort({ completedAt: -1 })
+              .limit(1)
+              .next();
+
+            return Response.json(latest ?? null);
+          }
+
           const sessions =
             await collection
               .find(
@@ -103,7 +128,6 @@ export default async function handler(request: Request) {
                   projection: {
                     _id: 0,
                     id: 1,
-                    userId: 1,
                     routineId: 1,
                     startedAt: 1,
                     completedAt: 1,
@@ -112,9 +136,17 @@ export default async function handler(request: Request) {
                   },
                 },
               )
-              .sort({
-                completedAt: -1,
-              })
+              .sort({ completedAt: -1 })
+              .limit(Math.min(
+                200,
+                Math.max(
+                  1,
+                  Number.parseInt(
+                    url.searchParams.get("limit") ?? "100",
+                    10,
+                  ) || 100,
+                ),
+              ))
               .toArray();
 
           return Response.json(

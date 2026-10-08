@@ -113,7 +113,7 @@ export default function WorkoutDetails() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [sessionId]);
 
   const allRoutines = useMemo(
     () => [

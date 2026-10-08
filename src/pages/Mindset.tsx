@@ -202,7 +202,6 @@ export default function Mindset() {
                     className="absolute inset-0 block h-full w-full object-cover transition-[filter] duration-500 ease-out group-hover:brightness-110"
                   />
 
-                  {/* Dark gradient */}
 
 
                   {/* Post type */}

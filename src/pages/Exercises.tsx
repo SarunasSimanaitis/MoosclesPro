@@ -370,7 +370,15 @@ export default function Exercises() {
                   className="flex flex-col p-6"
                 >
                   <div className="flex items-start justify-between gap-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--primary-soft)] text-[var(--primary)]">
+                    <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${
+                      exercise.category === "Strength"
+                        ? "bg-[var(--primary-soft)] text-[var(--primary)]"
+                        : exercise.category === "Hypertrophy"
+                          ? "bg-[var(--accent-soft)] text-[var(--accent)]"
+                          : exercise.category === "Mobility"
+                            ? "bg-[var(--violet-soft)] text-[var(--violet)]"
+                            : "bg-[var(--rose-soft)] text-[var(--rose)]"
+                    }`}>
                       <Dumbbell size={22} />
                     </div>
 

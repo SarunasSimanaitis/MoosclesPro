@@ -264,6 +264,7 @@ export default function History() {
           label="Workouts"
           value={sessions.length}
           suffix="completed"
+          tone="primary"
         />
 
         <HistoryMetric
@@ -272,12 +273,14 @@ export default function History() {
             totalVolume,
           )}
           suffix="kg"
+          tone="violet"
         />
 
         <HistoryMetric
           label="Completed sets"
           value={totalCompletedSets}
           suffix="sets"
+          tone="accent"
         />
       </section>
 
@@ -509,10 +512,27 @@ function HistoryMetric({
   label: string;
   value: number | string;
   suffix: string;
+  tone: "primary" | "violet" | "accent";
 }) {
+  const tone = {
+    primary: {
+      bg: "var(--primary-soft)",
+      text: "var(--primary)",
+    },
+    violet: {
+      bg: "var(--violet-soft)",
+      text: "var(--violet)",
+    },
+    accent: {
+      bg: "var(--accent-soft)",
+      text: "var(--accent)",
+    },
+  }[tone];
+
   return (
     <Card className="p-5">
-      <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">
         {label}
       </p>
 
@@ -521,7 +541,13 @@ function HistoryMetric({
           {value}
         </span>
 
-        <span className="text-xs font-semibold text-[var(--text-muted)]">
+        <span
+          className="rounded-full px-2.5 py-1 text-[10px] font-bold"
+          style={{
+            backgroundColor: tone.bg,
+            color: tone.text,
+          }}
+        >
           {suffix}
         </span>
       </div>

@@ -38,7 +38,7 @@ export default function ProgramCard({
 
         <div className="relative">
           <div className="flex items-start justify-between gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--primary-soft)] text-[var(--primary)]">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--violet-soft)] text-[var(--violet)]">
               <Dumbbell size={23} />
             </div>
 

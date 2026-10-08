@@ -53,7 +53,7 @@ export default function RoutineCard({
     >
       <div className="flex items-start justify-between gap-4">
         <div>
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--primary-soft)] text-[var(--primary)]">
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)]">
             <Dumbbell size={21} />
           </div>
 
@@ -221,7 +221,7 @@ export default function RoutineCard({
         )}
       </div>
 
-      <div className="mt-6 flex items-center justify-between border-t border-[var(--border)] pt-5">
+      <div className="mt-6 flex items-center justify-between gap-3 border-t border-[var(--border)] pt-5">
         <div className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
           <Clock3 size={15} />
           ~{estimatedMinutes} min

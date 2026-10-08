@@ -176,10 +176,10 @@ export default function Exercises() {
                       exercise.category === "Strength"
                         ? "bg-[var(--primary-soft)] text-[var(--primary)]"
                         : exercise.category === "Hypertrophy"
-                          ? "bg-[var(--accent-soft)] text-[var(--accent)]"
+                          ? "bg-[var(--success-soft)] text-[var(--success)]"
                           : exercise.category === "Mobility"
-                            ? "bg-[var(--violet-soft)] text-[var(--violet)]"
-                            : "bg-[var(--rose-soft)] text-[var(--rose)]"
+                            ? "bg-[var(--primary-soft)] text-[var(--primary)]"
+                            : "bg-[var(--danger-soft)] text-[var(--danger)]"
                     }`}
                   >
                     <Dumbbell size={21} />

@@ -1,4 +1,4 @@
-import { database } from "../src/lib/mongodb.js";
+import { database, ensureWorkoutIndexes } from "../src/lib/mongodb.js";
 
 import {
   internalServerErrorResponse,
@@ -41,6 +41,8 @@ export default async function handler(request: Request) {
     }
 
     const { user } = authResult;
+
+    await ensureWorkoutIndexes();
 
     try {
       const collection =

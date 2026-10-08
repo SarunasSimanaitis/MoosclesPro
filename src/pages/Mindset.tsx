@@ -203,11 +203,11 @@ export default function Mindset() {
                   />
 
                   {/* Dark gradient */}
-                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/5" />
+
 
                   {/* Post type */}
                   <div className="absolute left-6 top-6">
-                    <span className="rounded-full border border-white/20 bg-black/30 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-white backdrop-blur-md">
+                    <span className="rounded-full border border-white/20 bg-black/30 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-white">
                       {post.type}
                     </span>
                   </div>
@@ -221,7 +221,7 @@ export default function Mindset() {
                         ? `Remove ${post.title} from saved posts`
                         : `Save ${post.title}`
                     }
-                    className="absolute right-6 top-6 flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-black/30 text-white backdrop-blur-md transition hover:bg-white/20"
+                    className="absolute right-6 top-6 flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-black/30 text-white transition hover:bg-white/20"
                   >
                     <Bookmark
                       size={16}

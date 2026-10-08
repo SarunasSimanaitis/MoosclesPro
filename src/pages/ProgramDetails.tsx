@@ -38,7 +38,6 @@ function ProgramHighlight({
         border-[var(--feature-border)]
         bg-[var(--feature-surface)]
         p-4
-        backdrop-blur-sm
       "
     >
       <div className="text-[var(--primary)]">
@@ -171,35 +170,8 @@ export default function ProgramDetails() {
           md:py-12
         "
       >
-        <div
-          aria-hidden="true"
-          className="
-            absolute
-            -right-24
-            -top-24
-            h-72
-            w-72
-            rounded-full
-            bg-[var(--primary)]
-            opacity-15
-            blur-3xl
-          "
-        />
 
-        <div
-          aria-hidden="true"
-          className="
-            absolute
-            -bottom-28
-            -left-16
-            h-56
-            w-56
-            rounded-full
-            bg-[var(--primary)]
-            opacity-10
-            blur-3xl
-          "
-        />
+
 
         <div className="relative max-w-5xl">
           <div className="flex flex-wrap gap-2">

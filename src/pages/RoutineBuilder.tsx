@@ -787,7 +787,7 @@ function RoutineEditor({
 
       {/* Save bar */}
       <div className="sticky bottom-4 z-20">
-        <Card className="flex flex-col gap-4 border-[var(--border-strong)] bg-[var(--surface)]/95 p-4 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:flex-row sm:items-center sm:justify-between sm:p-5">
+        <Card className="flex flex-col gap-4 border-[var(--border-strong)] bg-[var(--surface)]/95 p-4 shadow-[var(--shadow-lg)] sm:flex-row sm:items-center sm:justify-between sm:p-5">
           <div className="flex items-center gap-3">
             <div className="hidden h-9 w-9 items-center justify-center rounded-xl bg-[var(--success-soft)] text-[var(--success)] sm:flex">
               <CheckCircle2 size={18} />

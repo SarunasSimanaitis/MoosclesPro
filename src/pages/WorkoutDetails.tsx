@@ -218,10 +218,7 @@ export default function WorkoutDetails() {
 
       {/* Header */}
       <section className="relative overflow-hidden rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-[var(--shadow-sm)] md:p-8">
-        <div
-          aria-hidden="true"
-          className="absolute -right-24 -top-24 h-64 w-64 rounded-full bg-[var(--primary)] opacity-10 blur-3xl"
-        />
+
 
         <div className="relative">
           <div className="flex flex-col gap-7 lg:flex-row lg:items-start lg:justify-between">

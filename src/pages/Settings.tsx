@@ -36,7 +36,7 @@ export default function Settings() {
     "No email available";
 
   return (
-    <main className="mx-auto max-w-5xl space-y-10">
+    <main className="mx-auto max-w-4xl space-y-7 sm:space-y-9">
       {/* Header */}
       <section>
         <p className="text-sm font-semibold uppercase tracking-[0.25em] text-[var(--primary)]">
@@ -62,7 +62,7 @@ export default function Settings() {
           title="Your account"
         />
 
-        <Card className="p-6 md:p-8">
+        <Card className="p-5 sm:p-7 md:p-8">
           {isPending ? (
             <AccountSkeleton />
           ) : (
@@ -203,44 +203,6 @@ export default function Settings() {
         </Card>
       </section>
 
-      {/* Application */}
-      <section className="space-y-4">
-        <SectionHeading
-          icon={
-            <Palette size={19} />
-          }
-          eyebrow="Application"
-          title="About"
-        />
-
-        <Card className="p-6 md:p-8">
-          <div className="grid gap-6 sm:grid-cols-2">
-            <InfoItem
-              label="Version"
-              value="0.1.0"
-            />
-
-            <InfoItem
-              label="Experience"
-              value="Personal fitness tracking"
-            />
-
-            <InfoItem
-              label="Theme"
-              value={
-                theme === "dark"
-                  ? "Dark mode"
-                  : "Light mode"
-              }
-            />
-
-            <InfoItem
-              label="Platform"
-              value="MoosclesPro Web"
-            />
-          </div>
-        </Card>
-      </section>
     </main>
   );
 }
@@ -318,26 +280,6 @@ function ThemeOption({
       {icon}
       {label}
     </button>
-  );
-}
-
-function InfoItem({
-  label,
-  value,
-}: {
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="rounded-[var(--radius-md)] bg-[var(--surface-soft)] p-4">
-      <p className="text-xs font-bold uppercase tracking-[0.15em] text-[var(--text-muted)]">
-        {label}
-      </p>
-
-      <p className="mt-2 font-semibold text-[var(--text)]">
-        {value}
-      </p>
-    </div>
   );
 }
 

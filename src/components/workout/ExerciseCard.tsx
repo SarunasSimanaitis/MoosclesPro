@@ -122,7 +122,7 @@ export default function ExerciseCard({
               </div>
 
               <div className="min-w-0">
-                <h2 className="truncate text-xl font-black tracking-tight text-[var(--text)] md:text-2xl">
+                <h2 className="truncate text-lg font-black sm:text-xl tracking-tight text-[var(--text)] md:text-2xl">
                   {exercise.name}
                 </h2>
 

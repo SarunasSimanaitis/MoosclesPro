@@ -27,8 +27,9 @@ const ALLOWED_METHODS = [
   "POST",
 ];
 
-export default {
-  async fetch(request: Request) {
+export const runtime = "nodejs";
+
+export default async function handler(request: Request) {
     const authResult =
       await requireSession(
         request,
@@ -278,5 +279,4 @@ export default {
 
       return internalServerErrorResponse();
     }
-  },
-};
+}

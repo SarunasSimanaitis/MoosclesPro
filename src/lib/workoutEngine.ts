@@ -3,6 +3,8 @@ import type { WorkoutExercise } from "../types/WorkoutExercise";
 import type { WorkoutSession } from "../types/WorkoutSession";
 import type { WorkoutSet } from "../types/WorkoutSet";
 
+export type PreviousPerformance = Pick<WorkoutSet, "weight" | "reps">;
+
 export type WorkoutMetrics = {
   completedSets: number;
   totalSets: number;
@@ -139,4 +141,41 @@ export function normalizeReps(
   return Number.isFinite(value)
     ? Math.max(0, Math.floor(value))
     : 0;
+}
+
+
+export function applyPreviousPerformance(
+  exercises: WorkoutExercise[],
+  previousSession: WorkoutSession | null,
+): WorkoutExercise[] {
+  if (!previousSession) return exercises;
+
+  const previousByExercise = new Map(
+    previousSession.exercises.map((exercise) => [
+      exercise.exercise.id,
+      exercise.sets,
+    ]),
+  );
+
+  return exercises.map((exercise) => {
+    const previousSets = previousByExercise.get(exercise.exercise.id);
+    if (!previousSets) return exercise;
+
+    return {
+      ...exercise,
+      sets: exercise.sets.map((set) => {
+        const previousSet = previousSets.find(
+          (candidate) => candidate.order === set.order,
+        );
+
+        if (!previousSet) return set;
+
+        return {
+          ...set,
+          weight: normalizeWeight(previousSet.weight),
+          reps: normalizeReps(previousSet.reps),
+        };
+      }),
+    };
+  });
 }

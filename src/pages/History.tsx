@@ -6,7 +6,6 @@ import {
   Dumbbell,
   Filter,
   History as HistoryIcon,
-  Weight,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -145,8 +144,8 @@ export default function History() {
 
       <section className="grid gap-3 sm:grid-cols-3">
         <Summary label="Workouts" value={sessions.length.toString()} suffix="completed" tone="primary" />
-        <Summary label="Volume" value={formatNumber(totalVolume)} suffix="kg" tone="violet" />
-        <Summary label="Sets" value={totalCompletedSets.toString()} suffix="completed" tone="accent" />
+        <Summary label="Volume" value={formatNumber(totalVolume)} suffix="kg" tone="primary" />
+        <Summary label="Sets" value={totalCompletedSets.toString()} suffix="completed" tone="success" />
       </section>
 
       {sessions.length === 0 ? (
@@ -236,7 +235,7 @@ function HistoryItem({
     >
       <Card hover className="p-4 sm:p-5">
         <div className="flex items-start gap-4">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)]">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[var(--success-soft)] text-[var(--success)]">
             <CheckCircle2 size={21} />
           </div>
 
@@ -289,15 +288,15 @@ function Summary({
     tone === "primary"
       ? "var(--primary)"
       : tone === "violet"
-        ? "var(--violet)"
-        : "var(--accent)";
+        ? "var(--primary)"
+        : "var(--success)";
 
   const bg =
     tone === "primary"
       ? "var(--primary-soft)"
       : tone === "violet"
-        ? "var(--violet-soft)"
-        : "var(--accent-soft)";
+        ? "var(--primary-soft)"
+        : "var(--success-soft)";
 
   return (
     <Card className="p-5">

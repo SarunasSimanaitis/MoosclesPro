@@ -64,7 +64,7 @@ export default function RoutineCard({
           {menuOpen && (
             <div
               role="menu"
-              className="absolute right-0 top-12 z-30 w-48 overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-1.5 shadow-[var(--shadow-lg)]"
+              className="absolute right-0 top-12 z-30 w-48 overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-1.5"
               onClick={(event) => event.stopPropagation()}
             >
               <MenuItem icon={<Pencil size={16} />} label="Edit" onClick={() => onEdit(routine.id)} />

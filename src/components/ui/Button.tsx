@@ -21,10 +21,10 @@ export default function Button({
   ...props
 }: ButtonProps) {
   const variants: Record<ButtonVariant, string> = {
-    primary: "bg-[var(--primary)] text-[var(--primary-foreground)] shadow-[var(--shadow-sm)] hover:bg-[var(--primary-hover)]",
+    primary: "bg-[var(--primary)] text-[var(--primary-foreground)] hover:bg-[var(--primary-hover)]",
     secondary: "border border-[var(--border-strong)] bg-[var(--surface)] text-[var(--text)] hover:border-[var(--primary)] hover:text-[var(--primary)]",
     ghost: "text-[var(--text-muted)] hover:bg-[var(--surface)] hover:text-[var(--text)]",
-    danger: "bg-[var(--danger)] text-white shadow-[var(--shadow-sm)] hover:opacity-90",
+    danger: "bg-[var(--danger)] text-white hover:opacity-90",
   };
 
   const sizes: Record<ButtonSize, string> = {

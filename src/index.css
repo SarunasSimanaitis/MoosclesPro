@@ -3,74 +3,55 @@
 :root {
   color-scheme: light;
 
-  /* ========================================
-     Core surfaces
-     ======================================== */
-  --background: #f5f1e8;
+  --background: #f4f0e8;
   --surface: #fffdf8;
-  --surface-soft: #f0e9dd;
-  --surface-hover: #f8f4ec;
+  --surface-soft: #eee8de;
+  --surface-hover: #e8e0d5;
 
-  /* ========================================
-     Brand
-     ======================================== */
-  --primary: #c58a3a;
-  --primary-hover: #b47725;
-  --primary-soft: rgba(197, 138, 58, 0.12);
-  --primary-foreground: #1c1711;
+  --primary: #c98b3f;
+  --primary-hover: #b9772c;
+  --primary-soft: rgba(201, 139, 63, 0.13);
+  --primary-foreground: #20170d;
 
-  /* ========================================
-     Typography
-     ======================================== */
+  --accent: #5d8f79;
+  --accent-hover: #4d7b67;
+  --accent-soft: rgba(93, 143, 121, 0.13);
+
+  --violet: #796ba5;
+  --violet-soft: rgba(121, 107, 165, 0.13);
+
+  --rose: #b86f78;
+  --rose-soft: rgba(184, 111, 120, 0.13);
+
   --text: #30261e;
-  --text-muted: #85776a;
-  --text-subtle: #a49586;
+  --text-muted: #817366;
+  --text-subtle: #a59687;
 
-  /* ========================================
-     Borders
-     ======================================== */
-  --border: #e5ddd0;
-  --border-strong: #d8ccbb;
+  --border: #e1d8ca;
+  --border-strong: #d2c6b5;
 
-  /* ========================================
-     Status
-     ======================================== */
-  --success: #6f8f63;
-  --success-soft: rgba(111, 143, 99, 0.12);
+  --success: #5f8860;
+  --success-soft: rgba(95, 136, 96, 0.13);
 
   --warning: #b7791f;
-  --warning-soft: rgba(183, 121, 31, 0.12);
+  --warning-soft: rgba(183, 121, 31, 0.13);
 
-  --danger: #a85d4a;
-  --danger-soft: rgba(168, 93, 74, 0.12);
+  --danger: #aa5f4e;
+  --danger-soft: rgba(170, 95, 78, 0.13);
 
-  /* ========================================
-     Feature / editorial surfaces
-     Used for special hero sections without
-     hardcoding colors in components.
-     ======================================== */
-  --feature-background: #eadfce;
-  --feature-surface: rgba(255, 255, 255, 0.46);
+  --feature-background: #e9dcc8;
+  --feature-surface: rgba(255, 255, 255, 0.6);
   --feature-text: #30261e;
   --feature-muted: rgba(48, 38, 30, 0.66);
-  --feature-subtle: rgba(48, 38, 30, 0.44);
-  --feature-border: rgba(48, 38, 30, 0.1);
+  --feature-subtle: rgba(48, 38, 30, 0.46);
+  --feature-border: rgba(48, 38, 30, 0.11);
 
-  /* ========================================
-     Focus / interaction
-     ======================================== */
-  --focus-ring: rgba(197, 138, 58, 0.24);
+  --focus-ring: rgba(201, 139, 63, 0.24);
 
-  /* ========================================
-     Shadows
-     ======================================== */
   --shadow-sm: 0 2px 12px rgba(48, 38, 30, 0.045);
   --shadow-md: 0 10px 28px rgba(48, 38, 30, 0.075);
   --shadow-lg: 0 18px 48px rgba(48, 38, 30, 0.14);
 
-  /* ========================================
-     Radius
-     ======================================== */
   --radius-sm: 0.75rem;
   --radius-md: 1.125rem;
   --radius-lg: 1.5rem;
@@ -80,73 +61,55 @@
 .dark {
   color-scheme: dark;
 
-  /* ========================================
-     Core surfaces
-     ======================================== */
-  --background: #171513;
-  --surface: #211e1a;
-  --surface-soft: #2b2722;
-  --surface-hover: #302c26;
+  --background: #151412;
+  --surface: #211f1b;
+  --surface-soft: #2a2722;
+  --surface-hover: #312d27;
 
-  /* ========================================
-     Brand
-     ======================================== */
-  --primary: #c58a3a;
-  --primary-hover: #d49a49;
-  --primary-soft: rgba(197, 138, 58, 0.14);
-  --primary-foreground: #1b160f;
+  --primary: #d29a50;
+  --primary-hover: #e1aa61;
+  --primary-soft: rgba(210, 154, 80, 0.16);
+  --primary-foreground: #1e160e;
 
-  /* ========================================
-     Typography
-     ======================================== */
-  --text: #f5f0e8;
-  --text-muted: #aaa096;
-  --text-subtle: #81776d;
+  --accent: #76a893;
+  --accent-hover: #8abb9f;
+  --accent-soft: rgba(118, 168, 147, 0.16);
 
-  /* ========================================
-     Borders
-     ======================================== */
-  --border: #3a342d;
-  --border-strong: #4a4238;
+  --violet: #9b8dc8;
+  --violet-soft: rgba(155, 141, 200, 0.16);
 
-  /* ========================================
-     Status
-     ======================================== */
-  --success: #8ca87d;
-  --success-soft: rgba(140, 168, 125, 0.14);
+  --rose: #d0878f;
+  --rose-soft: rgba(208, 135, 143, 0.16);
 
-  --warning: #d49a3a;
-  --warning-soft: rgba(212, 154, 58, 0.14);
+  --text: #f6f0e7;
+  --text-muted: #aa9f93;
+  --text-subtle: #80766d;
 
-  --danger: #c47761;
-  --danger-soft: rgba(196, 119, 97, 0.14);
+  --border: #39342d;
+  --border-strong: #4b443a;
 
-  /* ========================================
-     Feature / editorial surfaces
-     ======================================== */
-  --feature-background: #2f261d;
-  --feature-surface: rgba(255, 255, 255, 0.05);
-  --feature-text: #fffaf0;
-  --feature-muted: rgba(255, 250, 240, 0.66);
-  --feature-subtle: rgba(255, 250, 240, 0.42);
+  --success: #8db18d;
+  --success-soft: rgba(141, 177, 141, 0.16);
+
+  --warning: #d59b43;
+  --warning-soft: rgba(213, 155, 67, 0.16);
+
+  --danger: #cf7d69;
+  --danger-soft: rgba(207, 125, 105, 0.16);
+
+  --feature-background: #30261e;
+  --feature-surface: rgba(255, 255, 255, 0.06);
+  --feature-text: #fff8ee;
+  --feature-muted: rgba(255, 248, 238, 0.66);
+  --feature-subtle: rgba(255, 248, 238, 0.44);
   --feature-border: rgba(255, 255, 255, 0.1);
 
-  /* ========================================
-     Focus / interaction
-     ======================================== */
-  --focus-ring: rgba(197, 138, 58, 0.28);
+  --focus-ring: rgba(210, 154, 80, 0.28);
 
-  /* ========================================
-     Shadows
-     ======================================== */
-  --shadow-sm: 0 2px 12px rgba(0, 0, 0, 0.2);
-  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.25);
-  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.35);
+  --shadow-sm: 0 2px 12px rgba(0, 0, 0, 0.22);
+  --shadow-md: 0 10px 28px rgba(0, 0, 0, 0.28);
+  --shadow-lg: 0 18px 48px rgba(0, 0, 0, 0.38);
 }
-
-/* ==========================================
-   Global reset
-   ========================================== */
 
 *,
 *::before,
@@ -164,26 +127,14 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-
   background: var(--background);
   color: var(--text);
-
-  font-family:
-    Inter,
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    sans-serif;
-
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-
-  transition:
-    background-color 180ms ease,
-    color 180ms ease;
+  transition: background-color 180ms ease, color 180ms ease;
 }
 
 button,
@@ -233,10 +184,6 @@ textarea::placeholder {
 #root {
   min-height: 100vh;
 }
-
-/* ==========================================
-   Reduced motion
-   ========================================== */
 
 @media (prefers-reduced-motion: reduce) {
   html {

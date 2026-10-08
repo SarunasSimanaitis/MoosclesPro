@@ -1,5 +1,10 @@
-import { ChevronDown, LogOut, Menu, Moon, Settings, Sun, X } from "lucide-react";
-import type { ReactNode } from "react";
+import {
+  Menu,
+  Moon,
+  Settings,
+  Sun,
+  X,
+} from "lucide-react";
 import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 
@@ -10,250 +15,146 @@ import Button from "../ui/Button";
 
 export default function Navbar() {
   const { theme, toggleTheme } = useTheme();
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [accountOpen, setAccountOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
   const { data: session, isPending } = authClient.useSession();
-
-  const isLoggedIn = Boolean(session?.user);
-  const userName = session?.user?.name?.trim() || "Account";
-  const userInitial = userName.charAt(0).toUpperCase() || "A";
+  const loggedIn = Boolean(session?.user);
 
   async function handleSignOut() {
     try {
       await authClient.signOut();
-    } catch (error) {
-      console.error("Failed to sign out:", error);
     } finally {
-      setAccountOpen(false);
-      setMobileOpen(false);
+      setMenuOpen(false);
       navigate("/");
     }
   }
 
+  const name = session?.user?.name?.trim() || "Account";
+  const initial = name.charAt(0).toUpperCase() || "A";
+
   return (
-    <header className="sticky top-0 z-50 border-b border-[var(--border)] bg-[var(--surface)]">
-      <div className="mx-auto flex min-h-[4.25rem] max-w-[120rem] items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-50 border-b border-[var(--border)] bg-[var(--background)]/94 backdrop-blur-xl">
+      <div className="mx-auto flex min-h-[4.25rem] max-w-[120rem] items-center justify-between gap-4 px-4 sm:px-6 xl:px-8">
         <NavLink
-          to={isLoggedIn ? "/dashboard" : "/"}
-          className="shrink-0 text-xl font-black tracking-tight text-[var(--text)] sm:text-2xl"
+          to={loggedIn ? "/dashboard" : "/"}
+          onClick={() => setMenuOpen(false)}
+          className="shrink-0 text-xl font-black tracking-tight sm:text-2xl"
           aria-label="MoosclesPro home"
         >
           Mooscles<span className="text-[var(--primary)]">Pro</span>
         </NavLink>
 
+        {!loggedIn && (
+          <nav className="hidden items-center gap-1 md:flex" aria-label="Primary navigation">
+            {publicNavigation.map((item) => (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                className={({ isActive }) =>
+                  `inline-flex min-h-11 items-center gap-2 rounded-[var(--radius-md)] px-3 text-sm font-semibold ${isActive ? "bg-[var(--primary-soft)] text-[var(--primary)]" : "text-[var(--text-muted)] hover:bg-[var(--surface)] hover:text-[var(--text)]"}`
+                }
+              >
+                <item.icon size={17} />
+                {item.label}
+              </NavLink>
+            ))}
+          </nav>
+        )}
+
         <div className="flex items-center gap-1.5">
-          {!isPending && (
-            isLoggedIn ? (
-              <AccountMenu
-                userName={userName}
-                userInitial={userInitial}
-                open={accountOpen}
-                onToggle={() => setAccountOpen((open) => !open)}
-                onSettings={() => {
-                  setAccountOpen(false);
-                  navigate("/settings");
-                }}
-                onSignOut={handleSignOut}
-              />
-            ) : (
-              <div className="hidden items-center gap-1 sm:flex">
-                <NavLink
-                  to="/login"
-                  className="inline-flex min-h-11 items-center rounded-[var(--radius-md)] px-4 text-sm font-semibold text-[var(--text-muted)] hover:bg-[var(--surface-soft)] hover:text-[var(--text)]"
-                >
-                  Log in
-                </NavLink>
-                <NavLink
-                  to="/register"
-                  className="inline-flex min-h-11 items-center rounded-[var(--radius-md)] bg-[var(--primary)] px-4 text-sm font-semibold text-[var(--primary-foreground)] hover:bg-[var(--primary-hover)]"
-                >
-                  Create account
-                </NavLink>
-              </div>
-            )
+          {!isPending && loggedIn && (
+            <div className="hidden items-center gap-2 pr-1 sm:flex">
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--primary-soft)] text-xs font-black text-[var(--primary)]">
+                {initial}
+              </span>
+              <span className="hidden max-w-28 truncate text-sm font-semibold lg:block">{name}</span>
+            </div>
+          )}
+
+          {!isPending && !loggedIn && (
+            <div className="hidden items-center gap-1 sm:flex">
+              <NavLink
+                to="/login"
+                className="inline-flex min-h-11 items-center rounded-[var(--radius-md)] px-4 text-sm font-semibold text-[var(--text-muted)] hover:text-[var(--text)]"
+              >
+                Log in
+              </NavLink>
+              <NavLink
+                to="/register"
+                className="inline-flex min-h-11 items-center rounded-[var(--radius-md)] bg-[var(--primary)] px-4 text-sm font-semibold text-[var(--primary-foreground)] hover:bg-[var(--primary-hover)]"
+              >
+                Create account
+              </NavLink>
+            </div>
           )}
 
           <Button
             variant="ghost"
             size="sm"
             onClick={toggleTheme}
-            className="h-11 w-11 min-h-11 rounded-[var(--radius-md)] p-0"
-            aria-label={theme === "light" ? "Switch to dark mode" : "Switch to light mode"}
+            className="h-11 w-11 p-0"
+            aria-label={theme === "light" ? "Switch to dark theme" : "Switch to light theme"}
           >
             {theme === "light" ? <Moon size={18} /> : <Sun size={18} />}
           </Button>
 
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => setMobileOpen((open) => !open)}
-            className="h-11 w-11 min-h-11 rounded-[var(--radius-md)] p-0 md:hidden"
-            aria-label={mobileOpen ? "Close menu" : "Open menu"}
-            aria-expanded={mobileOpen}
-            aria-controls="mobile-navigation"
-          >
-            {mobileOpen ? <X size={19} /> : <Menu size={19} />}
-          </Button>
+          {loggedIn && (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setMenuOpen((value) => !value)}
+              className="h-11 w-11 p-0 md:hidden"
+              aria-expanded={menuOpen}
+              aria-controls="mobile-more-menu"
+              aria-label={menuOpen ? "Close menu" : "Open menu"}
+            >
+              {menuOpen ? <X size={19} /> : <Menu size={19} />}
+            </Button>
+          )}
         </div>
       </div>
 
-      {mobileOpen && (
-        <div id="mobile-navigation" className="border-t border-[var(--border)] bg-[var(--surface)] md:hidden">
-          <nav aria-label="More navigation" className="px-4 py-4 sm:px-6">
-            <p className="px-1 text-[10px] font-black uppercase tracking-[0.18em] text-[var(--text-subtle)]">
-              More
-            </p>
-
-            <div className="mt-2 space-y-1">
-              {publicNavigation.map((link) => (
+      {menuOpen && loggedIn && (
+        <div id="mobile-more-menu" className="border-t border-[var(--border)] bg-[var(--surface)] md:hidden">
+          <nav className="mx-auto max-w-lg px-4 py-4 sm:px-6" aria-label="More navigation">
+            <div className="space-y-1">
+              {publicNavigation.map((item) => (
                 <NavLink
-                  key={link.path}
-                  to={link.path}
-                  onClick={() => setMobileOpen(false)}
+                  key={item.path}
+                  to={item.path}
+                  onClick={() => setMenuOpen(false)}
                   className={({ isActive }) =>
-                    `flex min-h-11 items-center gap-3 rounded-[var(--radius-md)] px-4 py-3 text-sm font-semibold ${
-                      isActive
-                        ? "bg-[var(--primary-soft)] text-[var(--primary)]"
-                        : "text-[var(--text-muted)] hover:bg-[var(--surface-soft)]"
-                    }`
+                    `flex min-h-11 items-center gap-3 rounded-[var(--radius-md)] px-4 py-3 text-sm font-semibold ${isActive ? "bg-[var(--primary-soft)] text-[var(--primary)]" : "text-[var(--text-muted)] hover:bg-[var(--surface-soft)] hover:text-[var(--text)]"}`
                   }
                 >
-                  <link.icon size={18} />
-                  {link.label}
+                  <item.icon size={18} />
+                  {item.label}
                 </NavLink>
               ))}
 
-              {isLoggedIn && (
-                <>
-                  <NavLink
-                    to="/settings"
-                    onClick={() => setMobileOpen(false)}
-                    className="flex min-h-11 items-center gap-3 rounded-[var(--radius-md)] px-4 py-3 text-sm font-semibold text-[var(--text-muted)] hover:bg-[var(--surface-soft)]"
-                  >
-                    <Settings size={18} />
-                    Settings
-                  </NavLink>
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false);
+                  navigate("/settings");
+                }}
+                className="flex min-h-11 w-full items-center gap-3 rounded-[var(--radius-md)] px-4 py-3 text-sm font-semibold text-[var(--text-muted)] hover:bg-[var(--surface-soft)] hover:text-[var(--text)]"
+              >
+                <Settings size={18} />
+                Settings
+              </button>
 
-                  <button
-                    type="button"
-                    onClick={handleSignOut}
-                    className="flex min-h-11 w-full items-center gap-3 rounded-[var(--radius-md)] px-4 py-3 text-left text-sm font-semibold text-[var(--danger)] hover:bg-[var(--danger-soft)]"
-                  >
-                    <LogOut size={18} />
-                    Log out
-                  </button>
-                </>
-              )}
-
-              {!isLoggedIn && (
-                <div className="mt-3 grid gap-2 border-t border-[var(--border)] pt-3 sm:hidden">
-                  <NavLink
-                    to="/login"
-                    onClick={() => setMobileOpen(false)}
-                    className="flex min-h-11 items-center justify-center rounded-[var(--radius-md)] border border-[var(--border-strong)] px-4 text-sm font-semibold"
-                  >
-                    Log in
-                  </NavLink>
-                  <NavLink
-                    to="/register"
-                    onClick={() => setMobileOpen(false)}
-                    className="flex min-h-11 items-center justify-center rounded-[var(--radius-md)] bg-[var(--primary)] px-4 text-sm font-semibold text-[var(--primary-foreground)]"
-                  >
-                    Create account
-                  </NavLink>
-                </div>
-              )}
+              <button
+                type="button"
+                onClick={() => void handleSignOut()}
+                className="flex min-h-11 w-full items-center rounded-[var(--radius-md)] px-4 py-3 text-sm font-semibold text-[var(--danger)] hover:bg-[var(--danger-soft)]"
+              >
+                Sign out
+              </button>
             </div>
           </nav>
         </div>
       )}
     </header>
-  );
-}
-
-function AccountMenu({
-  userName,
-  userInitial,
-  open,
-  onToggle,
-  onSettings,
-  onSignOut,
-}: {
-  userName: string;
-  userInitial: string;
-  open: boolean;
-  onToggle: () => void;
-  onSettings: () => void;
-  onSignOut: () => void;
-}) {
-  return (
-    <div className="relative hidden sm:block">
-      <button
-        type="button"
-        onClick={onToggle}
-        aria-haspopup="menu"
-        aria-expanded={open}
-        className="flex min-h-11 items-center gap-2.5 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface-soft)] px-2.5 py-2 text-left text-sm font-semibold text-[var(--text)] hover:border-[var(--border-strong)]"
-      >
-        <Avatar initial={userInitial} />
-        <span className="hidden max-w-32 truncate lg:block">{userName}</span>
-        <ChevronDown size={16} className={`text-[var(--text-muted)] transition-transform ${open ? "rotate-180" : ""}`} />
-      </button>
-
-      {open && (
-        <div
-          role="menu"
-          className="absolute right-0 top-[calc(100%+0.6rem)] z-50 w-56 overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-1.5 shadow-[var(--shadow-lg)]"
-        >
-          <div className="px-3 py-3">
-            <p className="truncate text-sm font-bold">{userName}</p>
-            <p className="mt-0.5 text-xs text-[var(--text-muted)]">Account</p>
-          </div>
-          <div className="my-1 border-t border-[var(--border)]" />
-          <MenuButton icon={<Settings size={17} />} label="Settings" onClick={onSettings} />
-          <MenuButton icon={<LogOut size={17} />} label="Log out" onClick={onSignOut} danger />
-        </div>
-      )}
-    </div>
-  );
-}
-
-function MenuButton({
-  icon,
-  label,
-  onClick,
-  danger = false,
-}: {
-  icon: ReactNode;
-  label: string;
-  onClick: () => void;
-  danger?: boolean;
-}) {
-  return (
-    <button
-      type="button"
-      role="menuitem"
-      onClick={onClick}
-      className={`flex min-h-11 w-full items-center gap-3 rounded-[var(--radius-md)] px-3 py-2.5 text-sm font-semibold ${
-        danger
-          ? "text-[var(--danger)] hover:bg-[var(--danger-soft)]"
-          : "text-[var(--text-muted)] hover:bg-[var(--surface-soft)] hover:text-[var(--text)]"
-      }`}
-    >
-      {icon}
-      {label}
-    </button>
-  );
-}
-
-function Avatar({ initial }: { initial: string }) {
-  return (
-    <span
-      aria-hidden="true"
-      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--primary-soft)] text-xs font-black text-[var(--primary)]"
-    >
-      {initial}
-    </span>
   );
 }

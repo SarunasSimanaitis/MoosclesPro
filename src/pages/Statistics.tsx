@@ -121,7 +121,7 @@ export default function Statistics() {
           label="Streak"
           value={statistics.overview.streak.toString()}
           suffix={statistics.overview.streak === 1 ? "day" : "days"}
-          tone="danger"
+          tone="success"
         />
       </section>
 

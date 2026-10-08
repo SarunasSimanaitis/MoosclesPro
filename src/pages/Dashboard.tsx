@@ -16,6 +16,7 @@ import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import PageHeader from "../components/ui/PageHeader";
 import ProgressBar from "../components/ui/ProgressBar";
+import StatCard from "../components/ui/StatCard";
 import { authClient } from "../lib/auth-client";
 
 const WEEKLY_GOAL_TARGET = 5;
@@ -248,43 +249,6 @@ export default function Dashboard() {
         />
       </section>
     </main>
-  );
-}
-
-function DashboardStat({
-  icon,
-  label,
-  value,
-  suffix,
-  tone,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: number | string;
-  suffix: string;
-  tone: "primary" | "success";
-}) {
-  const styles =
-    tone === "success"
-      ? ["var(--success-soft)", "var(--success)"]
-      : ["var(--primary-soft)", "var(--primary)"];
-
-  return (
-    <Card className="p-5 sm:p-6">
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-sm font-semibold text-[var(--text-muted)]">{label}</p>
-        <div
-          className="flex h-10 w-10 items-center justify-center rounded-2xl"
-          style={{ backgroundColor: styles[0], color: styles[1] }}
-        >
-          {icon}
-        </div>
-      </div>
-      <div className="mt-5 flex items-baseline gap-2">
-        <span className="text-3xl font-black tracking-tight">{value}</span>
-        <span className="text-sm font-semibold text-[var(--text-muted)]">{suffix}</span>
-      </div>
-    </Card>
   );
 }
 

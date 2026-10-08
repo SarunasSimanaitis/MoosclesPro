@@ -219,7 +219,7 @@ export default function ExerciseDetails() {
       <section className="grid gap-6 lg:grid-cols-[1.35fr_1fr]">
         {/* Media */}
         <Card className="overflow-hidden p-0">
-          <div className="relative flex min-h-[360px] items-center justify-center overflow-hidden bg-[var(--surface-soft)] md:min-h-[460px]">
+          <div className="relative flex min-h-[300px] sm:min-h-[360px] items-center justify-center overflow-hidden bg-[var(--surface-soft)] md:min-h-[460px]">
             {selectedExercise.imageUrl ? (
               <img
                 src={selectedExercise.imageUrl}
@@ -284,7 +284,7 @@ export default function ExerciseDetails() {
         </Card>
 
         {/* Overview */}
-        <Card className="flex flex-col p-7 md:p-9">
+        <Card className="flex flex-col p-5 sm:p-7 md:p-9">
           <div className="flex flex-wrap gap-2">
             <Badge variant="primary">
               {selectedExercise.category}
@@ -303,7 +303,7 @@ export default function ExerciseDetails() {
             </Badge>
           </div>
 
-          <h1 className="mt-6 text-4xl font-black tracking-tight text-[var(--text)] md:text-5xl">
+          <h1 className="mt-6 text-3xl font-black tracking-tight text-[var(--text)] sm:text-4xl md:text-5xl">
             {selectedExercise.name}
           </h1>
 

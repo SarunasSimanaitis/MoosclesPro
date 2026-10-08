@@ -48,7 +48,7 @@ const benefits = [
 
 export default function LandingPage() {
   return (
-    <div className="space-y-28 pb-16">
+    <div className="mx-auto max-w-7xl space-y-20 pb-16 sm:space-y-24">
       {/* Hero */}
 
       <section className="relative overflow-hidden pt-8 md:pt-14">
@@ -64,14 +64,14 @@ export default function LandingPage() {
               Training made measurable.
             </div>
 
-            <h1 className="mt-7 max-w-4xl text-5xl font-black tracking-tight text-[var(--text)] md:text-6xl lg:text-7xl">
+            <h1 className="mt-7 max-w-4xl text-4xl font-black tracking-tight text-[var(--text)] sm:text-5xl md:text-6xl lg:text-7xl">
               Train smarter.
               <span className="block text-[var(--primary)]">
                 Keep progressing.
               </span>
             </h1>
 
-            <p className="mt-6 max-w-2xl text-lg leading-relaxed text-[var(--text-muted)] md:text-xl">
+            <p className="mt-5 max-w-2xl text-base leading-relaxed text-[var(--text-muted)] sm:text-lg md:text-xl">
               MoosclesPro helps you build workouts,
               track every set, understand your progress,
               and stay consistent without getting in
@@ -190,7 +190,7 @@ export default function LandingPage() {
           </p>
         </div>
 
-        <div className="mt-10 grid gap-5 lg:grid-cols-3">
+        <div className="mt-8 grid gap-4 lg:grid-cols-3">
           {features.map(
             ({
               icon: Icon,
@@ -294,7 +294,7 @@ export default function LandingPage() {
 
       {/* CTA */}
 
-      <section className="overflow-hidden rounded-[2.5rem] bg-[var(--text)] p-8 text-[var(--surface)] md:p-12">
+      <section className="overflow-hidden rounded-[var(--radius-xl)] bg-[var(--text)] p-7 text-[var(--surface)] sm:p-9 md:p-12">
         <div className="max-w-3xl">
           <p className="text-sm font-semibold uppercase tracking-[0.25em] text-[var(--primary)]">
             Start training

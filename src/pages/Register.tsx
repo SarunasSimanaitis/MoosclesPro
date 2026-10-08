@@ -3,6 +3,9 @@ import type { FormEvent } from "react";
 import { ArrowLeft } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
+import Button from "../components/ui/Button";
+import Input from "../components/ui/Input";
+import Card from "../components/ui/Card";
 import { authClient } from "../lib/auth-client";
 
 export default function Register() {
@@ -68,65 +71,44 @@ export default function Register() {
           </p>
         </div>
 
-        <div className="rounded-[2rem] border border-[var(--border)] bg-[var(--surface)] p-7 shadow-sm md:p-8">
+        <Card className="p-6 sm:p-7 md:p-8">
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label
-                htmlFor="name"
-                className="mb-2 block text-sm font-semibold text-[var(--text)]"
-              >
-                Name
-              </label>
-
-              <input
+              <Input
                 id="name"
+                label="Name"
                 type="text"
                 autoComplete="name"
                 required
                 value={name}
                 onChange={(event) => setName(event.target.value)}
-                className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] px-4 py-3 text-[var(--text)] outline-none transition focus:border-[var(--primary)]"
                 placeholder="Your name"
               />
             </div>
 
             <div>
-              <label
-                htmlFor="email"
-                className="mb-2 block text-sm font-semibold text-[var(--text)]"
-              >
-                Email
-              </label>
-
-              <input
+              <Input
                 id="email"
+                label="Email"
                 type="email"
                 autoComplete="email"
                 required
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
-                className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] px-4 py-3 text-[var(--text)] outline-none transition focus:border-[var(--primary)]"
                 placeholder="you@example.com"
               />
             </div>
 
             <div>
-              <label
-                htmlFor="password"
-                className="mb-2 block text-sm font-semibold text-[var(--text)]"
-              >
-                Password
-              </label>
-
-              <input
+              <Input
                 id="password"
+                label="Password"
                 type="password"
                 autoComplete="new-password"
                 required
                 minLength={8}
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
-                className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] px-4 py-3 text-[var(--text)] outline-none transition focus:border-[var(--primary)]"
                 placeholder="At least 8 characters"
               />
             </div>
@@ -137,13 +119,13 @@ export default function Register() {
               </div>
             )}
 
-            <button
+            <Button
               type="submit"
-              disabled={loading}
-              className="w-full rounded-xl bg-[var(--primary)] px-5 py-3 font-semibold text-white transition hover:bg-[var(--primary-hover)] disabled:cursor-not-allowed disabled:opacity-60"
+              loading={loading}
+              className="w-full"
             >
-              {loading ? "Creating account..." : "Create Account"}
-            </button>
+              {loading ? "Creating account..." : "Create account"}
+            </Button>
           </form>
 
           <p className="mt-6 text-center text-sm text-[var(--text-muted)]">

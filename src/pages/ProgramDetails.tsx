@@ -142,7 +142,7 @@ export default function ProgramDetails() {
   }
 
   return (
-    <main className="space-y-10">
+    <main className="mx-auto max-w-6xl space-y-7 sm:space-y-9">
       {/* Navigation */}
       <Button
         variant="ghost"
@@ -163,8 +163,10 @@ export default function ProgramDetails() {
           overflow-hidden
           rounded-[var(--radius-xl)]
           bg-[var(--feature-background)]
-          px-6
-          py-8
+          px-5
+          py-7
+          sm:px-8
+          sm:py-9
           md:px-10
           md:py-12
         "
@@ -224,7 +226,7 @@ export default function ProgramDetails() {
             </span>
           </div>
 
-          <h1 className="mt-6 max-w-4xl text-4xl font-black tracking-tight text-[var(--feature-text)] md:text-6xl">
+          <h1 className="mt-6 max-w-4xl text-3xl font-black tracking-tight text-[var(--feature-text)] sm:text-4xl md:text-6xl">
             {program.name}
           </h1>
 

@@ -30,7 +30,8 @@ export default function ProgramCard({
           relative
           overflow-hidden
           bg-[var(--feature-background)]
-          p-7
+          p-5
+          sm:p-7
           md:p-8
         "
       >

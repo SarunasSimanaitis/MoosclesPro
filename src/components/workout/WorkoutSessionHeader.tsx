@@ -34,7 +34,7 @@ export default function WorkoutSessionHeader({
   onTogglePause,
 }: WorkoutSessionHeaderProps) {
   return (
-    <Card className="p-5 shadow-[var(--shadow-md)] md:p-7">
+    <Card className="p-4 shadow-[var(--shadow-md)] sm:p-5 md:p-7">
       <div className="flex flex-col gap-5">
         <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
           <div className="min-w-0">

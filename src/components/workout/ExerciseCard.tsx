@@ -89,7 +89,7 @@ export default function ExerciseCard({
       `}
     >
       {/* Header */}
-      <div className="p-5 md:p-7">
+      <div className="p-4 sm:p-5 md:p-7">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
             <div className="flex items-start gap-3">
@@ -194,7 +194,7 @@ export default function ExerciseCard({
       </div>
 
       {/* Set controls */}
-      <div className="border-t border-[var(--border)] p-4 md:p-6">
+      <div className="border-t border-[var(--border)] p-3 sm:p-4 md:p-6">
         <div className="mb-3 hidden grid-cols-[44px_1fr_1fr_56px] items-center gap-3 px-3 text-center text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)] sm:grid md:grid-cols-[52px_1fr_1fr_64px] md:gap-4">
           <span>Set</span>
           <span>Weight</span>

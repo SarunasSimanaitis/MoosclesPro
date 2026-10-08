@@ -16,6 +16,7 @@ import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import PageHeader from "../components/ui/PageHeader";
 import ProgressBar from "../components/ui/ProgressBar";
+import StatCard from "../components/ui/StatCard";
 import { authClient } from "../lib/auth-client";
 
 const WEEKLY_GOAL_TARGET = 5;

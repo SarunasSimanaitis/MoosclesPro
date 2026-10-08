@@ -14,6 +14,7 @@ import { workoutSessionsApi } from "../api/workoutSessions";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import PageHeader from "../components/ui/PageHeader";
+import StatCard from "../components/ui/StatCard";
 import { routines } from "../data/routines";
 import { useRoutineStore } from "../stores/routineStore";
 import {
@@ -143,9 +144,9 @@ export default function History() {
       />
 
       <section className="grid gap-3 sm:grid-cols-3">
-        <Summary label="Workouts" value={sessions.length.toString()} suffix="completed" tone="primary" />
-        <Summary label="Volume" value={formatNumber(totalVolume)} suffix="kg" tone="primary" />
-        <Summary label="Sets" value={totalCompletedSets.toString()} suffix="completed" tone="success" />
+        <StatCard label="Workouts" value={sessions.length.toString()} suffix="completed" />
+        <StatCard label="Volume" value={formatNumber(totalVolume)} suffix="kg" />
+        <StatCard label="Sets" value={totalCompletedSets.toString()} suffix="completed" tone="success" />
       </section>
 
       {sessions.length === 0 ? (
@@ -270,40 +271,6 @@ function HistoryItem({
         </div>
       </Card>
     </button>
-  );
-}
-
-function Summary({
-  label,
-  value,
-  suffix,
-  tone,
-}: {
-  label: string;
-  value: string;
-  suffix: string;
-  tone: "primary" | "success";
-}) {
-  const color =
-    tone === "success"
-      ? "var(--success)"
-      : "var(--primary)";
-
-  const bg =
-    tone === "success"
-      ? "var(--success-soft)"
-      : "var(--primary-soft)";
-
-  return (
-    <Card className="p-5">
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-xs font-black uppercase tracking-[0.16em] text-[var(--text-muted)]">{label}</p>
-        <span className="rounded-full px-2.5 py-1 text-[10px] font-bold" style={{ backgroundColor: bg, color }}>
-          {suffix}
-        </span>
-      </div>
-      <p className="mt-3 text-2xl font-black">{value}</p>
-    </Card>
   );
 }
 

@@ -57,7 +57,8 @@ export default function SetRow({
       <div
         className={`
           flex
-          h-10
+          h-11
+          min-h-11
           items-center
           justify-center
           rounded-[var(--radius-sm)]
@@ -121,8 +122,9 @@ export default function SetRow({
         className={`
           mx-auto
           flex
-          h-10
-          w-10
+          h-11
+          min-h-11
+          w-11
           items-center
           justify-center
           rounded-[var(--radius-md)]

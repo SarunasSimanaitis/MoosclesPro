@@ -82,8 +82,9 @@ export default function RoutineCard({
             aria-expanded={menuOpen}
             className="
               flex
-              h-10
-              w-10
+              h-11
+              min-h-11
+              w-11
               items-center
               justify-center
               rounded-[var(--radius-md)]
@@ -265,6 +266,7 @@ function MenuItem({
         items-center
         gap-3
         rounded-[var(--radius-md)]
+        min-h-11
         px-3
         py-2.5
         text-sm

@@ -191,8 +191,8 @@ export default function NumberStepper({
         aria-label={`Decrease ${ariaLabel}`}
         className="
           flex
-          h-10
-          w-10
+          h-11
+          w-11
           shrink-0
           items-center
           justify-center
@@ -239,6 +239,7 @@ export default function NumberStepper({
           appearance-none
           bg-transparent
           px-2
+          min-h-11
           py-2
           text-center
           font-semibold
@@ -261,8 +262,8 @@ export default function NumberStepper({
         aria-label={`Increase ${ariaLabel}`}
         className="
           flex
-          h-10
-          w-10
+          h-11
+          w-11
           shrink-0
           items-center
           justify-center

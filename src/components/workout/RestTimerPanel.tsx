@@ -150,9 +150,7 @@ export default function RestTimerPanel({
               >
                 <Minus size={15} />
 
-                <span className="hidden sm:inline">
-                  15s
-                </span>
+                15s
               </Button>
 
               <Button
@@ -164,9 +162,7 @@ export default function RestTimerPanel({
               >
                 <Plus size={15} />
 
-                <span className="hidden sm:inline">
-                  15s
-                </span>
+                15s
               </Button>
 
               <Button
@@ -179,9 +175,7 @@ export default function RestTimerPanel({
                   size={15}
                 />
 
-                <span className="hidden sm:inline">
-                  Skip
-                </span>
+                Skip
               </Button>
             </div>
           </div>

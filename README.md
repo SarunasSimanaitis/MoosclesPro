@@ -1,103 +1,58 @@
-# 🏋️ MoosclesPro
+# MoosclesPro
 
-A modern fitness tracker built with **React, TypeScript, and Tailwind CSS**.
+A simple fitness tracker built with React, TypeScript, Tailwind CSS, MongoDB, and Better Auth.
 
-MoosclesPro is designed to make workout tracking simple, focused, and consistent — from choosing a routine to completing sessions and reviewing progress.
+MoosclesPro is designed around one idea: **make training easy to follow**. Choose a workout, log your sets, finish the session, and see your progress without unnecessary clutter.
 
-> Train with consistency.
+**Live demo:** https://mooscles-pro.vercel.app/
 
-🌐 **Live Demo:** [MoosclesPro](https://mooscles-pro.vercel.app/)
+## What it does
 
----
+- Dashboard with weekly goals and training overview
+- Ready-made training programs
+- Custom workout routines
+- Set-by-set workout logging
+- Rest timer and resumable active workouts
+- Exercise library with search and filters
+- Workout history and session details
+- Training statistics and streaks
+- Light and dark themes
+- Responsive mobile and desktop layouts
+- User authentication and user-scoped workout data
 
-## ✨ Features
+## Tech
 
-### Current
+**Frontend:** React, TypeScript, Vite, Tailwind CSS, React Router, Lucide React
 
-- 🏠 Modern dashboard
-- 👋 Dynamic user greeting
-- 🎯 Weekly workout goals
-- 💪 Workout routines
-- 🏋️ Functional workout sessions
-- 📚 Exercise library with filtering
-- 📋 Routine builder
-- 📖 Workout history
-- 📊 Statistics dashboard
-- 🧠 Mindset & motivation section
-- 🔐 User authentication
-- 💾 MongoDB database
-- 🌙 Dark & light themes
-- 📱 Responsive interface
-- 🎨 Custom design system
-- ⚡ Fast Vite-powered development and production builds
+**Backend:** Vercel API routes, MongoDB, Better Auth
 
-### In Progress
+## Run locally
 
-- 🏆 Real XP & leveling system
-- 📈 Complete progress & statistics engine
-- 🔥 Automatic streak tracking
-- 🥇 Personal records
-- ☁️ Expanded backend API
-- 👤 More user-specific data and personalization
-
----
-
-## 🛠️ Tech Stack
-
-### Frontend
-
-- **React**
-- **TypeScript**
-- **Vite**
-- **Tailwind CSS**
-- **React Router**
-- **Lucide React**
-
-### Backend & Data
-
-- **Node.js**
-- **MongoDB**
-- **Better Auth**
-- **Vercel**
-
----
-
-## 📸 Screenshots
-
-### Dashboard
-
-![MoosclesPro Dashboard](./screenshots/MoosclesPro_Dashboard.png)
-
-### Workouts
-
-![MoosclesPro Workouts](./screenshots/MoosclesPro_Workouts.png)
-
-### Exercise Library
-
-![MoosclesPro Exercise Library](./screenshots/MoosclesPro_Exercises.png)
-
-### Mindset
-
-![MoosclesPro Mindset](./screenshots/MoosclesPro_Mindset.png)
-
----
-
-## 🚀 Getting Started
-
-### Clone the repository
+Clone the repository:
 
 ```bash
-git clone https://github.com/LithuanianProgrammer/MoosclesPro.git
+git clone https://github.com/SarunasSimanaitis/MoosclesPro.git
 cd MoosclesPro
+```
 
-Install dependencies
+Install dependencies:
 
+```bash
 npm install
+```
 
-Start the development server
+Start the development server:
 
+```bash
 npm run dev
+```
 
-Build for production
+Build for production:
 
+```bash
 npm run build
+```
+
+## Project direction
+
+MoosclesPro is being rebuilt around a mobile-first, low-friction interface: clear actions, comfortable touch targets, consistent layouts, and only the information that helps you train.

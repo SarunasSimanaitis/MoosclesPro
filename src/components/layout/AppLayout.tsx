@@ -7,8 +7,8 @@ export default function AppLayout() {
     <div className="app-shell min-h-screen text-[var(--text)]">
       <Navbar />
 
-      <main className="min-w-0 px-4 py-6 sm:px-6 sm:py-8">
-        <div className="mx-auto w-full max-w-6xl">
+      <main className="app-content min-w-0 px-4 py-6 sm:px-7 sm:py-9 lg:px-10 lg:py-10 2xl:px-14">
+        <div className="mx-auto w-full max-w-[1720px]">
           <Outlet />
         </div>
       </main>

@@ -23,5 +23,5 @@ export const authenticatedNavigation: NavigationItem[] = [
   { label: "Workouts", path: "/workouts", icon: Dumbbell },
   { label: "History", path: "/history", icon: History },
   { label: "Statistics", path: "/statistics", icon: ChartColumn },
+  { label: "Mindset", path: "/mindset", icon: Sparkles },
 ];
-

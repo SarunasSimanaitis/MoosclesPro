@@ -42,6 +42,8 @@ type UseWorkoutSessionResult = {
     setId: string,
   ) => void;
 
+  addSet: (exerciseId: string) => void;
+
   createSession: (
     completedAt?: string,
   ) => WorkoutSession;
@@ -282,6 +284,35 @@ export function useWorkoutSession(): UseWorkoutSessionResult {
     );
   }
 
+  function addSet(exerciseId: string) {
+    updateExercises((currentExercises) =>
+      currentExercises.map((exercise) => {
+        if (exercise.exercise.id !== exerciseId) return exercise;
+
+        const order = exercise.sets.reduce(
+          (largest, set) => Math.max(largest, set.order),
+          0,
+        ) + 1;
+        const previous = exercise.sets[exercise.sets.length - 1];
+
+        return {
+          ...exercise,
+          targetSets: Math.max(exercise.targetSets, order),
+          sets: [
+            ...exercise.sets,
+            {
+              id: crypto.randomUUID(),
+              order,
+              weight: previous?.weight ?? 0,
+              reps: previous?.reps ?? 0,
+              completed: false,
+            },
+          ],
+        };
+      }),
+    );
+  }
+
   function createSession(
     completedAt = new Date().toISOString(),
   ): WorkoutSession {
@@ -310,6 +341,7 @@ export function useWorkoutSession(): UseWorkoutSessionResult {
     updateReps,
     commitReps,
     toggleSet,
+    addSet,
     createSession,
   };
 }

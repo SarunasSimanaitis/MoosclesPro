@@ -76,7 +76,7 @@ export default function ExerciseDetails() {
    */
   if (!exercise) {
     return (
-      <main className="mx-auto max-w-4xl py-10">
+      <main className="mx-auto max-w-6xl 2xl:max-w-7xl py-10">
         <Card className="p-10 text-center">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--surface-soft)] text-[var(--text-muted)]">
             <Dumbbell size={26} />

@@ -198,7 +198,7 @@ export default function WorkoutDetails() {
       : 0;
 
   return (
-    <main className="mx-auto max-w-5xl space-y-8 pb-10">
+    <main className="mx-auto max-w-7xl space-y-8 pb-10">
       <Link
         to="/history"
         className="
@@ -572,7 +572,7 @@ function DetailsSkeleton() {
     <main
       role="status"
       aria-label="Loading workout details"
-      className="mx-auto max-w-5xl space-y-6"
+      className="mx-auto max-w-7xl space-y-6"
     >
       <span className="sr-only">
         Loading workout details

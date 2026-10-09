@@ -1,292 +1,227 @@
 import {
   Check,
+  ChevronDown,
   Moon,
   Palette,
   ShieldCheck,
   Sun,
+  Timer,
   UserCircle2,
+  Minus,
+  Plus,
+  Target,
 } from "lucide-react";
+import { useState, type ReactNode } from "react";
 
 import Card from "../components/ui/Card";
 import { useTheme } from "../hooks/useTheme";
 import { authClient } from "../lib/auth-client";
+import { getAppPreferences, saveAppPreferences } from "../lib/preferences";
 
 export default function Settings() {
-  const {
-    theme,
-    toggleTheme,
-  } = useTheme();
+  const { theme, toggleTheme } = useTheme();
+  const { data: session, isPending } = authClient.useSession();
+  const [preferences, setPreferences] = useState(getAppPreferences);
+  const user = session?.user;
+  const firstName = user?.name?.trim().split(/\s+/)[0] ?? "User";
+  const email = user?.email ?? "No email available";
 
-  const {
-    data: session,
-    isPending,
-  } = authClient.useSession();
+  function updateWeeklyGoal(delta: number) {
+    setPreferences(saveAppPreferences({
+      weeklyGoalTarget: preferences.weeklyGoalTarget + delta,
+    }));
+  }
 
-  const user =
-    session?.user;
-
-  const firstName =
-    user?.name
-      ?.trim()
-      .split(/\s+/)[0] ??
-    "User";
-
-  const email =
-    user?.email ??
-    "No email available";
 
   return (
-    <main className="mx-auto max-w-4xl space-y-7 sm:space-y-9">
-      {/* Header */}
-      <section>
-        <p className="text-sm font-semibold uppercase tracking-[0.25em] text-[var(--primary)]">
-          Preferences
-        </p>
-
-        <h1 className="mt-3 text-3xl font-black tracking-tight text-[var(--text)] sm:text-4xl md:text-5xl">
-          Settings
-        </h1>
-
+    <main className="page-stack mx-auto max-w-7xl 2xl:max-w-[1500px] space-y-8 sm:space-y-10">
+      <header className="max-w-4xl">
+        <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--primary)] sm:text-sm">Your space</p>
+        <h1 className="mt-2 text-4xl font-black tracking-[-0.05em] sm:text-5xl lg:text-6xl">Settings</h1>
         <p className="mt-3 max-w-2xl text-base leading-relaxed text-[var(--text-muted)] sm:text-lg">
-          Manage your account and appearance.
+          Make MoosclesPro feel right for the way you train.
         </p>
-      </section>
+      </header>
 
-      {/* Account */}
-      <section className="space-y-4">
-        <SectionHeading
-          icon={
-            <UserCircle2 size={19} />
-          }
-          eyebrow="Account"
-          title="Your account"
-        />
+      <div className="grid gap-7 xl:grid-cols-[minmax(0,1.25fr)_minmax(320px,0.75fr)] xl:gap-9">
+        <div className="space-y-8">
+          <section className="space-y-4">
+            <SectionHeading icon={<UserCircle2 size={19} />} eyebrow="Profile" title="Your account" />
+            <Card className="p-5 sm:p-7 lg:p-8">
+              {isPending ? (
+                <AccountSkeleton />
+              ) : (
+                <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
+                  <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[1.4rem] bg-[var(--primary-soft)] text-xl font-black text-[var(--primary)]">
+                    {firstName.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xl font-black">{user?.name ?? firstName}</p>
+                    <p className="mt-1 break-all text-sm text-[var(--text-muted)]">{email}</p>
+                  </div>
+                  <div className="inline-flex items-center gap-2 self-start rounded-full bg-[var(--success-soft)] px-3.5 py-2 text-xs font-bold text-[var(--success)] sm:self-center">
+                    <Check size={14} aria-hidden="true" />
+                    Account active
+                  </div>
+                </div>
+              )}
+            </Card>
+          </section>
 
-        <Card className="p-5 sm:p-7 md:p-8">
-          {isPending ? (
-            <AccountSkeleton />
-          ) : (
-            <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
-              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-[var(--primary-soft)] text-xl font-black text-[var(--primary)]">
-                {firstName
-                  .charAt(0)
-                  .toUpperCase()}
+          <section className="space-y-4">
+            <SectionHeading icon={<Palette size={19} />} eyebrow="Appearance" title="Set the mood" />
+            <Card className="p-5 sm:p-7 lg:p-8">
+              <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <h2 className="text-lg font-bold">Choose your finish</h2>
+                  <p className="mt-1 max-w-xl text-sm leading-relaxed text-[var(--text-muted)]">
+                    Warm marble for daylight, deep obsidian for a quieter session.
+                  </p>
+                </div>
+                <div role="group" aria-label="Theme selection" className="grid w-full grid-cols-2 gap-3 sm:w-fit">
+                  <ThemeOption active={theme === "light"} icon={<Sun size={18} />} label="Marble" detail="Warm light" onClick={() => theme !== "light" && toggleTheme()} />
+                  <ThemeOption active={theme === "dark"} icon={<Moon size={18} />} label="Obsidian" detail="Deep dark" onClick={() => theme !== "dark" && toggleTheme()} />
+                </div>
               </div>
+            </Card>
+          </section>
 
-              <div className="min-w-0 flex-1">
-                <p className="text-xl font-black text-[var(--text)]">
-                  {firstName}
-                </p>
-
-                <p className="mt-1 break-all text-sm text-[var(--text-muted)]">
-                  {email}
-                </p>
+          <section className="space-y-4">
+            <SectionHeading icon={<ShieldCheck size={19} />} eyebrow="Security" title="Your privacy" />
+            <Card className="p-5 sm:p-7 lg:p-8">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h2 className="text-lg font-bold">Secure account</h2>
+                  <p className="mt-1 max-w-xl text-sm leading-relaxed text-[var(--text-muted)]">
+                    Your workouts and account are protected by your signed-in session.
+                  </p>
+                </div>
+                <div className="inline-flex items-center gap-2 self-start rounded-full bg-[var(--surface-soft)] px-3.5 py-2 text-xs font-bold text-[var(--text-muted)]">
+                  <ShieldCheck size={15} aria-hidden="true" />
+                  Session protected
+                </div>
               </div>
+            </Card>
+          </section>
+        </div>
 
-              <div className="inline-flex items-center gap-2 self-start rounded-full bg-[var(--success-soft)] px-3 py-1.5 text-xs font-bold text-[var(--success)] sm:self-center">
-                <Check size={14} />
-                Account active
-              </div>
-            </div>
-          )}
-        </Card>
-      </section>
-
-      {/* Appearance */}
-      <section className="space-y-4">
-        <SectionHeading
-          icon={
-            <Palette size={19} />
-          }
-          eyebrow="Appearance"
-          title="Appearance"
-        />
-
-        <Card className="p-6 md:p-8">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <h2 className="text-lg font-bold text-[var(--text)]">
-                Theme
-              </h2>
-
-              <p className="mt-1 max-w-xl text-sm leading-relaxed text-[var(--text-muted)]">
-                Choose a light or dark theme.
+        <aside className="space-y-7">
+          <section className="space-y-4">
+            <SectionHeading icon={<Target size={19} />} eyebrow="Consistency" title="Weekly target" />
+            <Card className="p-5 sm:p-7">
+              <p className="text-sm leading-relaxed text-[var(--text-muted)]">
+                Set a realistic number of sessions to aim for each week. Your dashboard progress updates to match.
               </p>
-            </div>
+              <div className="mt-6 flex items-center justify-between gap-3 rounded-[var(--radius-lg)] bg-[var(--surface-soft)] p-4 sm:p-5">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[0.13em] text-[var(--text-muted)]">Workouts per week</p>
+                  <p className="mt-1 text-3xl font-black tracking-tight">{preferences.weeklyGoalTarget}</p>
+                </div>
+                <div className="flex gap-2">
+                  <StepButton label="Reduce weekly goal" disabled={preferences.weeklyGoalTarget <= 1} onClick={() => updateWeeklyGoal(-1)}><Minus size={17} /></StepButton>
+                  <StepButton label="Increase weekly goal" disabled={preferences.weeklyGoalTarget >= 7} onClick={() => updateWeeklyGoal(1)}><Plus size={17} /></StepButton>
+                </div>
+              </div>
+              <p className="mt-3 text-xs text-[var(--text-muted)]">A steady 2–4 sessions is a great place to begin.</p>
+            </Card>
+          </section>
 
-            <div
-              role="group"
-              aria-label="Theme selection"
-              className="
-                grid
-                grid-cols-2
-                gap-2
-                rounded-[var(--radius-lg)]
-                border
-                border-[var(--border)]
-                bg-[var(--surface-soft)]
-                p-1.5
-                sm:w-fit
-              "
-            >
-              <ThemeOption
-                active={
-                  theme === "light"
-                }
-                icon={
-                  <Sun size={17} />
-                }
-                label="Light"
-                onClick={() => {
-                  if (
-                    theme !==
-                    "light"
-                  ) {
-                    toggleTheme();
-                  }
-                }}
-              />
-
-              <ThemeOption
-                active={
-                  theme === "dark"
-                }
-                icon={
-                  <Moon size={17} />
-                }
-                label="Dark"
-                onClick={() => {
-                  if (
-                    theme !==
-                    "dark"
-                  ) {
-                    toggleTheme();
-                  }
-                }}
-              />
-            </div>
-          </div>
-        </Card>
-      </section>
-
-      {/* Security */}
-      <section className="space-y-4">
-        <SectionHeading
-          icon={
-            <ShieldCheck size={19} />
-          }
-          eyebrow="Security"
-          title="Security"
-        />
-
-        <Card className="p-6 md:p-8">
-          <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h2 className="text-lg font-bold text-[var(--text)]">
-                Authentication
-              </h2>
-
-              <p className="mt-1 max-w-xl text-sm leading-relaxed text-[var(--text-muted)]">
-                Your account is protected by
-                secure session-based
-                authentication.
+          <section className="space-y-4">
+            <SectionHeading icon={<Timer size={19} />} eyebrow="Workout flow" title="Rest timer" />
+            <Card className="p-5 sm:p-7">
+              <p className="text-sm leading-relaxed text-[var(--text-muted)]">
+                New exercises in routines will start with this rest period. You can still adjust each exercise.
               </p>
-            </div>
+              <label htmlFor="default-rest" className="mt-5 block text-sm font-bold">Default rest between sets</label>
+              <div className="relative mt-2">
+                <select
+                  id="default-rest"
+                  value={preferences.defaultRestSeconds}
+                  onChange={(event) => setPreferences(saveAppPreferences({ defaultRestSeconds: Number(event.target.value) }))}
+                  className="min-h-12 w-full appearance-none rounded-2xl border border-[var(--border-strong)] bg-[var(--surface-soft)] px-4 pr-11 text-sm font-semibold text-[var(--text)] focus:border-[var(--primary)] focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring)]"
+                >
+                  {[30, 45, 60, 75, 90, 120, 150, 180, 240].map((seconds) => (
+                    <option key={seconds} value={seconds}>{formatDuration(seconds)}</option>
+                  ))}
+                </select>
+                <ChevronDown size={17} className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" aria-hidden="true" />
+              </div>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {[60, 90, 120].map((seconds) => (
+                  <button
+                    type="button"
+                    key={seconds}
+                    aria-pressed={preferences.defaultRestSeconds === seconds}
+                    onClick={() => setPreferences(saveAppPreferences({ defaultRestSeconds: seconds }))}
+                    className={"min-h-10 rounded-full border px-3.5 text-xs font-bold transition-colors " + (preferences.defaultRestSeconds === seconds ? "border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary)]" : "border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-soft)]")}
+                  >
+                    {formatDuration(seconds)}
+                  </button>
+                ))}
+              </div>
+            </Card>
+          </section>
 
-            <div className="inline-flex items-center gap-2 rounded-full bg-[var(--surface-soft)] px-3 py-1.5 text-xs font-bold text-[var(--text-muted)]">
-              <ShieldCheck
-                size={14}
-              />
-              Secure session
-            </div>
+          <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--primary-soft)] p-5 sm:p-6">
+            <p className="text-sm font-bold text-[var(--primary)]">Built for the long run</p>
+            <p className="mt-2 text-sm leading-relaxed text-[var(--text-muted)]">
+              Small, repeatable sessions add up. Keep your plan simple and let the log show your progress.
+            </p>
           </div>
-        </Card>
-      </section>
-
+        </aside>
+      </div>
     </main>
   );
 }
 
-function SectionHeading({
-  icon,
-  eyebrow,
-  title,
-}: {
-  icon: React.ReactNode;
-  eyebrow: string;
-  title: string;
-}) {
+function formatDuration(seconds: number) {
+  return seconds < 60 ? seconds + " sec" : Math.round(seconds / 60) + " min";
+}
+
+function SectionHeading({ icon, eyebrow, title }: { icon: ReactNode; eyebrow: string; title: string }) {
   return (
     <div className="flex items-center gap-3">
-      <div className="flex h-10 w-10 items-center justify-center rounded-[var(--radius-md)] bg-[var(--primary-soft)] text-[var(--primary)]">
-        {icon}
-      </div>
-
+      <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[var(--primary-soft)] text-[var(--primary)]">{icon}</div>
       <div>
-        <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--primary)]">
-          {eyebrow}
-        </p>
-
-        <h2 className="mt-1 text-2xl font-black tracking-tight text-[var(--text)]">
-          {title}
-        </h2>
+        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[var(--primary)] sm:text-xs">{eyebrow}</p>
+        <h2 className="mt-0.5 text-xl font-black tracking-tight sm:text-2xl">{title}</h2>
       </div>
     </div>
   );
 }
 
-function ThemeOption({
-  active,
-  icon,
-  label,
-  onClick,
-}: {
-  active: boolean;
-  icon: React.ReactNode;
-  label: string;
-  onClick: () => void;
-}) {
+function ThemeOption({ active, icon, label, detail, onClick }: { active: boolean; icon: React.ReactNode; label: string; detail: string; onClick: () => void }) {
   return (
     <button
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`
-        inline-flex
-        min-h-10
-        items-center
-        justify-center
-        gap-2
-        rounded-[var(--radius-md)]
-        px-4
-        text-sm
-        font-semibold
-        transition-[background-color,color,box-shadow]
-        duration-200
-        ${
-          active
-            ? `
-              bg-[var(--surface)]
-              text-[var(--text)]
-            `
-            : `
-              text-[var(--text-muted)]
-              hover:text-[var(--text)]
-            `
-        }
-      `}
+      className={"flex min-h-[84px] min-w-32 flex-col items-start justify-center gap-1 rounded-[var(--radius-lg)] border px-4 text-left transition-all " + (active ? "border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--text)] shadow-sm" : "border-[var(--border)] bg-[var(--surface)] text-[var(--text-muted)] hover:border-[var(--border-strong)]")}
     >
-      {icon}
-      {label}
+      <span className="flex items-center gap-2 text-sm font-bold">{icon}{label}</span>
+      <span className="text-xs text-[var(--text-muted)]">{detail}</span>
+    </button>
+  );
+}
+
+function StepButton({ children, label, disabled, onClick }: { children: ReactNode; label: string; disabled: boolean; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      disabled={disabled}
+      onClick={onClick}
+      className="flex h-11 w-11 items-center justify-center rounded-full border border-[var(--border-strong)] bg-[var(--surface)] text-[var(--text)] transition-colors hover:border-[var(--primary)] hover:text-[var(--primary)] disabled:opacity-40"
+    >
+      {children}
     </button>
   );
 }
 
 function AccountSkeleton() {
   return (
-    <div className="flex items-center gap-5">
-      <div className="h-16 w-16 animate-pulse rounded-full bg-[var(--surface-soft)]" />
-
+    <div className="flex items-center gap-5" role="status" aria-label="Loading account">
+      <div className="h-16 w-16 animate-pulse rounded-2xl bg-[var(--surface-soft)]" />
       <div className="space-y-2">
         <div className="h-5 w-32 animate-pulse rounded bg-[var(--surface-soft)]" />
         <div className="h-4 w-48 animate-pulse rounded bg-[var(--surface-soft)]" />

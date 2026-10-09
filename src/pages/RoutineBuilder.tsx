@@ -26,6 +26,7 @@ import Input from "../components/ui/Input";
 
 import { exercises } from "../data/exercises";
 import { useRoutineStore } from "../stores/routineStore";
+import { getAppPreferences } from "../lib/preferences";
 
 import type { Routine } from "../types/Routine";
 import type { RoutineExercise } from "../types/RoutineExercise";
@@ -289,7 +290,7 @@ function RoutineEditor({
           exercise,
           targetSets: 3,
           targetReps: "8-12",
-          restSeconds: 90,
+          restSeconds: getAppPreferences().defaultRestSeconds,
         },
       ],
     );
@@ -480,7 +481,7 @@ function RoutineEditor({
       <main
         role="status"
         aria-label="Loading routine"
-        className="mx-auto max-w-5xl"
+        className="mx-auto max-w-7xl"
       >
         <span className="sr-only">
           Loading routine
@@ -504,7 +505,7 @@ function RoutineEditor({
   }
 
   return (
-    <main className="mx-auto max-w-5xl space-y-6 pb-10">
+    <main className="mx-auto max-w-7xl space-y-6 pb-10">
       {/* Back */}
       <button
         type="button"

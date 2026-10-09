@@ -1,4 +1,4 @@
-import { MongoClient } from "mongodb";
+import { MongoClient, type MongoClientOptions } from "mongodb";
 
 type RuntimeEnv = {
   MONGODB_URI?: string;
@@ -23,17 +23,25 @@ type GlobalMongo = typeof globalThis & {
   __moosclesMongoClient?: MongoClient;
   __moosclesMongoConnection?: Promise<void>;
   __moosclesMongoIndexes?: Promise<void>;
+  __moosclesMindsetIndexes?: Promise<void>;
 };
 
 const globalMongo = globalThis as GlobalMongo;
 
+/*
+ * MongoDB documents these as optional constructor settings. This narrow assertion
+ * keeps the documented partial options compatible with TypeScript 6's stricter
+ * MongoClientOptions declarations without changing the runtime configuration.
+ */
+const mongoOptions = {
+  connectTimeoutMS: 10_000,
+  serverSelectionTimeoutMS: 10_000,
+  socketTimeoutMS: 20_000,
+} as unknown as MongoClientOptions;
+
 export const mongoClient =
   globalMongo.__moosclesMongoClient ??
-  new MongoClient(mongodbUri, {
-    connectTimeoutMS: 10_000,
-    serverSelectionTimeoutMS: 10_000,
-    socketTimeoutMS: 20_000,
-  });
+  new MongoClient(mongodbUri, mongoOptions);
 
 if (env.NODE_ENV !== "production") {
   globalMongo.__moosclesMongoClient = mongoClient;
@@ -84,4 +92,26 @@ export function ensureWorkoutIndexes(): Promise<void> {
     });
 
   return globalMongo.__moosclesMongoIndexes;
+}
+
+export function ensureMindsetIndexes(): Promise<void> {
+  if (globalMongo.__moosclesMindsetIndexes) {
+    return globalMongo.__moosclesMindsetIndexes;
+  }
+
+  globalMongo.__moosclesMindsetIndexes = connectMongo()
+    .then(() =>
+      Promise.all([
+        database.collection("mindsetPosts").createIndex({ id: 1 }, { unique: true }),
+        database.collection("mindsetPosts").createIndex({ kind: 1, createdAt: -1 }),
+        database.collection("mindsetComments").createIndex({ postId: 1, createdAt: -1 }),
+      ]),
+    )
+    .then(() => undefined)
+    .catch((error: unknown) => {
+      globalMongo.__moosclesMindsetIndexes = undefined;
+      throw error;
+    });
+
+  return globalMongo.__moosclesMindsetIndexes;
 }

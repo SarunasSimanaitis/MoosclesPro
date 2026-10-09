@@ -2,6 +2,7 @@ import {
   CheckCircle2,
   Circle,
   Clock3,
+  Plus,
 } from "lucide-react";
 
 import type { WorkoutExercise } from "../../types/WorkoutExercise";
@@ -39,6 +40,8 @@ type ExerciseCardProps = {
     exerciseId: string,
     setId: string,
   ) => void;
+
+  onAddSet: (exerciseId: string) => void;
 };
 
 export default function ExerciseCard({
@@ -48,6 +51,7 @@ export default function ExerciseCard({
   updateReps,
   commitReps,
   updateCompleted,
+  onAddSet,
 }: ExerciseCardProps) {
   const {
     exercise,
@@ -242,6 +246,14 @@ export default function ExerciseCard({
             />
           ))}
         </div>
+        <button
+          type="button"
+          onClick={() => onAddSet(exercise.id)}
+          className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-full border border-dashed border-[var(--border-strong)] px-4 text-sm font-bold text-[var(--text-muted)] transition-colors hover:border-[var(--primary)] hover:bg-[var(--primary-soft)] hover:text-[var(--primary)]"
+        >
+          <Plus size={16} aria-hidden="true" />
+          Add set
+        </button>
       </div>
     </Card>
   );

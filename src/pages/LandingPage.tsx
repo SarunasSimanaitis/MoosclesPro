@@ -48,7 +48,7 @@ const benefits = [
 
 export default function LandingPage() {
   return (
-    <div className="mx-auto max-w-6xl space-y-14 pb-12 sm:space-y-16">
+    <div className="mx-auto max-w-[1400px] space-y-14 pb-12 sm:space-y-16">
       {/* Hero */}
 
       <section className="relative overflow-hidden pt-8 md:pt-14">
@@ -63,7 +63,7 @@ export default function LandingPage() {
               Training made measurable.
             </div>
 
-            <h1 className="mt-7 max-w-4xl text-4xl font-black tracking-tight text-[var(--text)] sm:text-5xl md:text-6xl">
+            <h1 className="mt-7 max-w-[1400px] 2xl:max-w-7xl text-4xl font-black tracking-tight text-[var(--text)] sm:text-5xl md:text-6xl">
               Train smarter.
               <span className="block text-[var(--primary)]">
                 Keep progressing.

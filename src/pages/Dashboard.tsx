@@ -18,8 +18,7 @@ import PageHeader from "../components/ui/PageHeader";
 import ProgressBar from "../components/ui/ProgressBar";
 import StatCard from "../components/ui/StatCard";
 import { authClient } from "../lib/auth-client";
-
-const WEEKLY_GOAL_TARGET = 5;
+import { getAppPreferences } from "../lib/preferences";
 
 function getFirstName(name?: string | null) {
   return name?.trim().split(/\s+/)[0] || "there";
@@ -38,6 +37,7 @@ export default function Dashboard() {
   const { data: session, isPending: isSessionPending } = authClient.useSession();
 
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [weeklyGoalTarget] = useState(() => getAppPreferences().weeklyGoalTarget);
   const [isLoading, setIsLoading] = useState(false);
   const [isRetryingAuth, setIsRetryingAuth] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -131,7 +131,7 @@ export default function Dashboard() {
   }
 
   const { stats, todayWorkout, weeklyGoal } = dashboardData;
-  const weeklyTarget = weeklyGoal.target || WEEKLY_GOAL_TARGET;
+  const weeklyTarget = weeklyGoalTarget;
   const weeklyCompleted = Math.max(0, weeklyGoal.completed);
   const weeklyPercentage =
     weeklyTarget > 0
@@ -233,7 +233,7 @@ export default function Dashboard() {
         </Card>
       </section>
 
-      <section className="grid gap-4 sm:grid-cols-2">
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <QuickLink
           icon={<Dumbbell size={20} />}
           title="Find an exercise"
@@ -247,6 +247,13 @@ export default function Dashboard() {
           description="Look back at completed sessions and volume."
           href="/history"
           tone="success"
+        />
+        <QuickLink
+          icon={<Sparkles size={20} />}
+          title="Reset your mindset"
+          description="Keep a good thought close for the next session."
+          href="/mindset"
+          tone="primary"
         />
       </section>
     </main>

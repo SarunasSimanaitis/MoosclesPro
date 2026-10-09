@@ -266,6 +266,7 @@ function WorkoutSession({
     updateReps,
     commitReps,
     toggleSet,
+    addSet,
     createSession,
   } =
     useWorkoutSession();
@@ -398,7 +399,7 @@ function WorkoutSession({
   }
 
   return (
-    <main className="mx-auto max-w-5xl space-y-6 pb-10">
+    <main className="mx-auto max-w-7xl space-y-6 pb-10">
       <button
         type="button"
         onClick={handleExit}
@@ -507,6 +508,7 @@ function WorkoutSession({
               updateCompleted={
                 handleToggleSet
               }
+              onAddSet={addSet}
             />
           ),
         )}
@@ -636,7 +638,7 @@ function SessionLoading() {
     <main
       role="status"
       aria-label="Loading workout"
-      className="mx-auto max-w-5xl space-y-6"
+      className="mx-auto max-w-7xl space-y-6"
     >
       <span className="sr-only">
         Loading workout

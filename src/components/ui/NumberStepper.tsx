@@ -98,14 +98,14 @@ export default function NumberStepper({
 
   return (
     <div
-      className={`number-stepper grid min-h-12 grid-cols-[2.25rem_minmax(1.25rem,1fr)_2.25rem] items-center gap-1 rounded-2xl border border-[var(--border-strong)] bg-[var(--surface)] p-1 transition-[border-color,background-color,box-shadow] duration-200 focus-within:border-[var(--primary)] focus-within:ring-2 focus-within:ring-[var(--focus-ring)] sm:min-h-[3.5rem] sm:grid-cols-[2.75rem_minmax(2.5rem,1fr)_2.75rem] ${disabled ? "opacity-50" : ""} ${className}`}
+      className={`number-stepper grid min-h-12 grid-cols-[2.5rem_minmax(1rem,1fr)_2.5rem] items-center gap-1 rounded-2xl border border-[var(--border-strong)] bg-[var(--surface)] p-1 transition-[border-color,background-color,box-shadow] duration-200 focus-within:border-[var(--primary)] focus-within:ring-2 focus-within:ring-[var(--focus-ring)] sm:min-h-[3.5rem] sm:grid-cols-[2.75rem_minmax(2.5rem,1fr)_2.75rem] ${disabled ? "opacity-50" : ""} ${className}`}
     >
       <button
         type="button"
         onClick={() => stepValue(-1)}
         disabled={!canDecrement}
         aria-label={`Decrease ${ariaLabel}`}
-        className="stepper-button flex h-9 w-9 touch-manipulation items-center justify-center rounded-xl bg-[var(--surface-soft)] text-[var(--text-muted)] transition-[background-color,color,transform] duration-150 hover:bg-[var(--surface-hover)] hover:text-[var(--text)] active:scale-95 disabled:cursor-not-allowed disabled:opacity-35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--primary)] sm:h-11 sm:w-11"
+        className="stepper-button flex h-10 w-10 touch-manipulation items-center justify-center rounded-xl bg-[var(--surface-soft)] text-[var(--text-muted)] transition-[background-color,color,transform] duration-150 hover:bg-[var(--surface-hover)] hover:text-[var(--text)] active:scale-95 disabled:cursor-not-allowed disabled:opacity-35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--primary)] sm:h-11 sm:w-11"
       >
         <Minus size={16} strokeWidth={2.5} aria-hidden="true" />
       </button>
@@ -121,7 +121,7 @@ export default function NumberStepper({
         onBlur={handleBlur}
         onKeyDown={handleKeyDown}
         onWheel={handleWheel}
-        className="min-w-0 min-h-9 w-full bg-transparent px-0.5 text-center text-sm font-black tabular-nums text-[var(--text)] outline-none placeholder:font-semibold placeholder:text-[var(--text-subtle)] sm:min-h-11 sm:px-1 sm:text-lg"
+        className="min-w-0 min-h-10 w-full bg-transparent px-0.5 text-center text-sm font-black tabular-nums text-[var(--text)] outline-none placeholder:font-semibold placeholder:text-[var(--text-subtle)] sm:min-h-11 sm:px-1 sm:text-lg"
       />
 
       <button
@@ -129,7 +129,7 @@ export default function NumberStepper({
         onClick={() => stepValue(1)}
         disabled={!canIncrement}
         aria-label={`Increase ${ariaLabel}`}
-        className="stepper-button flex h-9 w-9 touch-manipulation items-center justify-center rounded-xl bg-[var(--surface-soft)] text-[var(--text-muted)] transition-[background-color,color,transform] duration-150 hover:bg-[var(--primary-soft)] hover:text-[var(--primary)] active:scale-95 disabled:cursor-not-allowed disabled:opacity-35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--primary)] sm:h-11 sm:w-11"
+        className="stepper-button flex h-10 w-10 touch-manipulation items-center justify-center rounded-xl bg-[var(--surface-soft)] text-[var(--text-muted)] transition-[background-color,color,transform] duration-150 hover:bg-[var(--primary-soft)] hover:text-[var(--primary)] active:scale-95 disabled:cursor-not-allowed disabled:opacity-35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--primary)] sm:h-11 sm:w-11"
       >
         <Plus size={16} strokeWidth={2.5} aria-hidden="true" />
       </button>

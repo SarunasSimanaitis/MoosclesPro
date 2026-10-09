@@ -1,4 +1,5 @@
 import {
+  ArrowDownRight,
   Bell,
   ChevronDown,
   ChevronUp,
@@ -8,6 +9,7 @@ import {
   RotateCcw,
 } from "lucide-react";
 import {
+  useEffect,
   useRef,
   useState,
   type KeyboardEvent,
@@ -53,6 +55,27 @@ export default function RestTimerPanel({
       ? Math.min(100, Math.max(0, (restTime / restDuration) * 100))
       : 0;
 
+  useEffect(() => {
+    const keepPanelVisible = () => {
+      window.requestAnimationFrame(() => {
+        const panel = panelRef.current;
+        if (!panel) return;
+        const bounds = panel.getBoundingClientRect();
+
+        setPosition((current) => current
+          ? clampPanelPosition(current, bounds.width, bounds.height)
+          : current);
+      });
+    };
+
+    window.addEventListener("resize", keepPanelVisible);
+    window.visualViewport?.addEventListener("resize", keepPanelVisible);
+    return () => {
+      window.removeEventListener("resize", keepPanelVisible);
+      window.visualViewport?.removeEventListener("resize", keepPanelVisible);
+    };
+  }, []);
+
   function handleDragStart(event: PointerEvent<HTMLButtonElement>) {
     if (event.button !== 0) return;
 
@@ -81,13 +104,10 @@ export default function RestTimerPanel({
     if (!drag || !panel || drag.pointerId !== event.pointerId) return;
 
     const bounds = panel.getBoundingClientRect();
-    const maxLeft = Math.max(8, window.innerWidth - bounds.width - 8);
-    const maxTop = Math.max(8, window.innerHeight - bounds.height - 16);
-
-    setPosition({
-      left: clamp(drag.left + event.clientX - drag.startX, 8, maxLeft),
-      top: clamp(drag.top + event.clientY - drag.startY, 8, maxTop),
-    });
+    setPosition(clampPanelPosition({
+      left: drag.left + event.clientX - drag.startX,
+      top: drag.top + event.clientY - drag.startY,
+    }, bounds.width, bounds.height));
   }
 
   function handleDragEnd(event: PointerEvent<HTMLButtonElement>) {
@@ -119,9 +139,20 @@ export default function RestTimerPanel({
       top: bounds.top,
     };
 
-    setPosition({
-      left: clamp(current.left + direction[0], 8, window.innerWidth - bounds.width - 8),
-      top: clamp(current.top + direction[1], 8, window.innerHeight - bounds.height - 16),
+    setPosition(clampPanelPosition({
+      left: current.left + direction[0],
+      top: current.top + direction[1],
+    }, bounds.width, bounds.height));
+  }
+
+  function toggleCollapsed(collapsed: boolean) {
+    setIsCollapsed(collapsed);
+    window.requestAnimationFrame(() => {
+      const bounds = panelRef.current?.getBoundingClientRect();
+      if (!bounds) return;
+      setPosition((current) => current
+        ? clampPanelPosition(current, bounds.width, bounds.height)
+        : current);
     });
   }
 
@@ -167,7 +198,17 @@ export default function RestTimerPanel({
             </span>
             <button
               type="button"
-              onClick={() => setIsCollapsed(false)}
+              onClick={() => setPosition(null)}
+              className="flex h-9 shrink-0 items-center justify-center gap-1 rounded-xl px-2 text-[10px] font-bold text-[var(--text-muted)] transition-[background-color,color] hover:bg-[var(--surface-soft)] hover:text-[var(--primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
+              aria-label="Return rest timer to its dock"
+              title="Return to dock"
+            >
+              <ArrowDownRight size={14} aria-hidden="true" />
+              Dock
+            </button>
+            <button
+              type="button"
+              onClick={() => toggleCollapsed(false)}
               className="ml-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-[var(--text-muted)] transition-[background-color,color,transform] duration-200 hover:bg-[var(--surface-soft)] hover:text-[var(--text)] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
               aria-label="Expand rest timer controls"
             >
@@ -203,14 +244,23 @@ export default function RestTimerPanel({
               <p className="text-[0.65rem] font-extrabold uppercase tracking-[0.16em] text-[var(--text-muted)]">
                 Rest timer
               </p>
-              <p className="mt-0.5 text-xs text-[var(--text-muted)]">Recover for your next set</p>
             </div>
             <span className="font-mono text-2xl font-black tabular-nums tracking-tight text-[var(--text)]" aria-live="polite">
               {formatRestTime(restTime)}
             </span>
             <button
               type="button"
-              onClick={() => setIsCollapsed(true)}
+              onClick={() => setPosition(null)}
+              className="flex h-9 shrink-0 items-center justify-center gap-1 rounded-xl px-2 text-[10px] font-bold text-[var(--text-muted)] transition-[background-color,color] hover:bg-[var(--surface-soft)] hover:text-[var(--primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
+              aria-label="Return rest timer to its dock"
+              title="Return to dock"
+            >
+              <ArrowDownRight size={14} aria-hidden="true" />
+              Dock
+            </button>
+            <button
+              type="button"
+              onClick={() => toggleCollapsed(true)}
               className="ml-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-[var(--text-muted)] transition-[background-color,color,transform] duration-200 hover:bg-[var(--surface-soft)] hover:text-[var(--text)] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
               aria-label="Minimize rest timer"
             >
@@ -272,6 +322,19 @@ export default function RestTimerPanel({
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), Math.max(min, max));
+}
+
+function clampPanelPosition(position: Position, width: number, height: number): Position {
+  const viewport = window.visualViewport;
+  const offsetLeft = viewport?.offsetLeft ?? 0;
+  const offsetTop = viewport?.offsetTop ?? 0;
+  const viewportWidth = viewport?.width ?? window.innerWidth;
+  const viewportHeight = viewport?.height ?? window.innerHeight;
+
+  return {
+    left: clamp(position.left, offsetLeft + 8, offsetLeft + viewportWidth - width - 8),
+    top: clamp(position.top, offsetTop + 8, offsetTop + viewportHeight - height - 16),
+  };
 }
 
 function formatRestTime(seconds: number) {

@@ -39,13 +39,13 @@ export default function SetRow({
 
   return (
     <div
-      className={`set-row-card grid grid-cols-2 items-end gap-x-3 gap-y-3 rounded-3xl border p-3 transition-[background-color,border-color,box-shadow,transform] duration-200 md:grid-cols-[56px_minmax(0,1fr)_minmax(0,1fr)_auto_minmax(0,auto)] md:items-center md:gap-3 md:p-3.5 ${
+      className={`set-row-card grid grid-cols-2 items-end gap-x-2.5 gap-y-2 rounded-3xl border p-2.5 transition-[background-color,border-color,box-shadow,transform] duration-200 md:grid-cols-[56px_minmax(0,1fr)_minmax(0,1fr)_auto_minmax(0,auto)] md:items-center md:gap-3 md:p-3.5 ${
         isCompleted
           ? "set-row-completed border-[var(--success)]/40 bg-[var(--success-soft)]"
           : "border-[var(--border)] bg-[var(--surface-soft)]/70"
       } ${hasRecord ? "set-row-record border-[var(--primary)]/55" : ""}`}
     >
-      <div className="col-span-2 flex min-w-0 items-center justify-between gap-3 md:col-span-1 md:justify-center">
+      <div className="col-span-2 flex min-w-0 items-center justify-between gap-2 md:col-span-1 md:justify-center">
         <div className="flex min-w-0 items-center gap-2.5 md:flex-col md:gap-1">
           <span className={`flex h-9 min-w-9 items-center justify-center rounded-xl text-sm font-black tabular-nums md:h-8 md:min-w-8 ${isCompleted ? "bg-[var(--success)] text-white" : "bg-[var(--surface)] text-[var(--text-muted)]"}`}>
             {workoutSet.order}
@@ -59,6 +59,17 @@ export default function SetRow({
             {personalRecordLabels.map((label) => <RecordBadge key={label} label={label} />)}
           </div>
         )}
+
+        <button
+          type="button"
+          onClick={handleToggle}
+          aria-label={isCompleted ? `Mark set ${workoutSet.order} incomplete` : `Log set ${workoutSet.order} as complete`}
+          aria-pressed={isCompleted}
+          className={`inline-flex min-h-10 shrink-0 touch-manipulation items-center justify-center gap-1.5 rounded-xl border px-3 text-xs font-black transition-[background-color,border-color,color,box-shadow,transform] duration-200 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] md:hidden ${isCompleted ? "border-[var(--success)] bg-[var(--success)] text-white" : "border-[var(--border-strong)] bg-[var(--surface)] text-[var(--text-muted)] hover:border-[var(--primary)] hover:bg-[var(--primary-soft)] hover:text-[var(--primary)]"}`}
+        >
+          {isCompleted ? <Check size={15} strokeWidth={3} aria-hidden="true" /> : <Circle size={15} aria-hidden="true" />}
+          {isCompleted ? "Done" : "Log"}
+        </button>
       </div>
 
       <label className="block min-w-0">
@@ -90,7 +101,7 @@ export default function SetRow({
         onClick={handleToggle}
         aria-label={isCompleted ? `Mark set ${workoutSet.order} incomplete` : `Log set ${workoutSet.order} as complete`}
         aria-pressed={isCompleted}
-        className={`col-span-2 inline-flex min-h-12 touch-manipulation items-center justify-center gap-2 rounded-2xl border px-4 text-sm font-black transition-[background-color,border-color,color,box-shadow,transform] duration-200 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] md:col-span-1 md:min-h-11 md:min-w-28 ${isCompleted ? "border-[var(--success)] bg-[var(--success)] text-white shadow-[0_8px_20px_rgba(50,110,75,0.2)]" : "border-[var(--border-strong)] bg-[var(--surface)] text-[var(--text-muted)] hover:border-[var(--primary)] hover:bg-[var(--primary-soft)] hover:text-[var(--primary)]"}`}
+        className={`hidden min-h-11 touch-manipulation items-center justify-center gap-2 rounded-2xl border px-4 text-sm font-black transition-[background-color,border-color,color,box-shadow,transform] duration-200 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] md:inline-flex md:min-w-28 ${isCompleted ? "border-[var(--success)] bg-[var(--success)] text-white shadow-[0_8px_20px_rgba(50,110,75,0.2)]" : "border-[var(--border-strong)] bg-[var(--surface)] text-[var(--text-muted)] hover:border-[var(--primary)] hover:bg-[var(--primary-soft)] hover:text-[var(--primary)]"}`}
       >
         {isCompleted ? <Check size={17} strokeWidth={3} aria-hidden="true" /> : <Circle size={17} aria-hidden="true" />}
         {isCompleted ? "Logged" : "Log set"}

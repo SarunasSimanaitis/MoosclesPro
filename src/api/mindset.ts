@@ -5,6 +5,7 @@ export type MindsetComment = {
   author: string;
   text: string;
   createdAt: string;
+  canDelete?: boolean;
 };
 
 export type MindsetPost = {
@@ -22,12 +23,18 @@ export type MindsetPost = {
   recentComments: MindsetComment[];
 };
 
-export type MindsetView = "all" | "saved";
+export type MindsetView = "all" | "saved" | "hidden";
 
 export const mindsetApi = {
   list(view: MindsetView = "all"): Promise<{ posts: MindsetPost[] }> {
     return apiRequest<{ posts: MindsetPost[] }>(
-      "/api/mindset" + (view === "saved" ? "?view=saved" : ""),
+      "/api/mindset" + (view === "all" ? "" : `?view=${view}`),
+    );
+  },
+
+  comments(postId: string): Promise<{ comments: MindsetComment[] }> {
+    return apiRequest<{ comments: MindsetComment[] }>(
+      `/api/mindset?commentsFor=${encodeURIComponent(postId)}`,
     );
   },
 
@@ -49,6 +56,20 @@ export const mindsetApi = {
     return apiRequest<{ comment: MindsetComment }>("/api/mindset", {
       method: "POST",
       body: { action: "comment", postId, text },
+    });
+  },
+
+  deletePost(postId: string): Promise<{ ok: true }> {
+    return apiRequest<{ ok: true }>("/api/mindset", {
+      method: "POST",
+      body: { action: "delete-post", postId },
+    });
+  },
+
+  deleteComment(postId: string, commentId: string): Promise<{ ok: true }> {
+    return apiRequest<{ ok: true }>("/api/mindset", {
+      method: "POST",
+      body: { action: "delete-comment", postId, commentId },
     });
   },
 };

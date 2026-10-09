@@ -105,20 +105,19 @@ export default function ExerciseCard({
       `}
     >
       {/* Header */}
-      <div className="p-4 sm:p-5 md:p-7">
-        <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
-          <div className="min-w-0">
-            <div className="flex items-start gap-3">
+      <div className="p-3 sm:p-5 md:p-7">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex min-w-0 items-start gap-2.5 sm:gap-3">
               <div
                 className={`
                   mt-0.5
                   flex
-                  h-9
-                  w-9
+                  h-8
+                  w-8
                   shrink-0
                   items-center
                   justify-center
-                  rounded-full
+                  rounded-xl
                   ${
                     isCompleted
                       ? "bg-[var(--success-soft)] text-[var(--success)]"
@@ -128,54 +127,57 @@ export default function ExerciseCard({
               >
                 {isCompleted ? (
                   <CheckCircle2
-                    size={19}
+                    size={17}
                   />
                 ) : (
                   <Circle
-                    size={19}
+                    size={17}
                   />
                 )}
               </div>
 
               <div className="min-w-0">
-                <h2 className="truncate text-lg font-black sm:text-xl tracking-tight text-[var(--text)] md:text-2xl">
+                <h2 className="line-clamp-2 break-words text-base font-black leading-tight tracking-tight text-[var(--text)] sm:text-xl md:text-2xl">
                   {exercise.name}
                 </h2>
 
-                <p className="mt-1 text-sm text-[var(--text-muted)]">
+                <p className="mt-1 line-clamp-1 text-xs text-[var(--text-muted)] sm:text-sm">
                   {exercise.muscleGroup}{" "}
                   · {exercise.equipment}
                 </p>
+
+                <div className="mt-2.5 flex flex-wrap gap-1.5 sm:mt-3 sm:gap-2">
+                  <Badge variant="primary">
+                    {targetSets} sets
+                  </Badge>
+
+                  <Badge>
+                    {targetReps} reps
+                  </Badge>
+
+                  <Badge>
+                    <Clock3
+                      size={12}
+                      className="mr-1"
+                    />
+                    {formatRest(restSeconds)}
+                  </Badge>
+                </div>
               </div>
-            </div>
-
-            <div className="mt-4 flex flex-wrap gap-2">
-              <Badge variant="primary">
-                {targetSets} sets
-              </Badge>
-
-              <Badge>
-                {targetReps} reps
-              </Badge>
-
-              <Badge>
-                <Clock3
-                  size={12}
-                  className="mr-1"
-                />
-                {formatRest(restSeconds)}
-              </Badge>
-            </div>
           </div>
 
-          <div className="shrink-0">
+          <div className="shrink-0 pt-0.5">
             <div
               className={`
                 rounded-full
-                px-3
-                py-1.5
-                text-xs
+                px-2.5
+                py-1
+                text-[10px]
                 font-bold
+                tabular-nums
+                sm:px-3
+                sm:py-1.5
+                sm:text-xs
                 ${
                   isCompleted
                     ? "bg-[var(--success-soft)] text-[var(--success)]"
@@ -189,7 +191,7 @@ export default function ExerciseCard({
           </div>
         </div>
 
-        <div className="mt-5 h-1 overflow-hidden rounded-full bg-[var(--surface-soft)]">
+        <div className="mt-3 h-1 overflow-hidden rounded-full bg-[var(--surface-soft)] sm:mt-5">
           <div
             className={`
               h-full
@@ -210,15 +212,8 @@ export default function ExerciseCard({
       </div>
 
       {/* Set controls */}
-      <div className="border-t border-[var(--border)] bg-[var(--surface)]/35 p-3 sm:p-4 md:p-6">
-        <div className="mb-4 flex items-end justify-between gap-3 px-1 sm:mb-5 sm:px-2">
-          <div>
-            <h3 className="text-sm font-black tracking-tight text-[var(--text)] sm:text-base">Log your sets</h3>
-            <p className="mt-1 text-xs leading-relaxed text-[var(--text-muted)]">Enter your load and reps, then log the set when you finish.</p>
-          </div>
-        </div>
-
-        <div className="space-y-3">
+      <div className="border-t border-[var(--border)] bg-[var(--surface)]/35 p-2.5 sm:p-4 md:p-6">
+        <div className="space-y-2.5 sm:space-y-3">
           {sets.map((set) => (
             <SetRow
               key={set.id}

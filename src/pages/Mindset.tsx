@@ -1,11 +1,13 @@
 import {
   Bookmark,
+  Eye,
   EyeOff,
   Heart,
   MessageCircle,
   Quote,
   Send,
   Sparkles,
+  Trash2,
 } from "lucide-react";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { Link } from "react-router-dom";
@@ -13,7 +15,7 @@ import { Link } from "react-router-dom";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import PageHeader from "../components/ui/PageHeader";
-import { mindsetApi, type MindsetPost, type MindsetView } from "../api/mindset";
+import { mindsetApi, type MindsetComment, type MindsetPost, type MindsetView } from "../api/mindset";
 import { authClient } from "../lib/auth-client";
 
 export default function Mindset() {
@@ -22,6 +24,9 @@ export default function Mindset() {
   const [view, setView] = useState<MindsetView>("all");
   const [draft, setDraft] = useState("");
   const [commentDrafts, setCommentDrafts] = useState<Record<string, string>>({});
+  const [commentsByPost, setCommentsByPost] = useState<Record<string, MindsetComment[]>>({});
+  const [loadingComments, setLoadingComments] = useState<Set<string>>(() => new Set());
+  const [pendingComments, setPendingComments] = useState<Set<string>>(() => new Set());
   const [openComments, setOpenComments] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isPosting, setIsPosting] = useState(false);
@@ -29,6 +34,7 @@ export default function Mindset() {
   const [error, setError] = useState("");
   const [pendingPosts, setPendingPosts] = useState<Set<string>>(() => new Set());
   const signedIn = Boolean(session?.user);
+  const currentUserId = session?.user?.id;
 
   useEffect(() => {
     let cancelled = false;
@@ -104,7 +110,7 @@ export default function Mindset() {
     try {
       await mindsetApi.setAction(action, postId, enabled);
       if (action === "hide") {
-        setNotice("Hidden from your feed.");
+        setNotice(enabled ? "Hidden from your feed." : "Back in your feed.");
       }
     } catch (requestError) {
       setPosts((current) => current.some((post) => post.id === postId)
@@ -115,6 +121,96 @@ export default function Mindset() {
       setPendingPosts((current) => {
         const next = new Set(current);
         next.delete(postId);
+        return next;
+      });
+    }
+  }
+
+  async function toggleComments(postId: string) {
+    if (openComments === postId) {
+      setOpenComments(null);
+      return;
+    }
+
+    setOpenComments(postId);
+    if (commentsByPost[postId] || loadingComments.has(postId)) return;
+
+    setLoadingComments((current) => new Set(current).add(postId));
+    try {
+      const result = await mindsetApi.comments(postId);
+      setCommentsByPost((current) => ({ ...current, [postId]: result.comments }));
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : "Comments could not be loaded.");
+    } finally {
+      setLoadingComments((current) => {
+        const next = new Set(current);
+        next.delete(postId);
+        return next;
+      });
+    }
+  }
+
+  async function deletePost(postId: string) {
+    if (!requireSignIn() || pendingPosts.has(postId)) return;
+    const originalPost = posts.find((post) => post.id === postId);
+    if (!originalPost || originalPost.kind !== "member" || originalPost.authorId !== currentUserId) return;
+    if (!window.confirm("Delete this post and its comments? This cannot be undone.")) return;
+
+    setPendingPosts((current) => new Set(current).add(postId));
+    setPosts((current) => current.filter((post) => post.id !== postId));
+    setOpenComments((current) => current === postId ? null : current);
+    setError("");
+    try {
+      await mindsetApi.deletePost(postId);
+      setNotice("Your post and its comments were deleted.");
+    } catch (requestError) {
+      setPosts((current) => current.some((post) => post.id === postId) ? current : [originalPost, ...current]);
+      setError(requestError instanceof Error ? requestError.message : "Your post could not be deleted.");
+    } finally {
+      setPendingPosts((current) => {
+        const next = new Set(current);
+        next.delete(postId);
+        return next;
+      });
+    }
+  }
+
+  async function deleteComment(postId: string, commentId: string) {
+    if (!requireSignIn() || pendingComments.has(commentId)) return;
+    const originalComments = commentsByPost[postId] ?? [];
+    const originalPost = posts.find((post) => post.id === postId);
+    const comment = originalComments.find((item) => item.id === commentId);
+    if (!comment?.canDelete) return;
+
+    setPendingComments((current) => new Set(current).add(commentId));
+    setCommentsByPost((current) => ({
+      ...current,
+      [postId]: (current[postId] ?? []).filter((item) => item.id !== commentId),
+    }));
+    setPosts((current) => current.map((post) => post.id === postId
+      ? {
+          ...post,
+          comments: Math.max(0, post.comments - 1),
+          recentComments: post.recentComments.filter((item) => item.id !== commentId),
+        }
+      : post));
+    setError("");
+
+    try {
+      await mindsetApi.deleteComment(postId, commentId);
+    } catch (requestError) {
+      setCommentsByPost((current) => ({
+        ...current,
+        [postId]: [...(current[postId] ?? []), comment],
+      }));
+      setPosts((current) => current.map((post) => post.id === postId
+        ? originalPost ?? post
+        : post));
+      setError(requestError instanceof Error ? requestError.message : "Your comment could not be deleted.");
+    } finally {
+      setPendingComments((current) => {
+        const next = new Set(current);
+        next.delete(commentId);
         return next;
       });
     }
@@ -136,6 +232,10 @@ export default function Mindset() {
     setError("");
     try {
       const { comment } = await mindsetApi.comment(postId, text);
+      setCommentsByPost((current) => ({
+        ...current,
+        [postId]: [...(current[postId] ?? []), comment],
+      }));
       setPosts((current) => current.map((post) => post.id === postId
         ? { ...post, comments: post.comments + 1, recentComments: [...post.recentComments, comment].slice(-3) }
         : post));
@@ -206,14 +306,18 @@ export default function Mindset() {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--primary)]">The feed</p>
-              <h2 className="mt-1 text-2xl font-black tracking-tight sm:text-3xl">{view === "saved" ? "Your saved reminders" : "Notes for the journey"}</h2>
+              <h2 className="mt-1 text-2xl font-black tracking-tight sm:text-3xl">{view === "saved" ? "Your saved reminders" : view === "hidden" ? "Hidden from you" : "Notes for the journey"}</h2>
             </div>
-            <div role="group" aria-label="Mindset feed filter" className="grid grid-cols-2 rounded-full border border-[var(--border)] bg-[var(--surface)] p-1">
-              <FeedFilter active={view === "all"} onClick={() => changeView("all")}>For you</FeedFilter>
+            <div role="group" aria-label="Mindset feed filter" className="grid grid-cols-3 rounded-full border border-[var(--border)] bg-[var(--surface)] p-1">
+              <FeedFilter active={view === "all"} onClick={() => changeView("all")}>Feed</FeedFilter>
               <FeedFilter active={view === "saved"} onClick={() => {
                 if (!requireSignIn()) return;
                 changeView("saved");
               }}>Saved</FeedFilter>
+              <FeedFilter active={view === "hidden"} onClick={() => {
+                if (!requireSignIn()) return;
+                changeView("hidden");
+              }}>Hidden</FeedFilter>
             </div>
           </div>
 
@@ -224,26 +328,37 @@ export default function Mindset() {
               {posts.map((post) => (
                 <PostCard
                   key={post.id}
-                post={post}
-                currentUserName={session?.user?.name ?? "You"}
-                isPending={pendingPosts.has(post.id)}
+                  post={post}
+                  currentUserName={session?.user?.name ?? "You"}
+                  currentUserId={currentUserId}
+                  isPending={pendingPosts.has(post.id)}
+                  view={view}
+                  comments={commentsByPost[post.id] ?? post.recentComments}
+                  areCommentsLoading={loadingComments.has(post.id)}
+                  pendingComments={pendingComments}
                   isCommentsOpen={openComments === post.id}
                   commentDraft={commentDrafts[post.id] ?? ""}
                   onLike={() => void runAction(post.id, "like", !post.liked)}
                   onSave={() => void runAction(post.id, "save", !post.saved)}
-                  onHide={() => void runAction(post.id, "hide", true)}
-                  onToggleComments={() => setOpenComments((current) => current === post.id ? null : post.id)}
+                  onHide={() => void runAction(post.id, "hide", view !== "hidden")}
+                  onDeletePost={() => void deletePost(post.id)}
+                  onToggleComments={() => void toggleComments(post.id)}
+                  onDeleteComment={(commentId) => void deleteComment(post.id, commentId)}
                   onCommentDraftChange={(text) => setCommentDrafts((current) => ({ ...current, [post.id]: text }))}
-              onComment={(event) => void submitComment(event, post.id)}
+                  onComment={(event) => void submitComment(event, post.id)}
                 />
               ))}
             </section>
           ) : (
             <Card className="p-8 text-center sm:p-12">
               <Bookmark size={25} className="mx-auto text-[var(--primary)]" aria-hidden="true" />
-              <h3 className="mt-4 text-xl font-black">{view === "saved" ? "Nothing saved yet" : "A quiet moment"}</h3>
+              <h3 className="mt-4 text-xl font-black">{view === "saved" ? "Nothing saved yet" : view === "hidden" ? "Your hidden posts are clear" : "A quiet moment"}</h3>
               <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-[var(--text-muted)]">
-                {view === "saved" ? "Tap Save on a quote or note and it will be here next time." : "There are no notes to show yet. Share the first one when you are ready."}
+                {view === "saved"
+                  ? "Tap Save on a quote or note and it will be here next time."
+                  : view === "hidden"
+                    ? "Posts you hide are private to you. You can bring any of them back here."
+                    : "There are no notes to show yet. Share the first one when you are ready."}
               </p>
             </Card>
           )}
@@ -298,29 +413,45 @@ function FeedFilter({ active, onClick, children }: { active: boolean; onClick: (
 function PostCard({
   post,
   currentUserName,
+  currentUserId,
   isPending,
+  view,
+  comments,
+  areCommentsLoading,
+  pendingComments,
   isCommentsOpen,
   commentDraft,
   onLike,
   onSave,
   onHide,
+  onDeletePost,
   onToggleComments,
+  onDeleteComment,
   onCommentDraftChange,
   onComment,
 }: {
   post: MindsetPost;
   currentUserName: string;
+  currentUserId?: string;
   isPending: boolean;
+  view: MindsetView;
+  comments: MindsetComment[];
+  areCommentsLoading: boolean;
+  pendingComments: Set<string>;
   isCommentsOpen: boolean;
   commentDraft: string;
   onLike: () => void;
   onSave: () => void;
   onHide: () => void;
+  onDeletePost: () => void;
   onToggleComments: () => void;
+  onDeleteComment: (commentId: string) => void;
   onCommentDraftChange: (value: string) => void;
   onComment: (event: FormEvent<HTMLFormElement>) => void;
 }) {
   const initials = post.author.trim().slice(0, 1).toUpperCase() || "M";
+  const isOwnPost = post.kind === "member" && Boolean(currentUserId && post.authorId === currentUserId);
+  const isHiddenView = view === "hidden";
 
   return (
     <article className="site-card overflow-hidden rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--surface)]">
@@ -339,8 +470,13 @@ function PostCard({
             <p className="truncate text-sm font-bold">{post.author || currentUserName}</p>
             <p className="mt-0.5 text-xs text-[var(--text-muted)]">{post.kind === "quote" ? "Daily reminder" : formatTime(post.createdAt)}</p>
           </div>
-          <button type="button" onClick={onHide} disabled={isPending} className="flex h-10 w-10 items-center justify-center rounded-full text-[var(--text-muted)] transition hover:bg-[var(--surface-soft)] hover:text-[var(--text)] disabled:opacity-50" aria-label="Hide this post from your feed" title="Hide for you">
-            <EyeOff size={17} aria-hidden="true" />
+          {isOwnPost && (
+            <button type="button" onClick={onDeletePost} disabled={isPending} className="flex h-10 w-10 items-center justify-center rounded-full text-[var(--text-muted)] transition-[background-color,color] hover:bg-[var(--danger-soft)] hover:text-[var(--danger)] disabled:opacity-50" aria-label="Delete your post" title="Delete post">
+              <Trash2 size={17} aria-hidden="true" />
+            </button>
+          )}
+          <button type="button" onClick={onHide} disabled={isPending} className="flex h-10 w-10 items-center justify-center rounded-full text-[var(--text-muted)] transition-[background-color,color] hover:bg-[var(--surface-soft)] hover:text-[var(--text)] disabled:opacity-50" aria-label={isHiddenView ? "Unhide this post" : "Hide this post from your feed"} title={isHiddenView ? "Unhide for you" : "Hide for you"}>
+            {isHiddenView ? <Eye size={17} aria-hidden="true" /> : <EyeOff size={17} aria-hidden="true" />}
           </button>
         </div>
 
@@ -357,35 +493,53 @@ function PostCard({
 
         {isCommentsOpen && (
           <div className="mt-4 border-t border-[var(--border)] pt-4">
-            {post.recentComments.length ? (
+            {areCommentsLoading ? (
+              <p role="status" className="text-sm text-[var(--text-muted)]">Loading comments…</p>
+            ) : comments.length ? (
               <div className="space-y-3">
-                {post.recentComments.map((comment) => (
-                  <div key={comment.id} className="flex gap-2.5">
+                {comments.map((comment) => (
+                  <div key={comment.id} className="flex items-start gap-2.5">
                     <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--surface-soft)] text-xs font-bold text-[var(--primary)]">{comment.author.slice(0, 1).toUpperCase()}</span>
                     <p className="min-w-0 flex-1 rounded-2xl bg-[var(--surface-soft)] px-3.5 py-2.5 text-sm leading-relaxed">
                       <span className="font-bold">{comment.author}</span>
                       <span className="text-[var(--text-muted)]"> {comment.text}</span>
                     </p>
+                    {comment.canDelete && (
+                      <button
+                        type="button"
+                        onClick={() => onDeleteComment(comment.id)}
+                        disabled={pendingComments.has(comment.id)}
+                        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[var(--text-muted)] transition-[background-color,color] hover:bg-[var(--danger-soft)] hover:text-[var(--danger)] disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--danger)]"
+                        aria-label="Delete your comment"
+                        title="Delete comment"
+                      >
+                        <Trash2 size={15} aria-hidden="true" />
+                      </button>
+                    )}
                   </div>
                 ))}
-                {post.comments > post.recentComments.length && (
-                  <p className="pl-10 text-xs text-[var(--text-muted)]">Showing the latest {post.recentComments.length} of {post.comments} comments.</p>
-                )}
               </div>
             ) : (
               <p className="text-sm text-[var(--text-muted)]">Be the first to leave a kind note.</p>
             )}
-            <form onSubmit={onComment} className="mt-4 flex items-center gap-2">
+            <form onSubmit={(event) => {
+              if (areCommentsLoading) {
+                event.preventDefault();
+                return;
+              }
+              onComment(event);
+            }} className="mt-4 flex items-center gap-2">
               <label htmlFor={"comment-" + post.id} className="sr-only">Write a comment</label>
               <input
                 id={"comment-" + post.id}
                 value={commentDraft}
                 maxLength={280}
+                disabled={areCommentsLoading}
                 onChange={(event) => onCommentDraftChange(event.target.value)}
                 placeholder="Add a thoughtful comment…"
                 className="min-h-11 min-w-0 flex-1 rounded-full border border-[var(--border)] bg-[var(--surface-soft)] px-4 text-sm outline-none focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--focus-ring)]"
               />
-              <button type="submit" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--primary)] text-[var(--primary-foreground)] transition hover:bg-[var(--primary-hover)]" aria-label="Send comment">
+              <button type="submit" disabled={areCommentsLoading || !commentDraft.trim()} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--primary)] text-[var(--primary-foreground)] transition-[background-color,opacity,transform] hover:bg-[var(--primary-hover)] active:scale-95 disabled:cursor-not-allowed disabled:opacity-45" aria-label="Send comment">
                 <Send size={16} aria-hidden="true" />
               </button>
             </form>

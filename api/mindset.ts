@@ -1,3 +1,4 @@
+import type { Filter } from "mongodb";
 import { database, ensureMindsetIndexes } from "../src/lib/mongodb.js";
 import { getSession, methodNotAllowedResponse, requireSession, unauthorizedResponse } from "../src/lib/api.js";
 import { mindsetQuotes } from "../src/data/mindsetQuotes.js";
@@ -59,10 +60,37 @@ async function getFeed(request: Request) {
   const userId = session?.user?.id;
   const posts = database.collection<StoredPost>("mindsetPosts");
   const comments = database.collection<StoredComment>("mindsetComments");
+  const url = new URL(request.url);
+  const commentsFor = url.searchParams.get("commentsFor");
+  const view = url.searchParams.get("view");
 
+  if (commentsFor) {
+    if (!(await ensurePostExists(commentsFor))) {
+      return Response.json({ error: "That post is no longer available." }, { status: 404 });
+    }
+
+    const thread = await comments.find({ postId: commentsFor }).sort({ createdAt: 1 }).toArray();
+    return Response.json({
+      comments: thread.map((comment) => ({
+        id: comment.id,
+        author: comment.author,
+        text: comment.text,
+        createdAt: comment.createdAt,
+        canDelete: comment.userId === userId,
+      })),
+    });
+  }
+
+  const memberPostQuery: Filter<StoredPost> = view === "hidden" && userId
+    ? { kind: "member", hiddenBy: userId }
+    : view === "saved" && userId
+      ? { kind: "member", savedBy: userId }
+      : view === "hidden" || view === "saved"
+        ? { kind: "member", id: { $in: [] } }
+        : { kind: "member" };
   const [storedQuotes, memberPosts] = await Promise.all([
     posts.find({ id: { $in: mindsetQuotes.map((quote) => quote.id) } }).toArray(),
-    posts.find({ kind: "member" }).sort({ createdAt: -1 }).limit(60).toArray(),
+    posts.find(memberPostQuery).sort({ createdAt: -1 }).limit(view === "all" ? 60 : 200).toArray(),
   ]);
 
   const byId = new Map(storedQuotes.map((post) => [post.id, post] as const));
@@ -82,8 +110,12 @@ async function getFeed(request: Request) {
   });
 
   const visible = [...quotePosts, ...memberPosts]
-    .filter((post) => !userId || !post.hiddenBy?.includes(userId))
-    .filter((post) => new URL(request.url).searchParams.get("view") !== "saved" || Boolean(userId && post.savedBy?.includes(userId)))
+    .filter((post) => {
+      const isHidden = Boolean(userId && post.hiddenBy?.includes(userId));
+      if (view === "hidden") return isHidden;
+      if (isHidden) return false;
+      return view !== "saved" || Boolean(userId && post.savedBy?.includes(userId));
+    })
     .sort((left, right) => right.createdAt.localeCompare(left.createdAt))
     .slice(0, 40);
 
@@ -92,14 +124,14 @@ async function getFeed(request: Request) {
     ? await comments.aggregate<{
         _id: string;
         count: number;
-        recent: Array<Pick<StoredComment, "id" | "author" | "text" | "createdAt">>;
+        recent: Array<Pick<StoredComment, "id" | "userId" | "author" | "text" | "createdAt">>;
       }>([
         { $match: { postId: { $in: ids } } },
         { $sort: { createdAt: -1 } },
         { $group: {
           _id: "$postId",
           count: { $sum: 1 },
-          recent: { $push: { id: "$id", author: "$author", text: "$text", createdAt: "$createdAt" } },
+          recent: { $push: { id: "$id", userId: "$userId", author: "$author", text: "$text", createdAt: "$createdAt" } },
         } },
         { $project: { count: 1, recent: { $slice: ["$recent", 3] } } },
       ]).toArray()
@@ -122,7 +154,13 @@ async function getFeed(request: Request) {
         comments: postComments?.count ?? 0,
         liked: Boolean(userId && post.likedBy?.includes(userId)),
         saved: Boolean(userId && post.savedBy?.includes(userId)),
-        recentComments: postComments?.recent ?? [],
+        recentComments: (postComments?.recent ?? []).map((comment) => ({
+          id: comment.id,
+          author: comment.author,
+          text: comment.text,
+          createdAt: comment.createdAt,
+          canDelete: comment.userId === userId,
+        })),
       };
     }),
   });
@@ -183,18 +221,46 @@ async function handleAction(request: Request) {
   }
 
   const postId = typeof body.postId === "string" ? body.postId : "";
-  if (!postId || !(await ensurePostExists(postId))) {
+  if (!postId) {
+    return Response.json({ error: "Choose a valid post." }, { status: 400 });
+  }
+
+  if (body.action === "delete-post") {
+    const post = await posts.findOne({ id: postId, kind: "member" });
+    if (!post) return Response.json({ error: "That post is no longer available." }, { status: 404 });
+    if (post.authorId !== userId) return Response.json({ error: "You can only delete your own posts." }, { status: 403 });
+
+    await posts.deleteOne({ id: postId, kind: "member", authorId: userId });
+    await comments.deleteMany({ postId });
+    return Response.json({ ok: true });
+  }
+
+  if (body.action === "delete-comment") {
+    const commentId = typeof body.commentId === "string" ? body.commentId : "";
+    if (!commentId) return Response.json({ error: "Choose a valid comment." }, { status: 400 });
+
+    const comment = await comments.findOne({ id: commentId, postId });
+    if (!comment) return Response.json({ error: "That comment is no longer available." }, { status: 404 });
+    if (comment.userId !== userId) return Response.json({ error: "You can only delete your own comments." }, { status: 403 });
+
+    await comments.deleteOne({ id: commentId, postId, userId });
+    return Response.json({ ok: true });
+  }
+
+  if (!(await ensurePostExists(postId))) {
     return Response.json({ error: "That post is no longer available." }, { status: 404 });
   }
 
   if (body.action === "like" || body.action === "save" || body.action === "hide") {
-    const enabled = body.action === "hide" || body.enabled === true;
+    const enabled = body.enabled === true;
     if (body.action === "like") {
       await posts.updateOne({ id: postId }, enabled ? { $addToSet: { likedBy: userId } } : { $pull: { likedBy: userId } });
     } else if (body.action === "save") {
       await posts.updateOne({ id: postId }, enabled ? { $addToSet: { savedBy: userId } } : { $pull: { savedBy: userId } });
-    } else {
+    } else if (enabled) {
       await posts.updateOne({ id: postId }, { $addToSet: { hiddenBy: userId } });
+    } else {
+      await posts.updateOne({ id: postId }, { $pull: { hiddenBy: userId } });
     }
     return Response.json({ ok: true });
   }
@@ -219,6 +285,7 @@ async function handleAction(request: Request) {
         author: comment.author,
         text: comment.text,
         createdAt: comment.createdAt,
+        canDelete: true,
       },
     }, { status: 201 });
   }

@@ -1,6 +1,8 @@
 import {
   ArrowLeft,
   ArrowRight,
+  CheckCircle2,
+  Circle,
   Dumbbell,
   TriangleAlert,
 } from "lucide-react";
@@ -27,6 +29,7 @@ import WorkoutSessionHeader from "../components/workout/WorkoutSessionHeader";
 import PersonalRecordBanner from "../components/workout/PersonalRecordBanner";
 
 import type { Routine } from "../types/Routine";
+import type { WorkoutExercise } from "../types/WorkoutExercise";
 import { applyPreviousPerformance } from "../lib/workoutEngine";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
@@ -302,6 +305,21 @@ function WorkoutSession({
     () => recordsReady ? findWorkoutPersonalRecords(workoutExercises, previousRecords) : [],
     [previousRecords, recordsReady, workoutExercises],
   );
+  const [activeExerciseId, setActiveExerciseId] = useState<string | null>(null);
+  const activeExercise =
+    workoutExercises.find((exercise) => exercise.exercise.id === activeExerciseId) ??
+    workoutExercises.find((exercise) => exercise.sets.some((set) => !set.completed)) ??
+    workoutExercises[0];
+  const activeExerciseIndex = activeExercise
+    ? workoutExercises.findIndex((exercise) => exercise.exercise.id === activeExercise.exercise.id)
+    : 0;
+
+  function focusExercise(exerciseId: string) {
+    setActiveExerciseId(exerciseId);
+    window.requestAnimationFrame(() => {
+      document.getElementById("active-exercise-card")?.scrollIntoView({ block: "start", behavior: "smooth" });
+    });
+  }
 
   const {
     isPaused,
@@ -369,6 +387,15 @@ function WorkoutSession({
       startRestTimer(
         exercise.restSeconds,
       );
+
+      const exerciseFinished = exercise.sets.every((item) => item.id === setId || item.completed);
+      if (exerciseFinished) {
+        const currentIndex = workoutExercises.findIndex((item) => item.exercise.id === exerciseId);
+        const nextExercise = workoutExercises
+          .slice(currentIndex + 1)
+          .find((item) => item.sets.some((itemSet) => !itemSet.completed));
+        if (nextExercise) focusExercise(nextExercise.exercise.id);
+      }
     }
   }
 
@@ -471,11 +498,6 @@ function WorkoutSession({
         }
       />
 
-      <PersonalRecordBanner
-        records={newPersonalRecords}
-        weightUnit={weightUnit}
-      />
-
       {saveError && (
         <Card
           role="alert"
@@ -522,37 +544,36 @@ function WorkoutSession({
         aria-label="Workout exercises"
         className="space-y-5"
       >
-        {workoutExercises.map(
-          (workoutExercise) => (
-            <ExerciseCard
-              key={
-                workoutExercise.exercise.id
-              }
-              workoutExercise={
-                workoutExercise
-              }
-              weightUnit={weightUnit}
-              personalRecords={newPersonalRecords}
-              updateWeight={
-                updateWeight
-              }
-              commitWeight={
-                commitWeight
-              }
-              updateReps={
-                updateReps
-              }
-              commitReps={
-                commitReps
-              }
-              updateCompleted={
-                handleToggleSet
-              }
-              onAddSet={addSet}
+        {activeExercise && (
+          <>
+            <ExerciseFocusNavigation
+              exercises={workoutExercises}
+              activeExercise={activeExercise}
+              activeIndex={activeExerciseIndex}
+              onSelect={focusExercise}
             />
-          ),
+            <div id="active-exercise-card" className="scroll-mt-44">
+              <ExerciseCard
+                key={activeExercise.exercise.id}
+                workoutExercise={activeExercise}
+                weightUnit={weightUnit}
+                personalRecords={newPersonalRecords}
+                updateWeight={updateWeight}
+                commitWeight={commitWeight}
+                updateReps={updateReps}
+                commitReps={commitReps}
+                updateCompleted={handleToggleSet}
+                onAddSet={addSet}
+              />
+            </div>
+          </>
         )}
       </section>
+
+      <PersonalRecordBanner
+        records={newPersonalRecords}
+        weightUnit={weightUnit}
+      />
 
       <WorkoutFinishCard
         completedSets={
@@ -566,6 +587,77 @@ function WorkoutSession({
         }
       />
     </main>
+  );
+}
+
+function ExerciseFocusNavigation({
+  exercises,
+  activeExercise,
+  activeIndex,
+  onSelect,
+}: {
+  exercises: WorkoutExercise[];
+  activeExercise: WorkoutExercise;
+  activeIndex: number;
+  onSelect: (exerciseId: string) => void;
+}) {
+  const previous = exercises[activeIndex - 1];
+  const next = exercises[activeIndex + 1];
+  const isComplete = activeExercise.sets.length > 0 && activeExercise.sets.every((set) => set.completed);
+
+  return (
+    <Card className="sticky top-[4.25rem] z-30 overflow-hidden border-[var(--border-strong)] bg-[var(--surface)]/95 p-2.5 shadow-[var(--shadow-md)] backdrop-blur-2xl sm:top-[4.75rem] sm:px-4 sm:py-3">
+      <div className="flex min-w-0 items-center gap-2">
+        <button
+          type="button"
+          onClick={() => previous && onSelect(previous.exercise.id)}
+          disabled={!previous}
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-[var(--text-muted)] transition-[background-color,color,opacity] hover:bg-[var(--surface-soft)] hover:text-[var(--text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] disabled:opacity-30"
+          aria-label="Previous exercise"
+        >
+          <ArrowLeft size={18} aria-hidden="true" />
+        </button>
+
+        <div className="min-w-0 flex-1">
+          <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[var(--primary)]">
+            Exercise {activeIndex + 1} of {exercises.length}{isComplete ? " · Complete" : " · In progress"}
+          </p>
+          <p className="truncate text-sm font-black text-[var(--text)] sm:text-base">{activeExercise.exercise.name}</p>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => next && onSelect(next.exercise.id)}
+          disabled={!next}
+          className="flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-2xl bg-[var(--primary-soft)] px-3 text-xs font-black text-[var(--primary)] transition-[background-color,opacity,transform] hover:bg-[var(--primary)] hover:text-[var(--primary-foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] active:scale-[0.97] disabled:opacity-35 disabled:hover:bg-[var(--primary-soft)] disabled:hover:text-[var(--primary)]"
+          aria-label={next ? `Next exercise: ${next.exercise.name}` : "Last exercise"}
+        >
+          Next
+          <ArrowRight size={15} aria-hidden="true" />
+        </button>
+      </div>
+
+      <div className="mt-2 flex gap-1.5 overflow-x-auto pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" role="group" aria-label="Choose an exercise">
+        {exercises.map((exercise, index) => {
+          const selected = exercise.exercise.id === activeExercise.exercise.id;
+          const done = exercise.sets.length > 0 && exercise.sets.every((set) => set.completed);
+
+          return (
+            <button
+              key={exercise.exercise.id}
+              type="button"
+              onClick={() => onSelect(exercise.exercise.id)}
+              aria-current={selected ? "step" : undefined}
+              aria-label={`Go to exercise ${index + 1}: ${exercise.exercise.name}${done ? ", complete" : ""}`}
+              className={`inline-flex min-h-8 shrink-0 items-center gap-1.5 rounded-full border px-3 text-[11px] font-bold transition-[background-color,border-color,color] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] ${selected ? "border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary)]" : "border-[var(--border)] bg-[var(--surface)] text-[var(--text-muted)] hover:bg-[var(--surface-soft)]"}`}
+            >
+              {done ? <CheckCircle2 size={13} aria-hidden="true" /> : <Circle size={12} aria-hidden="true" />}
+              <span>{index + 1}</span>
+            </button>
+          );
+        })}
+      </div>
+    </Card>
   );
 }
 

@@ -9,6 +9,8 @@ import {
 import Button from "../ui/Button";
 import Card from "../ui/Card";
 import ProgressBar from "../ui/ProgressBar";
+import type { WeightUnit } from "../../lib/units";
+import { formatVolume } from "../../lib/units";
 
 type WorkoutSessionHeaderProps = {
   routineName: string;
@@ -17,6 +19,7 @@ type WorkoutSessionHeaderProps = {
   totalSets: number;
   progress: number;
   totalVolume: number;
+  weightUnit: WeightUnit;
   formattedTime: string;
   isPaused: boolean;
   onTogglePause: () => void;
@@ -29,6 +32,7 @@ export default function WorkoutSessionHeader({
   totalSets,
   progress,
   totalVolume,
+  weightUnit,
   formattedTime,
   isPaused,
   onTogglePause,
@@ -146,7 +150,7 @@ export default function WorkoutSessionHeader({
 
           <SessionMetric
             label="Volume"
-            value={`${totalVolume.toLocaleString()} kg`}
+            value={`${formatVolume(totalVolume, weightUnit)} ${weightUnit}`}
             className="col-span-2 sm:col-span-1"
           />
         </div>

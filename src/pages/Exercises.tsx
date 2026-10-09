@@ -170,6 +170,12 @@ export default function Exercises() {
               className="group text-left"
             >
               <Card hover className="h-full p-4 sm:p-5">
+                {exercise.imageUrl && (
+                  <div className="relative mb-4 aspect-[16/10] overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface-soft)]">
+                    <img src={exercise.imageUrl} alt={`Movement reference: ${exercise.imageSourceName ?? exercise.name}`} loading="lazy" decoding="async" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.025]" />
+                    <span className="absolute bottom-2 left-2 rounded-full border border-white/30 bg-black/65 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.14em] text-white">Movement guide</span>
+                  </div>
+                )}
                 <div className="flex items-start justify-between gap-3">
                   <div
                     className={`flex h-11 w-11 items-center justify-center rounded-2xl ${

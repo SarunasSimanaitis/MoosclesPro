@@ -1,44 +1,55 @@
 import type { Routine } from "../types/Routine";
 
 import { apiRequest } from "./client";
+import { cachedRequest, invalidateCached, readCached } from "./cache";
 
 const ENDPOINT = "/api/routines";
 
 export const routinesApi = {
   list(): Promise<Routine[]> {
-    return apiRequest<Routine[]>(
-      ENDPOINT,
-    );
+    return cachedRequest("routines:list", () => apiRequest<Routine[]>(ENDPOINT));
   },
 
-  create(
+  cachedList(): Routine[] | undefined {
+    return readCached<Routine[]>("routines:list");
+  },
+
+  clearCache() {
+    invalidateCached("routines:list");
+  },
+
+  async create(
     routine: Routine,
   ): Promise<Routine> {
-    return apiRequest<Routine>(
+    const created = await apiRequest<Routine>(
       ENDPOINT,
       {
         method: "POST",
         body: routine,
       },
     );
+    invalidateCached("routines:list");
+    return created;
   },
 
-  update(
+  async update(
     routine: Routine,
   ): Promise<Routine> {
-    return apiRequest<Routine>(
+    const updated = await apiRequest<Routine>(
       ENDPOINT,
       {
         method: "PATCH",
         body: routine,
       },
     );
+    invalidateCached("routines:list");
+    return updated;
   },
 
-  remove(
+  async remove(
     routineId: string,
   ): Promise<{ success: true }> {
-    return apiRequest<{
+    const result = await apiRequest<{
       success: true;
     }>(
       `${ENDPOINT}?id=${encodeURIComponent(
@@ -48,5 +59,7 @@ export const routinesApi = {
         method: "DELETE",
       },
     );
+    invalidateCached("routines:list");
+    return result;
   },
 };

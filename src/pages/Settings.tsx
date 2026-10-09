@@ -1,6 +1,6 @@
 import {
   Check,
-  ChevronDown,
+  Dumbbell,
   Moon,
   Palette,
   ShieldCheck,
@@ -69,6 +69,31 @@ export default function Settings() {
           </section>
 
           <section className="space-y-4">
+            <SectionHeading icon={<Dumbbell size={19} />} eyebrow="Training units" title="Weight display" />
+            <Card className="p-5 sm:p-7 lg:p-8">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h2 className="text-lg font-bold">Choose your units</h2>
+                  <p className="mt-1 max-w-xl text-sm leading-relaxed text-[var(--text-muted)]">Your workouts stay safely stored in kilograms. This choice converts every entry and progress summary across the app.</p>
+                </div>
+                <div role="group" aria-label="Weight unit" className="grid grid-cols-2 gap-2 rounded-full border border-[var(--border)] bg-[var(--surface-soft)] p-1">
+                  {(["kg", "lb"] as const).map((unit) => (
+                    <button
+                      key={unit}
+                      type="button"
+                      aria-pressed={preferences.weightUnit === unit}
+                      onClick={() => setPreferences(saveAppPreferences({ weightUnit: unit }))}
+                      className={"min-h-11 min-w-20 rounded-full px-5 text-sm font-black transition-[background-color,color,box-shadow] duration-200 " + (preferences.weightUnit === unit ? "bg-[var(--primary)] text-[var(--primary-foreground)] shadow-sm" : "text-[var(--text-muted)] hover:text-[var(--text)]")}
+                    >
+                      {unit.toUpperCase()}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </Card>
+          </section>
+
+          <section className="space-y-4">
             <SectionHeading icon={<Palette size={19} />} eyebrow="Appearance" title="Set the mood" />
             <Card className="p-5 sm:p-7 lg:p-8">
               <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
@@ -132,28 +157,15 @@ export default function Settings() {
               <p className="text-sm leading-relaxed text-[var(--text-muted)]">
                 New exercises in routines will start with this rest period. You can still adjust each exercise.
               </p>
-              <label htmlFor="default-rest" className="mt-5 block text-sm font-bold">Default rest between sets</label>
-              <div className="relative mt-2">
-                <select
-                  id="default-rest"
-                  value={preferences.defaultRestSeconds}
-                  onChange={(event) => setPreferences(saveAppPreferences({ defaultRestSeconds: Number(event.target.value) }))}
-                  className="min-h-12 w-full appearance-none rounded-2xl border border-[var(--border-strong)] bg-[var(--surface-soft)] px-4 pr-11 text-sm font-semibold text-[var(--text)] focus:border-[var(--primary)] focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring)]"
-                >
-                  {[30, 45, 60, 75, 90, 120, 150, 180, 240].map((seconds) => (
-                    <option key={seconds} value={seconds}>{formatDuration(seconds)}</option>
-                  ))}
-                </select>
-                <ChevronDown size={17} className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" aria-hidden="true" />
-              </div>
-              <div className="mt-4 flex flex-wrap gap-2">
-                {[60, 90, 120].map((seconds) => (
+              <p className="mt-5 text-sm font-bold">Default rest between sets</p>
+              <div role="group" aria-label="Default rest between sets" className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-5">
+                {[30, 45, 60, 75, 90, 120, 150, 180, 240].map((seconds) => (
                   <button
                     type="button"
                     key={seconds}
                     aria-pressed={preferences.defaultRestSeconds === seconds}
                     onClick={() => setPreferences(saveAppPreferences({ defaultRestSeconds: seconds }))}
-                    className={"min-h-10 rounded-full border px-3.5 text-xs font-bold transition-colors " + (preferences.defaultRestSeconds === seconds ? "border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary)]" : "border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-soft)]")}
+                    className={"min-h-11 rounded-2xl border px-3 text-xs font-bold transition-[background-color,border-color,color,transform] duration-200 active:scale-[0.98] " + (preferences.defaultRestSeconds === seconds ? "border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary)] shadow-sm" : "border-[var(--border)] bg-[var(--surface)] text-[var(--text-muted)] hover:border-[var(--border-strong)] hover:text-[var(--text)]")}
                   >
                     {formatDuration(seconds)}
                   </button>

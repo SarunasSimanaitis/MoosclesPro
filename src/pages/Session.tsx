@@ -26,9 +26,12 @@ import {
 } from "../lib/activeWorkout";
 import { useActiveWorkoutStore } from "../stores/activeWorkoutStore";
 import { authClient } from "../lib/auth-client";
+import { getAppPreferences } from "../lib/preferences";
+import { formatVolume } from "../lib/units";
 
 export default function Session() {
   const navigate = useNavigate();
+  const weightUnit = getAppPreferences().weightUnit;
 
   const {
     data: session,
@@ -272,7 +275,7 @@ export default function Session() {
             <SessionMetric
               icon={<Clock3 size={16} />}
               label="Volume"
-              value={`${volume.toLocaleString()} kg`}
+              value={`${formatVolume(volume, weightUnit)} ${weightUnit}`}
             />
           </div>
 

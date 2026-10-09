@@ -17,10 +17,13 @@ import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import PageHeader from "../components/ui/PageHeader";
 import StatCard from "../components/ui/StatCard";
+import { getAppPreferences } from "../lib/preferences";
+import { formatVolume } from "../lib/units";
 
 export default function Statistics() {
-  const [statistics, setStatistics] = useState<StatisticsData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const weightUnit = getAppPreferences().weightUnit;
+  const [statistics, setStatistics] = useState<StatisticsData | null>(() => statisticsApi.cached() ?? null);
+  const [isLoading, setIsLoading] = useState(() => statisticsApi.cached() === undefined);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -28,7 +31,6 @@ export default function Statistics() {
 
     async function load() {
       try {
-        setIsLoading(true);
         setError(null);
         const data = await statisticsApi.get();
         if (!cancelled) setStatistics(data);
@@ -97,7 +99,7 @@ export default function Statistics() {
 
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard icon={<Dumbbell size={20} />} label="Workouts" value={statistics.overview.workouts.toString()} suffix="completed" />
-        <StatCard icon={<TrendingUp size={20} />} label="Volume" value={statistics.overview.volume.toLocaleString()} suffix="kg" />
+        <StatCard icon={<TrendingUp size={20} />} label="Volume" value={formatVolume(statistics.overview.volume, weightUnit)} suffix={weightUnit} />
         <StatCard icon={<Clock3 size={20} />} label="Training time" value={statistics.overview.trainingHours.toLocaleString(undefined, { maximumFractionDigits: 1 })} suffix="hours" tone="success" />
         <StatCard icon={<Flame size={20} />} label="Streak" value={statistics.overview.streak.toString()} suffix={statistics.overview.streak === 1 ? "day" : "days"} tone="success" />
       </section>
@@ -167,7 +169,7 @@ export default function Statistics() {
           title="Highest volume"
           description="Exercises contributing the most total weight."
           exercises={statistics.topVolumeExercises}
-          valueFormatter={(item) => `${item.volume.toLocaleString()} kg`}
+          valueFormatter={(item) => `${formatVolume(item.volume, weightUnit)} ${weightUnit}`}
           tone="primary"
         />
       </section>

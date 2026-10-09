@@ -1,4 +1,5 @@
 import { apiRequest } from "./client";
+import { cachedRequest, invalidateCached, readCached } from "./cache";
 
 export type DashboardStats = {
   streak: number;
@@ -27,8 +28,12 @@ export type DashboardData = {
 
 export const dashboardApi = {
   get(): Promise<DashboardData> {
-    return apiRequest<DashboardData>(
-      "/api/dashboard",
-    );
+    return cachedRequest("dashboard:get", () => apiRequest<DashboardData>("/api/dashboard"));
+  },
+  cached(): DashboardData | undefined {
+    return readCached<DashboardData>("dashboard:get");
+  },
+  clearCache() {
+    invalidateCached("dashboard:get");
   },
 };

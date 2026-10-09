@@ -1,6 +1,7 @@
 import type { Exercise } from "../types/Exercise";
+import { exerciseImageUrl, exerciseMediaById, exerciseMediaSourceUrl } from "./exerciseMedia";
 
-export const exercises: Exercise[] = [
+const exerciseCatalog: Exercise[] = [
   // ─────────────────────────────
   // CHEST
   // ─────────────────────────────
@@ -1801,3 +1802,16 @@ export const exercises: Exercise[] = [
     ],
   },
 ];
+
+export const exercises: Exercise[] = exerciseCatalog.map((exercise) => {
+  const media = exerciseMediaById[exercise.id];
+  if (!media) return exercise;
+
+  return {
+    ...exercise,
+    imageUrl: exercise.imageUrl ?? exerciseImageUrl(media),
+    ...(media.hasEnd ? { imageUrlEnd: exercise.imageUrlEnd ?? exerciseImageUrl(media, true) } : {}),
+    imageSourceName: media.sourceName,
+    imageSourceUrl: exerciseMediaSourceUrl,
+  };
+});

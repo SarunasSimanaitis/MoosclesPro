@@ -7,6 +7,8 @@ import {
   publicNavigation,
 } from "../../data/navigation";
 import { useTheme } from "../../hooks/useTheme";
+import { preloadRoute } from "../../lib/routePreload";
+import { invalidateCached } from "../../api/cache";
 import { authClient } from "../../lib/auth-client";
 import Button from "../ui/Button";
 
@@ -22,6 +24,7 @@ export default function Navbar() {
     try {
       await authClient.signOut();
     } finally {
+      invalidateCached("routines:list", "workout-sessions:list", "statistics:get", "dashboard:get");
       setMenuOpen(false);
       navigate("/");
     }
@@ -53,6 +56,8 @@ export default function Navbar() {
               <NavLink
                 key={item.path}
                 to={item.path}
+                onPointerEnter={() => preloadRoute(item.path)}
+                onFocus={() => preloadRoute(item.path)}
                 className={({ isActive }) =>
                   [
                     "inline-flex min-h-11 items-center gap-2 rounded-full px-3.5 text-sm font-semibold transition-colors xl:px-4",
@@ -119,8 +124,12 @@ export default function Navbar() {
         </div>
       </div>
 
-      {menuOpen && (
-        <div id="mobile-navigation" className="border-t border-[var(--border)] bg-[var(--surface)] shadow-lg backdrop-blur-2xl lg:hidden">
+      <div
+        id="mobile-navigation"
+        aria-hidden={!menuOpen}
+        inert={!menuOpen}
+        className={`mobile-navigation border-t border-[var(--border)] bg-[var(--surface)] shadow-lg backdrop-blur-2xl lg:hidden ${menuOpen ? "mobile-navigation-open" : ""}`}
+      >
           <nav className="mx-auto grid max-w-[1720px] gap-1 px-4 py-3 sm:px-7 lg:px-10" aria-label="Mobile navigation">
             {navigation.map((item) => {
               const Icon = item.icon;
@@ -129,6 +138,7 @@ export default function Navbar() {
                   key={item.path}
                   to={item.path}
                   onClick={closeMenu}
+                  onPointerEnter={() => preloadRoute(item.path)}
                   className={({ isActive }) =>
                     [
                       "flex min-h-12 items-center gap-3 rounded-2xl px-4 text-sm font-semibold",
@@ -161,8 +171,7 @@ export default function Navbar() {
               </div>
             )}
           </nav>
-        </div>
-      )}
+      </div>
     </header>
   );
 }

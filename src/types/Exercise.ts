@@ -50,5 +50,11 @@ export interface Exercise {
 
   imageUrl?: string;
 
+  imageUrlEnd?: string;
+
+  imageSourceName?: string;
+
+  imageSourceUrl?: string;
+
   videoUrl?: string;
 }

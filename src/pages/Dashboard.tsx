@@ -19,13 +19,10 @@ import ProgressBar from "../components/ui/ProgressBar";
 import StatCard from "../components/ui/StatCard";
 import { authClient } from "../lib/auth-client";
 import { getAppPreferences } from "../lib/preferences";
+import { formatVolume as formatVolumeForUnit } from "../lib/units";
 
 function getFirstName(name?: string | null) {
   return name?.trim().split(/\s+/)[0] || "there";
-}
-
-function formatVolume(value: number) {
-  return value.toLocaleString();
 }
 
 function formatHours(value: number) {
@@ -36,13 +33,14 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { data: session, isPending: isSessionPending } = authClient.useSession();
 
-  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(() => dashboardApi.cached() ?? null);
   const [weeklyGoalTarget] = useState(() => getAppPreferences().weeklyGoalTarget);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(() => dashboardApi.cached() === undefined);
   const [isRetryingAuth, setIsRetryingAuth] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const userId = session?.user?.id;
+  const weightUnit = getAppPreferences().weightUnit;
   const firstName = useMemo(
     () => getFirstName(session?.user?.name),
     [session?.user?.name],
@@ -54,7 +52,6 @@ export default function Dashboard() {
     let cancelled = false;
 
     async function load() {
-      setIsLoading(true);
       setError(null);
 
       try {
@@ -159,7 +156,7 @@ export default function Dashboard() {
       <section className="grid gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-4">
         <StatCard icon={<Flame size={20} />} label="Streak" value={stats.streak.toString()} suffix={stats.streak === 1 ? "day" : "days"} tone="success" />
         <StatCard icon={<Dumbbell size={20} />} label="Workouts" value={stats.workouts.toString()} suffix="completed" tone="success" />
-        <StatCard icon={<TrendingUp size={20} />} label="Volume" value={formatVolume(stats.volume)} suffix="kg" />
+        <StatCard icon={<TrendingUp size={20} />} label="Volume" value={formatVolumeForUnit(stats.volume, weightUnit)} suffix={weightUnit} />
         <StatCard icon={<Target size={20} />} label="Training time" value={formatHours(stats.hours)} suffix={stats.hours === 1 ? "hour" : "hours"} />
       </section>
 

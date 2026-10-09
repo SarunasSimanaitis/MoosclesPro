@@ -6,6 +6,8 @@ import {
 } from "lucide-react";
 
 import type { WorkoutExercise } from "../../types/WorkoutExercise";
+import type { WeightUnit } from "../../lib/units";
+import { toKilograms } from "../../lib/units";
 
 import Badge from "../ui/Badge";
 import Card from "../ui/Card";
@@ -13,6 +15,7 @@ import SetRow from "./SetRow";
 
 type ExerciseCardProps = {
   workoutExercise: WorkoutExercise;
+  weightUnit: WeightUnit;
 
   updateWeight: (
     exerciseId: string,
@@ -46,6 +49,7 @@ type ExerciseCardProps = {
 
 export default function ExerciseCard({
   workoutExercise,
+  weightUnit,
   updateWeight,
   commitWeight,
   updateReps,
@@ -201,7 +205,7 @@ export default function ExerciseCard({
       <div className="border-t border-[var(--border)] p-3 sm:p-4 md:p-6">
         <div className="mb-3 hidden grid-cols-[44px_1fr_1fr_56px] items-center gap-3 px-3 text-center text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)] sm:grid md:grid-cols-[52px_1fr_1fr_64px] md:gap-4">
           <span>Set</span>
-          <span>Weight</span>
+          <span>Weight ({weightUnit})</span>
           <span>Reps</span>
           <span>Done</span>
         </div>
@@ -211,6 +215,7 @@ export default function ExerciseCard({
             <SetRow
               key={set.id}
               workoutSet={set}
+              weightUnit={weightUnit}
               onToggle={() =>
                 updateCompleted(
                   exercise.id,
@@ -221,7 +226,7 @@ export default function ExerciseCard({
                 updateWeight(
                   exercise.id,
                   set.id,
-                  weight,
+                  toKilograms(weight, weightUnit),
                 )
               }
               onWeightCommit={() =>

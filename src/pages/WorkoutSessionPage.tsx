@@ -37,6 +37,7 @@ import { useWorkoutTimer } from "../hooks/useWorkoutTimer";
 import { useRoutineStore } from "../stores/routineStore";
 import { useActiveWorkoutStore } from "../stores/activeWorkoutStore";
 import { authClient } from "../lib/auth-client";
+import { getAppPreferences } from "../lib/preferences";
 
 export default function WorkoutSessionPage() {
   const navigate = useNavigate();
@@ -125,7 +126,7 @@ export default function WorkoutSessionPage() {
         console.error("Could not load previous workout performance:", error);
 
         if (!cancelled) {
-          startWorkout(routine!, session!.user!.id);
+          startWorkout(routine!, currentUserId);
         }
       } finally {
         if (!cancelled) {
@@ -254,6 +255,7 @@ function WorkoutSession({
 }) {
 
   const navigate = useNavigate();
+  const weightUnit = getAppPreferences().weightUnit;
 
   const {
     workoutExercises,
@@ -429,6 +431,7 @@ function WorkoutSession({
         totalSets={totalSets}
         progress={progress}
         totalVolume={totalVolume}
+        weightUnit={weightUnit}
         formattedTime={
           formattedTime
         }
@@ -493,6 +496,7 @@ function WorkoutSession({
               workoutExercise={
                 workoutExercise
               }
+              weightUnit={weightUnit}
               updateWeight={
                 updateWeight
               }

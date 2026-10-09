@@ -1,11 +1,14 @@
 import { Check } from "lucide-react";
 
 import type { WorkoutSet } from "../../types/WorkoutSet";
+import type { WeightUnit } from "../../lib/units";
+import { fromKilograms } from "../../lib/units";
 
 import NumberStepper from "../ui/NumberStepper";
 
 type SetRowProps = {
   workoutSet: WorkoutSet;
+  weightUnit: WeightUnit;
 
   onToggle: () => void;
 
@@ -24,6 +27,7 @@ type SetRowProps = {
 
 export default function SetRow({
   workoutSet,
+  weightUnit,
   onToggle,
   onWeightChange,
   onWeightCommit,
@@ -78,16 +82,16 @@ export default function SetRow({
       {/* Weight */}
       <div className="min-w-0">
         <NumberStepper
-          value={workoutSet.weight}
+          value={weightUnit === "lb" ? Math.round(fromKilograms(workoutSet.weight, weightUnit)) : workoutSet.weight}
           onChange={onWeightChange}
           onCommit={onWeightCommit}
           min={0}
-          step={0.5}
+          step={weightUnit === "lb" ? 1 : 0.5}
           ariaLabel={`Weight for set ${workoutSet.order}`}
         />
 
         <span className="mt-1 block text-center text-[9px] font-bold uppercase tracking-[0.1em] text-[var(--text-muted)] sm:hidden">
-          kg
+          {weightUnit}
         </span>
       </div>
 

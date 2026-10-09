@@ -6,6 +6,7 @@ import {
   Dumbbell,
   Filter,
   History as HistoryIcon,
+  Search,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -18,31 +19,33 @@ import StatCard from "../components/ui/StatCard";
 import { routines } from "../data/routines";
 import { useRoutineStore } from "../stores/routineStore";
 import {
-  formatNumber,
   formatWorkoutDate,
   getCompletedSets,
   getSessionDuration,
   getSessionVolume,
 } from "../lib/workoutPresentation";
 import type { WorkoutSession } from "../types/WorkoutSession";
+import { getAppPreferences } from "../lib/preferences";
+import { formatVolume, formatWeight } from "../lib/units";
 
-type HistoryFilter = "all" | "this-month" | "last-month";
+type HistoryFilter = "all" | "this-week" | "this-month" | "last-month";
 
 export default function History() {
   const navigate = useNavigate();
   const customRoutines = useRoutineStore((state) => state.customRoutines);
 
-  const [sessions, setSessions] = useState<WorkoutSession[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [sessions, setSessions] = useState<WorkoutSession[]>(() => workoutSessionsApi.cachedList() ?? []);
+  const [isLoading, setIsLoading] = useState(() => workoutSessionsApi.cachedList() === undefined);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<HistoryFilter>("all");
+  const [search, setSearch] = useState("");
+  const weightUnit = getAppPreferences().weightUnit;
 
   useEffect(() => {
     let cancelled = false;
 
     async function load() {
       try {
-        setIsLoading(true);
         setError(null);
         const data = await workoutSessionsApi.list();
 
@@ -75,39 +78,63 @@ export default function History() {
   }, [customRoutines]);
 
   const filtered = useMemo(() => {
-    if (filter === "all") return sessions;
-
     const now = new Date();
-    if (filter === "this-month") {
-      return sessions.filter((session) => {
+    let periodSessions = sessions;
+
+    if (filter === "this-week") {
+      const startOfWeek = new Date(now);
+      startOfWeek.setHours(0, 0, 0, 0);
+      startOfWeek.setDate(now.getDate() - ((now.getDay() + 6) % 7));
+      periodSessions = sessions.filter((session) => new Date(session.completedAt) >= startOfWeek);
+    } else if (filter === "this-month") {
+      periodSessions = sessions.filter((session) => {
         const date = new Date(session.completedAt);
-        return (
-          date.getFullYear() === now.getFullYear() &&
-          date.getMonth() === now.getMonth()
-        );
+        return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth();
+      });
+    } else if (filter === "last-month") {
+      const previousMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      periodSessions = sessions.filter((session) => {
+        const date = new Date(session.completedAt);
+        return date.getFullYear() === previousMonth.getFullYear() && date.getMonth() === previousMonth.getMonth();
       });
     }
 
-    const previousMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-
-    return sessions.filter((session) => {
-      const date = new Date(session.completedAt);
-      return (
-        date.getFullYear() === previousMonth.getFullYear() &&
-        date.getMonth() === previousMonth.getMonth()
-      );
+    const query = search.trim().toLocaleLowerCase();
+    if (!query) return periodSessions;
+    return periodSessions.filter((session) => {
+      const routineName = routineNames.get(session.routineId) ?? "Workout";
+      return routineName.toLocaleLowerCase().includes(query) || session.exercises.some((exercise) =>
+        exercise.exercise.name.toLocaleLowerCase().includes(query) || exercise.exercise.muscleGroup.toLocaleLowerCase().includes(query));
     });
-  }, [filter, sessions]);
+  }, [filter, routineNames, search, sessions]);
 
   const totalVolume = useMemo(
-    () => sessions.reduce((sum, session) => sum + getSessionVolume(session), 0),
-    [sessions],
+    () => filtered.reduce((sum, session) => sum + getSessionVolume(session), 0),
+    [filtered],
   );
 
   const totalCompletedSets = useMemo(
-    () => sessions.reduce((sum, session) => sum + getCompletedSets(session), 0),
-    [sessions],
+    () => filtered.reduce((sum, session) => sum + getCompletedSets(session), 0),
+    [filtered],
   );
+
+  const bestSet = useMemo(() => filtered.flatMap((session) => session.exercises.flatMap((exercise) =>
+    exercise.sets.filter((set) => set.completed && set.weight > 0).map((set) => ({
+      exerciseName: exercise.exercise.name,
+      weight: set.weight,
+      reps: set.reps,
+    }))))
+    .reduce<{ exerciseName: string; weight: number; reps: number } | null>((best, set) => !best || set.weight > best.weight ? set : best, null), [filtered]);
+
+  const leadingFocus = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const session of filtered) {
+      for (const exercise of session.exercises) {
+        counts.set(exercise.exercise.muscleGroup, (counts.get(exercise.exercise.muscleGroup) ?? 0) + 1);
+      }
+    }
+    return [...counts.entries()].sort((left, right) => right[1] - left[1])[0]?.[0] ?? null;
+  }, [filtered]);
 
   if (isLoading) return <HistorySkeleton />;
 
@@ -134,7 +161,7 @@ export default function History() {
         eyebrow="Training log"
         icon={<HistoryIcon size={15} />}
         title="History"
-        description="Your completed workouts, kept easy to scan."
+        description="A clear record of your sessions, strongest sets, and the work adding up over time."
         action={
           <Button className="w-full sm:w-auto" onClick={() => navigate("/workouts")}>
             <Dumbbell size={17} />
@@ -143,11 +170,32 @@ export default function History() {
         }
       />
 
-      <section className="grid gap-3 sm:grid-cols-3">
-        <StatCard label="Workouts" value={sessions.length.toString()} suffix="completed" />
-        <StatCard label="Volume" value={formatNumber(totalVolume)} suffix="kg" />
-        <StatCard label="Sets" value={totalCompletedSets.toString()} suffix="completed" tone="success" />
+      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard label={filter === "all" ? "Workouts" : "In this view"} value={filtered.length.toString()} suffix={filtered.length === 1 ? "session" : "sessions"} />
+        <StatCard label="Training volume" value={formatVolume(totalVolume, weightUnit)} suffix={weightUnit} />
+        <StatCard label="Work sets" value={totalCompletedSets.toString()} suffix="completed" tone="success" />
+        <StatCard label="Training focus" value={leadingFocus ?? "—"} suffix="most trained" />
       </section>
+
+      {sessions.length > 0 && (
+        <section className="grid gap-3 lg:grid-cols-2">
+          <Card className="flex items-center gap-4 p-5 sm:p-6">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[var(--primary-soft)] text-[var(--primary)]"><Dumbbell size={22} aria-hidden="true" /></div>
+            <div className="min-w-0">
+              <p className="text-xs font-black uppercase tracking-[0.14em] text-[var(--text-muted)]">Heaviest completed set · current view</p>
+              {bestSet ? <p className="mt-1 truncate text-lg font-black">{bestSet.exerciseName} <span className="text-[var(--primary)]">{formatWeight(bestSet.weight, weightUnit)} {weightUnit} × {bestSet.reps}</span></p> : <p className="mt-1 text-sm text-[var(--text-muted)]">Complete a weighted set to see it here.</p>}
+            </div>
+          </Card>
+          <Card className="flex items-center gap-4 p-5 sm:p-6">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[var(--success-soft)] text-[var(--success)]"><CalendarDays size={22} aria-hidden="true" /></div>
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.14em] text-[var(--text-muted)]">A useful pattern</p>
+              <p className="mt-1 text-lg font-black">{leadingFocus ? `${leadingFocus} is your most trained focus` : "Your training story is taking shape"}</p>
+              <p className="mt-1 text-sm text-[var(--text-muted)]">Based on the sessions in this view.</p>
+            </div>
+          </Card>
+        </section>
+      )}
 
       {sessions.length === 0 ? (
         <Card className="border-dashed p-7 text-center sm:p-10">
@@ -178,12 +226,15 @@ export default function History() {
               </div>
             </div>
 
-            <div
-              role="group"
-              aria-label="History date filter"
-              className="mt-4 grid grid-cols-3 gap-1 rounded-[var(--radius-md)] bg-[var(--surface-soft)] p-1"
-            >
-              <FilterButton active={filter === "all"} label="All" onClick={() => setFilter("all")} />
+            <label className="relative mt-4 block">
+              <Search size={17} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" aria-hidden="true" />
+              <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search workouts, exercises, or focus" className="min-h-12 w-full rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] pl-11 pr-4 text-sm outline-none transition focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--focus-ring)]" />
+              <span className="sr-only">Search workout history</span>
+            </label>
+
+            <div role="group" aria-label="History date filter" className="mt-3 flex gap-1 overflow-x-auto rounded-[var(--radius-md)] bg-[var(--surface-soft)] p-1">
+              <FilterButton active={filter === "all"} label="All time" onClick={() => setFilter("all")} />
+              <FilterButton active={filter === "this-week"} label="This week" onClick={() => setFilter("this-week")} />
               <FilterButton active={filter === "this-month"} label="This month" onClick={() => setFilter("this-month")} />
               <FilterButton active={filter === "last-month"} label="Last month" onClick={() => setFilter("last-month")} />
             </div>
@@ -203,6 +254,7 @@ export default function History() {
                 <HistoryItem
                   key={session.id}
                   session={session}
+                  weightUnit={weightUnit}
                   routineName={routineNames.get(session.routineId) ?? "Workout"}
                   onOpen={() => navigate(`/history/${session.id}`)}
                 />
@@ -217,10 +269,12 @@ export default function History() {
 
 function HistoryItem({
   session,
+  weightUnit,
   routineName,
   onOpen,
 }: {
   session: WorkoutSession;
+  weightUnit: "kg" | "lb";
   routineName: string;
   onOpen: () => void;
 }) {
@@ -267,7 +321,7 @@ function HistoryItem({
         <div className="mt-4 grid grid-cols-3 gap-2 border-t border-[var(--border)] pt-4">
           <Metric label="Exercises" value={session.exercises.length.toString()} />
           <Metric label="Sets" value={completedSets.toString()} />
-          <Metric label="Volume" value={`${formatNumber(volume)} kg`} />
+          <Metric label="Volume" value={`${formatVolume(volume, weightUnit)} ${weightUnit}`} />
         </div>
       </Card>
     </button>

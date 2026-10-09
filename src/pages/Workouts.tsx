@@ -20,7 +20,7 @@ import type { Routine } from "../types/Routine";
 export default function Workouts() {
   const navigate = useNavigate();
   const [openMenu, setOpenMenu] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(() => routinesApi.cachedList() === undefined);
   const [error, setError] = useState<string | null>(null);
   const [deletingRoutineId, setDeletingRoutineId] = useState<string | null>(null);
   const [duplicatingRoutineId, setDuplicatingRoutineId] = useState<string | null>(null);
@@ -35,7 +35,6 @@ export default function Workouts() {
 
     async function load() {
       try {
-        setIsLoading(true);
         setError(null);
         const data = await routinesApi.list();
         if (!cancelled) setCustomRoutines(data);

@@ -26,9 +26,10 @@ import { routines } from "../data/routines";
 import { useRoutineStore } from "../stores/routineStore";
 
 import type { WorkoutSession } from "../types/WorkoutSession";
+import { getAppPreferences } from "../lib/preferences";
+import { formatVolume, formatWeight } from "../lib/units";
 
 import {
-  formatNumber,
   formatWorkoutDate,
   formatWorkoutTime,
   getCompletedSets,
@@ -39,6 +40,7 @@ import {
 
 export default function WorkoutDetails() {
   const navigate = useNavigate();
+  const weightUnit = getAppPreferences().weightUnit;
 
   const {
     sessionId,
@@ -271,9 +273,7 @@ export default function WorkoutDetails() {
 
               <SummaryStat
                 label="Volume"
-                value={`${formatNumber(
-                  totalVolume,
-                )} kg`}
+                value={`${formatVolume(totalVolume, weightUnit)} ${weightUnit}`}
               />
             </div>
           </div>
@@ -393,10 +393,7 @@ export default function WorkoutDetails() {
                       </Badge>
 
                       <Badge>
-                        {formatNumber(
-                          exerciseVolume,
-                        )}{" "}
-                        kg
+                        {formatVolume(exerciseVolume, weightUnit)} {weightUnit}
                       </Badge>
                     </div>
                   </div>
@@ -412,7 +409,7 @@ export default function WorkoutDetails() {
                               Set {set.order}
                             </p>
                             <p className="mt-1 font-black text-[var(--text)]">
-                              {formatNumber(set.weight)} kg × {set.reps}
+                              {formatWeight(set.weight, weightUnit)} {weightUnit} × {set.reps}
                             </p>
                           </div>
 
@@ -431,7 +428,7 @@ export default function WorkoutDetails() {
                         <div className="mt-3 flex items-center justify-between text-xs font-semibold text-[var(--text-muted)]">
                           <span>Volume</span>
                           <span className="text-[var(--text)]">
-                            {formatNumber(set.weight * set.reps)} kg
+                            {formatVolume(set.weight * set.reps, weightUnit)} {weightUnit}
                           </span>
                         </div>
                       </div>
@@ -473,10 +470,7 @@ export default function WorkoutDetails() {
                             </td>
 
                             <td className="px-5 py-4 text-[var(--text)]">
-                              {formatNumber(
-                                set.weight,
-                              )}{" "}
-                              kg
+                              {formatWeight(set.weight, weightUnit)} {weightUnit}
                             </td>
 
                             <td className="px-5 py-4 text-[var(--text)]">
@@ -484,11 +478,7 @@ export default function WorkoutDetails() {
                             </td>
 
                             <td className="px-5 py-4 text-[var(--text-muted)]">
-                              {formatNumber(
-                                set.weight *
-                                  set.reps,
-                              )}{" "}
-                              kg
+                              {formatVolume(set.weight * set.reps, weightUnit)} {weightUnit}
                             </td>
 
                             <td className="px-5 py-4 text-right">

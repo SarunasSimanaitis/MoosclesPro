@@ -1,6 +1,7 @@
 export type AppPreferences = {
   weeklyGoalTarget: number;
   defaultRestSeconds: number;
+  weightUnit: "kg" | "lb";
 };
 
 const STORAGE_KEY = "mooscles-preferences";
@@ -8,6 +9,7 @@ const STORAGE_KEY = "mooscles-preferences";
 const DEFAULT_PREFERENCES: AppPreferences = {
   weeklyGoalTarget: 5,
   defaultRestSeconds: 90,
+  weightUnit: "kg",
 };
 
 export function getAppPreferences(): AppPreferences {
@@ -23,6 +25,7 @@ export function getAppPreferences(): AppPreferences {
     return {
       weeklyGoalTarget: clamp(value.weeklyGoalTarget, 1, 7, DEFAULT_PREFERENCES.weeklyGoalTarget),
       defaultRestSeconds: clamp(value.defaultRestSeconds, 30, 240, DEFAULT_PREFERENCES.defaultRestSeconds),
+      weightUnit: value.weightUnit === "lb" ? "lb" : "kg",
     };
   } catch {
     return DEFAULT_PREFERENCES;

@@ -27,13 +27,11 @@ export default function Mindset() {
   const [isPosting, setIsPosting] = useState(false);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
-  const [reload, setReload] = useState(0);
+  const [pendingPosts, setPendingPosts] = useState<Set<string>>(() => new Set());
   const signedIn = Boolean(session?.user);
 
   useEffect(() => {
     let cancelled = false;
-    setIsLoading(true);
-    setError("");
 
     mindsetApi.list(view)
       .then((result) => {
@@ -51,7 +49,7 @@ export default function Mindset() {
     return () => {
       cancelled = true;
     };
-  }, [view, reload, session?.user?.id]);
+  }, [view, session?.user?.id]);
 
   async function submitPost(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -62,11 +60,12 @@ export default function Mindset() {
     setIsPosting(true);
     setError("");
     try {
-      await mindsetApi.create(text);
+      const { post } = await mindsetApi.create(text);
+      setPosts((current) => [post, ...current.filter((item) => item.id !== post.id)]);
       setDraft("");
       setNotice("Your note is in the feed.");
       setView("all");
-      setReload((value) => value + 1);
+      setIsLoading(false);
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "Your post could not be saved.");
     } finally {
@@ -82,18 +81,50 @@ export default function Mindset() {
 
   async function runAction(postId: string, action: "like" | "save" | "hide", enabled: boolean) {
     if (!requireSignIn()) return;
+    if (pendingPosts.has(postId)) return;
+
+    const originalPost = posts.find((post) => post.id === postId);
+    if (!originalPost) return;
+
+    setPendingPosts((current) => new Set(current).add(postId));
     setError("");
+
+    if (action === "hide" || (action === "save" && !enabled && view === "saved")) {
+      setPosts((current) => current.filter((post) => post.id !== postId));
+    } else {
+      setPosts((current) => current.map((post) => {
+        if (post.id !== postId) return post;
+        if (action === "like") {
+          return { ...post, liked: enabled, likes: Math.max(0, post.likes + (enabled ? 1 : -1)) };
+        }
+        return { ...post, saved: enabled };
+      }));
+    }
+
     try {
       await mindsetApi.setAction(action, postId, enabled);
       if (action === "hide") {
-        setPosts((current) => current.filter((post) => post.id !== postId));
         setNotice("Hidden from your feed.");
-      } else {
-        setReload((value) => value + 1);
       }
     } catch (requestError) {
+      setPosts((current) => current.some((post) => post.id === postId)
+        ? current.map((post) => post.id === postId ? originalPost : post)
+        : [originalPost, ...current]);
       setError(requestError instanceof Error ? requestError.message : "That action could not be saved.");
+    } finally {
+      setPendingPosts((current) => {
+        const next = new Set(current);
+        next.delete(postId);
+        return next;
+      });
     }
+  }
+
+  function changeView(nextView: MindsetView) {
+    if (nextView === view) return;
+    setError("");
+    setIsLoading(true);
+    setView(nextView);
   }
 
   async function submitComment(event: FormEvent<HTMLFormElement>, postId: string) {
@@ -104,9 +135,11 @@ export default function Mindset() {
 
     setError("");
     try {
-      await mindsetApi.comment(postId, text);
+      const { comment } = await mindsetApi.comment(postId, text);
+      setPosts((current) => current.map((post) => post.id === postId
+        ? { ...post, comments: post.comments + 1, recentComments: [...post.recentComments, comment].slice(-3) }
+        : post));
       setCommentDrafts((current) => ({ ...current, [postId]: "" }));
-      setReload((value) => value + 1);
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "Your comment could not be saved.");
     }
@@ -176,10 +209,10 @@ export default function Mindset() {
               <h2 className="mt-1 text-2xl font-black tracking-tight sm:text-3xl">{view === "saved" ? "Your saved reminders" : "Notes for the journey"}</h2>
             </div>
             <div role="group" aria-label="Mindset feed filter" className="grid grid-cols-2 rounded-full border border-[var(--border)] bg-[var(--surface)] p-1">
-              <FeedFilter active={view === "all"} onClick={() => setView("all")}>For you</FeedFilter>
+              <FeedFilter active={view === "all"} onClick={() => changeView("all")}>For you</FeedFilter>
               <FeedFilter active={view === "saved"} onClick={() => {
                 if (!requireSignIn()) return;
-                setView("saved");
+                changeView("saved");
               }}>Saved</FeedFilter>
             </div>
           </div>
@@ -191,8 +224,9 @@ export default function Mindset() {
               {posts.map((post) => (
                 <PostCard
                   key={post.id}
-                  post={post}
-                  currentUserName={session?.user?.name ?? "You"}
+                post={post}
+                currentUserName={session?.user?.name ?? "You"}
+                isPending={pendingPosts.has(post.id)}
                   isCommentsOpen={openComments === post.id}
                   commentDraft={commentDrafts[post.id] ?? ""}
                   onLike={() => void runAction(post.id, "like", !post.liked)}
@@ -200,7 +234,7 @@ export default function Mindset() {
                   onHide={() => void runAction(post.id, "hide", true)}
                   onToggleComments={() => setOpenComments((current) => current === post.id ? null : post.id)}
                   onCommentDraftChange={(text) => setCommentDrafts((current) => ({ ...current, [post.id]: text }))}
-                  onComment={(event) => void submitComment(event, post.id)}
+              onComment={(event) => void submitComment(event, post.id)}
                 />
               ))}
             </section>
@@ -264,6 +298,7 @@ function FeedFilter({ active, onClick, children }: { active: boolean; onClick: (
 function PostCard({
   post,
   currentUserName,
+  isPending,
   isCommentsOpen,
   commentDraft,
   onLike,
@@ -275,6 +310,7 @@ function PostCard({
 }: {
   post: MindsetPost;
   currentUserName: string;
+  isPending: boolean;
   isCommentsOpen: boolean;
   commentDraft: string;
   onLike: () => void;
@@ -303,7 +339,7 @@ function PostCard({
             <p className="truncate text-sm font-bold">{post.author || currentUserName}</p>
             <p className="mt-0.5 text-xs text-[var(--text-muted)]">{post.kind === "quote" ? "Daily reminder" : formatTime(post.createdAt)}</p>
           </div>
-          <button type="button" onClick={onHide} className="flex h-10 w-10 items-center justify-center rounded-full text-[var(--text-muted)] transition hover:bg-[var(--surface-soft)] hover:text-[var(--text)]" aria-label="Hide this post from your feed" title="Hide for you">
+          <button type="button" onClick={onHide} disabled={isPending} className="flex h-10 w-10 items-center justify-center rounded-full text-[var(--text-muted)] transition hover:bg-[var(--surface-soft)] hover:text-[var(--text)] disabled:opacity-50" aria-label="Hide this post from your feed" title="Hide for you">
             <EyeOff size={17} aria-hidden="true" />
           </button>
         </div>
@@ -311,9 +347,9 @@ function PostCard({
         {post.kind === "member" && <p className="mt-4 whitespace-pre-wrap break-words text-sm leading-relaxed sm:text-base">{post.text}</p>}
 
         <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-[var(--border)] pt-4">
-          <ActionButton active={post.liked} label={post.liked ? "Unlike" : "Like"} count={post.likes} onClick={onLike} icon={<Heart size={17} fill={post.liked ? "currentColor" : "none"} />} />
+          <ActionButton active={post.liked} disabled={isPending} label={post.liked ? "Unlike" : "Like"} count={post.likes} onClick={onLike} icon={<Heart size={17} fill={post.liked ? "currentColor" : "none"} />} />
           <ActionButton active={false} expanded={isCommentsOpen} label="Comment" count={post.comments} onClick={onToggleComments} icon={<MessageCircle size={17} />} />
-          <button type="button" onClick={onSave} aria-pressed={post.saved} className={"ml-auto inline-flex min-h-10 items-center gap-2 rounded-full px-3 text-xs font-bold transition-colors " + (post.saved ? "bg-[var(--primary-soft)] text-[var(--primary)]" : "text-[var(--text-muted)] hover:bg-[var(--surface-soft)] hover:text-[var(--text)]")}>
+          <button type="button" onClick={onSave} disabled={isPending} aria-pressed={post.saved} className={"ml-auto inline-flex min-h-10 items-center gap-2 rounded-full px-3 text-xs font-bold transition-colors disabled:opacity-50 " + (post.saved ? "bg-[var(--primary-soft)] text-[var(--primary)]" : "text-[var(--text-muted)] hover:bg-[var(--surface-soft)] hover:text-[var(--text)]")}>
             <Bookmark size={16} fill={post.saved ? "currentColor" : "none"} aria-hidden="true" />
             {post.saved ? "Saved" : "Save"}
           </button>
@@ -360,15 +396,16 @@ function PostCard({
   );
 }
 
-function ActionButton({ active, expanded, label, count, onClick, icon }: { active: boolean; expanded?: boolean; label: string; count: number; onClick: () => void; icon: ReactNode }) {
+function ActionButton({ active, expanded, disabled, label, count, onClick, icon }: { active: boolean; expanded?: boolean; disabled?: boolean; label: string; count: number; onClick: () => void; icon: ReactNode }) {
   return (
     <button
       type="button"
       onClick={onClick}
+      disabled={disabled}
       aria-label={label + ", " + count}
       aria-pressed={active}
       aria-expanded={expanded}
-      className={"inline-flex min-h-10 items-center gap-2 rounded-full px-3 text-xs font-bold transition-colors " + (active ? "bg-[var(--danger-soft)] text-[var(--danger)]" : "text-[var(--text-muted)] hover:bg-[var(--surface-soft)] hover:text-[var(--text)]")}
+      className={"inline-flex min-h-10 items-center gap-2 rounded-full px-3 text-xs font-bold transition-colors disabled:opacity-50 " + (active ? "bg-[var(--danger-soft)] text-[var(--danger)]" : "text-[var(--text-muted)] hover:bg-[var(--surface-soft)] hover:text-[var(--text)]")}
     >
       {icon}
       <span>{count}</span>

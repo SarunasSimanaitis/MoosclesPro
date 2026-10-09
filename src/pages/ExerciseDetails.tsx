@@ -221,13 +221,18 @@ export default function ExerciseDetails() {
         <Card className="overflow-hidden p-0">
           <div className="relative flex min-h-[300px] sm:min-h-[360px] items-center justify-center overflow-hidden bg-[var(--surface-soft)] md:min-h-[460px]">
             {selectedExercise.imageUrl ? (
-              <img
-                src={selectedExercise.imageUrl}
-                alt={
-                  selectedExercise.name
-                }
-                className="h-full w-full object-cover"
-              />
+              <div className={`grid h-full w-full ${selectedExercise.imageUrlEnd ? "grid-cols-2" : "grid-cols-1"}`}>
+                <figure className="relative flex min-w-0 items-center justify-center overflow-hidden bg-[var(--surface-soft)]">
+                  <img src={selectedExercise.imageUrl} alt={`Starting position reference for ${selectedExercise.imageSourceName ?? selectedExercise.name}`} loading="eager" fetchPriority="high" decoding="async" className="h-full min-h-[300px] max-h-[460px] w-full object-contain p-2 sm:min-h-[360px] md:min-h-[460px]" />
+                  <figcaption className="absolute bottom-3 left-3 rounded-full border border-[var(--border)] bg-[var(--surface)]/90 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-[var(--text-muted)] shadow-sm">Start</figcaption>
+                </figure>
+                {selectedExercise.imageUrlEnd && (
+                  <figure className="relative flex min-w-0 items-center justify-center overflow-hidden border-l border-[var(--border)] bg-[var(--surface-soft)]">
+                    <img src={selectedExercise.imageUrlEnd} alt={`Finishing position reference for ${selectedExercise.imageSourceName ?? selectedExercise.name}`} loading="lazy" decoding="async" className="h-full min-h-[300px] max-h-[460px] w-full object-contain p-2 sm:min-h-[360px] md:min-h-[460px]" />
+                    <figcaption className="absolute bottom-3 left-3 rounded-full border border-[var(--border)] bg-[var(--surface)]/90 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-[var(--text-muted)] shadow-sm">Finish</figcaption>
+                  </figure>
+                )}
+              </div>
             ) : (
               <div className="flex flex-col items-center justify-center px-8 text-center">
                 <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-[var(--primary-soft)] text-[var(--primary)]">
@@ -278,6 +283,11 @@ export default function ExerciseDetails() {
               </a>
             )}
           </div>
+          {selectedExercise.imageSourceUrl && (
+            <p className="border-t border-[var(--border)] px-4 py-3 text-xs leading-relaxed text-[var(--text-muted)] sm:px-5">
+              Reference movement: <span className="font-semibold">{selectedExercise.imageSourceName}</span>. Photos are public-domain content from the <a href={selectedExercise.imageSourceUrl} target="_blank" rel="noreferrer" className="font-bold text-[var(--primary)] underline underline-offset-2">Free Exercise DB</a>.
+            </p>
+          )}
         </Card>
 
         {/* Overview */}

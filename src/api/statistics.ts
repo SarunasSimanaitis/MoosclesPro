@@ -1,4 +1,5 @@
 import { apiRequest } from "./client";
+import { cachedRequest, invalidateCached, readCached } from "./cache";
 
 export type StatisticsOverview = {
   workouts: number;
@@ -30,8 +31,12 @@ export type StatisticsData = {
 
 export const statisticsApi = {
   get(): Promise<StatisticsData> {
-    return apiRequest<StatisticsData>(
-      "/api/statistics",
-    );
+    return cachedRequest("statistics:get", () => apiRequest<StatisticsData>("/api/statistics"));
+  },
+  cached(): StatisticsData | undefined {
+    return readCached<StatisticsData>("statistics:get");
+  },
+  clearCache() {
+    invalidateCached("statistics:get");
   },
 };

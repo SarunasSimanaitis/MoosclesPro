@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 
 import type { WorkoutExercise } from "../../types/WorkoutExercise";
+import type { WorkoutPersonalRecord } from "../../lib/personalRecords";
 import type { WeightUnit } from "../../lib/units";
 import { toKilograms } from "../../lib/units";
 
@@ -16,6 +17,7 @@ import SetRow from "./SetRow";
 type ExerciseCardProps = {
   workoutExercise: WorkoutExercise;
   weightUnit: WeightUnit;
+  personalRecords: WorkoutPersonalRecord[];
 
   updateWeight: (
     exerciseId: string,
@@ -50,6 +52,7 @@ type ExerciseCardProps = {
 export default function ExerciseCard({
   workoutExercise,
   weightUnit,
+  personalRecords,
   updateWeight,
   commitWeight,
   updateReps,
@@ -82,6 +85,9 @@ export default function ExerciseCard({
             100,
         )
       : 0;
+  const exerciseRecords = personalRecords.filter(
+    (record) => record.exerciseId === exercise.id,
+  );
 
   return (
     <Card
@@ -91,8 +97,10 @@ export default function ExerciseCard({
         duration-200
         ${
           isCompleted
-            ? "border-[var(--success)]/30"
-            : ""
+            ? "border-[var(--success)]/40"
+            : exerciseRecords.length > 0
+              ? "border-[var(--primary)]/45 shadow-[var(--shadow-lg)]"
+              : ""
         }
       `}
     >
@@ -202,20 +210,21 @@ export default function ExerciseCard({
       </div>
 
       {/* Set controls */}
-      <div className="border-t border-[var(--border)] p-3 sm:p-4 md:p-6">
-        <div className="mb-3 hidden grid-cols-[44px_1fr_1fr_56px] items-center gap-3 px-3 text-center text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)] sm:grid md:grid-cols-[52px_1fr_1fr_64px] md:gap-4">
-          <span>Set</span>
-          <span>Weight ({weightUnit})</span>
-          <span>Reps</span>
-          <span>Done</span>
+      <div className="border-t border-[var(--border)] bg-[var(--surface)]/35 p-3 sm:p-4 md:p-6">
+        <div className="mb-4 flex items-end justify-between gap-3 px-1 sm:mb-5 sm:px-2">
+          <div>
+            <h3 className="text-sm font-black tracking-tight text-[var(--text)] sm:text-base">Log your sets</h3>
+            <p className="mt-1 text-xs leading-relaxed text-[var(--text-muted)]">Enter your load and reps, then log the set when you finish.</p>
+          </div>
         </div>
 
-        <div className="space-y-2.5">
+        <div className="space-y-3">
           {sets.map((set) => (
             <SetRow
               key={set.id}
               workoutSet={set}
               weightUnit={weightUnit}
+              personalRecordLabels={exerciseRecords.filter((record) => record.setId === set.id).map((record) => getRecordLabel(record.kind))}
               onToggle={() =>
                 updateCompleted(
                   exercise.id,
@@ -254,7 +263,7 @@ export default function ExerciseCard({
         <button
           type="button"
           onClick={() => onAddSet(exercise.id)}
-          className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-full border border-dashed border-[var(--border-strong)] px-4 text-sm font-bold text-[var(--text-muted)] transition-colors hover:border-[var(--primary)] hover:bg-[var(--primary-soft)] hover:text-[var(--primary)]"
+          className="mt-4 inline-flex min-h-12 w-full touch-manipulation items-center justify-center gap-2 rounded-2xl border border-dashed border-[var(--border-strong)] px-4 text-sm font-bold text-[var(--text-muted)] transition-[background-color,border-color,color,transform] duration-200 hover:border-[var(--primary)] hover:bg-[var(--primary-soft)] hover:text-[var(--primary)] active:scale-[0.99] sm:w-auto sm:justify-start sm:rounded-full"
         >
           <Plus size={16} aria-hidden="true" />
           Add set
@@ -262,6 +271,12 @@ export default function ExerciseCard({
       </div>
     </Card>
   );
+}
+
+function getRecordLabel(kind: WorkoutPersonalRecord["kind"]) {
+  if (kind === "load") return "Load PR";
+  if (kind === "estimated-one-rep-max") return "Est. 1RM";
+  return "Rep PR";
 }
 
 function formatRest(seconds: number) {

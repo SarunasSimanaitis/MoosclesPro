@@ -8,7 +8,7 @@ const ENDPOINT =
 
 export const workoutSessionsApi = {
   list(): Promise<WorkoutSession[]> {
-    return cachedRequest("workout-sessions:list", () => apiRequest<WorkoutSession[]>(ENDPOINT));
+    return cachedRequest("workout-sessions:list", () => apiRequest<WorkoutSession[]>(`${ENDPOINT}?limit=200`));
   },
 
   cachedList(): WorkoutSession[] | undefined {

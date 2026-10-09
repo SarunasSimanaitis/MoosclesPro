@@ -24,6 +24,7 @@ import ExerciseCard from "../components/workout/ExerciseCard";
 import RestTimerPanel from "../components/workout/RestTimerPanel";
 import WorkoutFinishCard from "../components/workout/WorkoutFinishCard";
 import WorkoutSessionHeader from "../components/workout/WorkoutSessionHeader";
+import PersonalRecordBanner from "../components/workout/PersonalRecordBanner";
 
 import type { Routine } from "../types/Routine";
 import { applyPreviousPerformance } from "../lib/workoutEngine";
@@ -38,6 +39,7 @@ import { useRoutineStore } from "../stores/routineStore";
 import { useActiveWorkoutStore } from "../stores/activeWorkoutStore";
 import { authClient } from "../lib/auth-client";
 import { getAppPreferences } from "../lib/preferences";
+import { collectPersonalRecords, findWorkoutPersonalRecords } from "../lib/personalRecords";
 
 export default function WorkoutSessionPage() {
   const navigate = useNavigate();
@@ -273,6 +275,34 @@ function WorkoutSession({
   } =
     useWorkoutSession();
 
+  const [recordSessions, setRecordSessions] = useState(() => workoutSessionsApi.cachedList() ?? []);
+  const [recordsReady, setRecordsReady] = useState(() => workoutSessionsApi.cachedList() !== undefined);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    workoutSessionsApi.list().then((sessions) => {
+      if (cancelled) return;
+      setRecordSessions(sessions);
+      setRecordsReady(true);
+    }).catch((error: unknown) => {
+      console.error("Could not load workout records:", error);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const previousRecords = useMemo(
+    () => collectPersonalRecords(recordSessions),
+    [recordSessions],
+  );
+  const newPersonalRecords = useMemo(
+    () => recordsReady ? findWorkoutPersonalRecords(workoutExercises, previousRecords) : [],
+    [previousRecords, recordsReady, workoutExercises],
+  );
+
   const {
     isPaused,
     formattedTime,
@@ -441,6 +471,11 @@ function WorkoutSession({
         }
       />
 
+      <PersonalRecordBanner
+        records={newPersonalRecords}
+        weightUnit={weightUnit}
+      />
+
       {saveError && (
         <Card
           role="alert"
@@ -497,6 +532,7 @@ function WorkoutSession({
                 workoutExercise
               }
               weightUnit={weightUnit}
+              personalRecords={newPersonalRecords}
               updateWeight={
                 updateWeight
               }
@@ -523,6 +559,7 @@ function WorkoutSession({
           completedSets
         }
         totalSets={totalSets}
+        personalRecordCount={newPersonalRecords.length}
         isFinishing={isFinishing}
         onFinish={() =>
           void finishWorkout()

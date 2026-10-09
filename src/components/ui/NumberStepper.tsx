@@ -7,6 +7,7 @@ import type {
   KeyboardEvent,
   WheelEvent,
 } from "react";
+import { useState } from "react";
 
 type NumberStepperProps = {
   value: number;
@@ -31,258 +32,106 @@ export default function NumberStepper({
   ariaLabel = "Number",
   className = "",
 }: NumberStepperProps) {
-  function clamp(
-    nextValue: number,
-  ) {
-    if (!Number.isFinite(nextValue)) {
-      return min;
-    }
+  const [draft, setDraft] = useState<string | null>(null);
 
-    const minimumValue = Math.max(
-      min,
-      nextValue,
-    );
-
-    if (max === undefined) {
-      return minimumValue;
-    }
-
-    return Math.min(
-      max,
-      minimumValue,
-    );
+  function clamp(nextValue: number) {
+    if (!Number.isFinite(nextValue)) return min;
+    return max === undefined
+      ? Math.max(min, nextValue)
+      : Math.min(max, Math.max(min, nextValue));
   }
 
-  function updateValue(
-    nextValue: number,
-  ) {
-    onChange(
-      clamp(nextValue),
-    );
+  function updateValue(nextValue: number) {
+    onChange(clamp(nextValue));
   }
 
-  function increment() {
-    updateValue(
-      value + step,
-    );
+  function stepValue(direction: -1 | 1) {
+    setDraft(null);
+    updateValue(value + step * direction);
     onCommit?.();
   }
 
-  function decrement() {
-    updateValue(
-      value - step,
-    );
+  function handleBlur() {
+    if (draft !== null) {
+      const parsedValue = draft.trim() === "" ? 0 : Number(draft);
+      onChange(clamp(parsedValue));
+      setDraft(null);
+    }
     onCommit?.();
   }
 
-  function handleKeyDown(
-    event: KeyboardEvent<HTMLInputElement>,
-  ) {
+  function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
     if (event.key === "Enter") {
       event.preventDefault();
-      onCommit?.();
       event.currentTarget.blur();
       return;
     }
 
-    if (event.key === "ArrowUp") {
+    if (event.key === "ArrowUp" || event.key === "ArrowDown") {
       event.preventDefault();
-
-      updateValue(
-        value + step,
-      );
-
-      onCommit?.();
-      return;
-    }
-
-    if (event.key === "ArrowDown") {
-      event.preventDefault();
-
-      updateValue(
-        value - step,
-      );
-
-      onCommit?.();
+      stepValue(event.key === "ArrowUp" ? 1 : -1);
     }
   }
 
-  function handleWheel(
-    event: WheelEvent<HTMLInputElement>,
-  ) {
-    /*
-     * Never let scrolling the workout page accidentally
-     * modify the currently focused value.
-     */
+  function handleWheel(event: WheelEvent<HTMLInputElement>) {
+    // Scrolling the workout should never change the focused value.
     event.currentTarget.blur();
   }
 
-  function handleChange(
-    event: ChangeEvent<HTMLInputElement>,
-  ) {
-    const rawValue =
-      event.target.value;
+  function handleChange(event: ChangeEvent<HTMLInputElement>) {
+    const rawValue = event.target.value;
+    const decimalPattern = step < 1 ? /^\d*(?:\.\d*)?$/ : /^\d*$/;
+    if (!decimalPattern.test(rawValue)) return;
 
+    setDraft(rawValue);
     if (rawValue === "") {
       onChange(0);
       return;
     }
 
-    /*
-     * Allow decimal values when the step requires them.
-     * The actual value is still normalized by updateValue
-     * when using the +/- controls.
-     */
-    const decimalPattern =
-      step < 1
-        ? /^\d*(?:\.\d*)?$/
-        : /^\d*$/;
-
-    if (
-      !decimalPattern.test(
-        rawValue,
-      )
-    ) {
-      return;
-    }
-
-    const parsedValue =
-      Number(rawValue);
-
-    if (
-      Number.isFinite(
-        parsedValue,
-      )
-    ) {
-      onChange(parsedValue);
-    }
+    const parsedValue = Number(rawValue);
+    if (Number.isFinite(parsedValue)) onChange(clamp(parsedValue));
   }
+
+  const canDecrement = !disabled && value > min;
+  const canIncrement = !disabled && (max === undefined || value < max);
 
   return (
     <div
-      className={`
-        flex
-        items-center
-        overflow-hidden
-        rounded-xl
-        border
-        border-[var(--border-strong)]
-        bg-[var(--surface)]
-        transition-[border-color,background-color]
-        duration-150
-        focus-within:border-[var(--primary)]
-        focus-within:ring-2
-        focus-within:ring-[var(--primary)]
-        ${
-          disabled
-            ? "opacity-50"
-            : ""
-        }
-        ${className}
-      `}
+      className={`number-stepper grid min-h-12 grid-cols-[2.25rem_minmax(1.25rem,1fr)_2.25rem] items-center gap-1 rounded-2xl border border-[var(--border-strong)] bg-[var(--surface)] p-1 transition-[border-color,background-color,box-shadow] duration-200 focus-within:border-[var(--primary)] focus-within:ring-2 focus-within:ring-[var(--focus-ring)] sm:min-h-[3.5rem] sm:grid-cols-[2.75rem_minmax(2.5rem,1fr)_2.75rem] ${disabled ? "opacity-50" : ""} ${className}`}
     >
       <button
         type="button"
-        onClick={decrement}
-        disabled={
-          disabled ||
-          value <= min
-        }
+        onClick={() => stepValue(-1)}
+        disabled={!canDecrement}
         aria-label={`Decrease ${ariaLabel}`}
-        className="
-          flex
-          h-11
-          w-11
-          shrink-0
-          items-center
-          justify-center
-          text-[var(--text-muted)]
-          transition-colors
-          hover:bg-[var(--surface-soft)]
-          hover:text-[var(--primary)]
-          disabled:cursor-not-allowed
-          disabled:opacity-30
-          focus-visible:outline-none
-          focus-visible:ring-2
-          focus-visible:ring-inset
-          focus-visible:ring-[var(--primary)]
-        "
+        className="stepper-button flex h-9 w-9 touch-manipulation items-center justify-center rounded-xl bg-[var(--surface-soft)] text-[var(--text-muted)] transition-[background-color,color,transform] duration-150 hover:bg-[var(--surface-hover)] hover:text-[var(--text)] active:scale-95 disabled:cursor-not-allowed disabled:opacity-35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--primary)] sm:h-11 sm:w-11"
       >
-        <Minus
-          size={15}
-          strokeWidth={2.5}
-        />
+        <Minus size={16} strokeWidth={2.5} aria-hidden="true" />
       </button>
 
       <input
         type="text"
-        inputMode={
-          step < 1
-            ? "decimal"
-            : "numeric"
-        }
-        value={
-          value === 0
-            ? ""
-            : String(value)
-        }
+        inputMode={step < 1 ? "decimal" : "numeric"}
+        value={draft ?? (value === 0 ? "" : String(value))}
         disabled={disabled}
         aria-label={ariaLabel}
         placeholder="0"
         onChange={handleChange}
-        onBlur={onCommit}
+        onBlur={handleBlur}
         onKeyDown={handleKeyDown}
         onWheel={handleWheel}
-        className="
-          min-w-0
-          flex-1
-          appearance-none
-          bg-transparent
-          px-2
-          min-h-11
-          py-2
-          text-center
-          font-semibold
-          text-[var(--text)]
-          outline-none
-          placeholder:text-[var(--text-muted)]
-          [&::-webkit-inner-spin-button]:appearance-none
-          [&::-webkit-outer-spin-button]:appearance-none
-        "
+        className="min-w-0 min-h-9 w-full bg-transparent px-0.5 text-center text-sm font-black tabular-nums text-[var(--text)] outline-none placeholder:font-semibold placeholder:text-[var(--text-subtle)] sm:min-h-11 sm:px-1 sm:text-lg"
       />
 
       <button
         type="button"
-        onClick={increment}
-        disabled={
-          disabled ||
-          (max !== undefined &&
-            value >= max)
-        }
+        onClick={() => stepValue(1)}
+        disabled={!canIncrement}
         aria-label={`Increase ${ariaLabel}`}
-        className="
-          flex
-          h-11
-          w-11
-          shrink-0
-          items-center
-          justify-center
-          text-[var(--text-muted)]
-          transition-colors
-          hover:bg-[var(--surface-soft)]
-          hover:text-[var(--primary)]
-          disabled:cursor-not-allowed
-          disabled:opacity-30
-          focus-visible:outline-none
-          focus-visible:ring-2
-          focus-visible:ring-inset
-          focus-visible:ring-[var(--primary)]
-        "
+        className="stepper-button flex h-9 w-9 touch-manipulation items-center justify-center rounded-xl bg-[var(--surface-soft)] text-[var(--text-muted)] transition-[background-color,color,transform] duration-150 hover:bg-[var(--primary-soft)] hover:text-[var(--primary)] active:scale-95 disabled:cursor-not-allowed disabled:opacity-35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--primary)] sm:h-11 sm:w-11"
       >
-        <Plus
-          size={15}
-          strokeWidth={2.5}
-        />
+        <Plus size={16} strokeWidth={2.5} aria-hidden="true" />
       </button>
     </div>
   );

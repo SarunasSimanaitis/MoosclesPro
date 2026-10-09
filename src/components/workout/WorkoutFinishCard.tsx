@@ -1,6 +1,7 @@
 import {
   CheckCircle2,
   Circle,
+  Trophy,
 } from "lucide-react";
 
 import Button from "../ui/Button";
@@ -9,6 +10,7 @@ import Card from "../ui/Card";
 type WorkoutFinishCardProps = {
   completedSets: number;
   totalSets: number;
+  personalRecordCount?: number;
   isFinishing: boolean;
   onFinish: () => void;
 };
@@ -16,6 +18,7 @@ type WorkoutFinishCardProps = {
 export default function WorkoutFinishCard({
   completedSets,
   totalSets,
+  personalRecordCount = 0,
   isFinishing,
   onFinish,
 }: WorkoutFinishCardProps) {
@@ -37,13 +40,17 @@ export default function WorkoutFinishCard({
               justify-center
               rounded-full
               ${
-                isComplete
+                personalRecordCount > 0
+                  ? "bg-[var(--primary-soft)] text-[var(--primary)]"
+                  : isComplete
                   ? "bg-[var(--success-soft)] text-[var(--success)]"
                   : "bg-[var(--surface-soft)] text-[var(--text-muted)]"
               }
             `}
           >
-            {isComplete ? (
+            {personalRecordCount > 0 ? (
+              <Trophy size={22} />
+            ) : isComplete ? (
               <CheckCircle2 size={22} />
             ) : (
               <Circle size={22} />
@@ -53,14 +60,16 @@ export default function WorkoutFinishCard({
           <div>
             <p className="font-bold text-[var(--text)]">
               {isComplete
-                ? "Workout complete!"
+                ? personalRecordCount > 0 ? "Workout complete — new best!" : "Workout complete!"
                 : "Almost there"}
             </p>
 
             <p className="mt-1 text-sm leading-relaxed text-[var(--text-muted)]">
               {isComplete
-                ? "You've completed every planned set. Save your workout to your history."
-                : `${completedSets} of ${totalSets} sets completed. You can finish now or keep going.`}
+                ? personalRecordCount > 0
+                  ? `You completed every set and earned ${personalRecordCount} personal ${personalRecordCount === 1 ? "record" : "records"}. Save this session to your history.`
+                  : "You've completed every planned set. Save your workout to your history."
+                : `${completedSets} of ${totalSets} sets completed${personalRecordCount > 0 ? ` · ${personalRecordCount} new ${personalRecordCount === 1 ? "record" : "records"}` : ""}. You can finish now or keep going.`}
             </p>
           </div>
         </div>

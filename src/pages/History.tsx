@@ -7,6 +7,7 @@ import {
   Filter,
   History as HistoryIcon,
   Search,
+  Trophy,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -27,6 +28,7 @@ import {
 import type { WorkoutSession } from "../types/WorkoutSession";
 import { getAppPreferences } from "../lib/preferences";
 import { formatVolume, formatWeight } from "../lib/units";
+import { collectPersonalRecords } from "../lib/personalRecords";
 
 type HistoryFilter = "all" | "this-week" | "this-month" | "last-month";
 
@@ -118,6 +120,11 @@ export default function History() {
     [filtered],
   );
 
+  const personalRecords = useMemo(
+    () => collectPersonalRecords(sessions),
+    [sessions],
+  );
+
   const bestSet = useMemo(() => filtered.flatMap((session) => session.exercises.flatMap((exercise) =>
     exercise.sets.filter((set) => set.completed && set.weight > 0).map((set) => ({
       exerciseName: exercise.exercise.name,
@@ -176,6 +183,43 @@ export default function History() {
         <StatCard label="Work sets" value={totalCompletedSets.toString()} suffix="completed" tone="success" />
         <StatCard label="Training focus" value={leadingFocus ?? "—"} suffix="most trained" />
       </section>
+
+      {personalRecords.length > 0 && (
+        <section aria-labelledby="personal-records-heading">
+          <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--primary)]">Your strongest moments</p>
+              <h2 id="personal-records-heading" className="mt-1 text-xl font-black tracking-tight">Personal records</h2>
+            </div>
+            <p className="text-xs text-[var(--text-muted)]">Updated each time you save a workout</p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {personalRecords.filter((record) => record.bestWeight || record.bestBodyweightReps).slice(0, 6).map((record) => (
+              <Card key={record.exerciseId} className="flex min-w-0 items-start gap-3.5 p-4 sm:p-5">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[var(--primary-soft)] text-[var(--primary)]">
+                  <Trophy size={19} aria-hidden="true" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h3 className="truncate text-sm font-black">{record.exerciseName}</h3>
+                  {record.bestWeight && (
+                    <p className="mt-2 text-sm font-black tabular-nums text-[var(--primary)]">
+                      {formatWeight(record.bestWeight.weight, weightUnit)} {weightUnit} <span className="text-[var(--text-muted)]">× {record.bestWeight.reps}</span>
+                    </p>
+                  )}
+                  {record.estimatedOneRepMax && (
+                    <p className="mt-1 text-xs font-semibold text-[var(--text-muted)]">
+                      Est. 1RM ≈ {formatWeight(record.estimatedOneRepMax.value, weightUnit)} {weightUnit}
+                    </p>
+                  )}
+                  {!record.bestWeight && record.bestBodyweightReps && (
+                    <p className="mt-2 text-sm font-black text-[var(--primary)]">{record.bestBodyweightReps.reps} reps</p>
+                  )}
+                </div>
+              </Card>
+            ))}
+          </div>
+        </section>
+      )}
 
       {sessions.length > 0 && (
         <section className="grid gap-3 lg:grid-cols-2">

@@ -7,6 +7,7 @@ import AuthFrame from "../components/auth/AuthFrame";
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
 import { authClient } from "../lib/auth-client";
+import { clearPrivateClientState } from "../lib/privateClientState";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -37,7 +38,18 @@ export default function Register() {
         return;
       }
 
-      await authClient.getSession();
+      const session = await authClient.getSession();
+      if (!session.data?.user) {
+        navigate("/login", {
+          replace: true,
+          state: {
+            notice: "Your account was created. Sign in to start tracking your workouts.",
+          },
+        });
+        return;
+      }
+
+      clearPrivateClientState();
       navigate(from, { replace: true });
     } catch (requestError) {
       console.error("Failed to create account:", requestError);

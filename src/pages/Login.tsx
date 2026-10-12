@@ -7,6 +7,7 @@ import AuthFrame from "../components/auth/AuthFrame";
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
 import { authClient } from "../lib/auth-client";
+import { clearPrivateClientState } from "../lib/privateClientState";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -18,6 +19,8 @@ export default function Login() {
 
   const from =
     (location.state as { from?: string } | null)?.from ?? "/dashboard";
+  const notice =
+    (location.state as { notice?: string } | null)?.notice;
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -35,7 +38,13 @@ export default function Login() {
         return;
       }
 
-      await authClient.getSession();
+      const session = await authClient.getSession();
+      if (!session.data?.user) {
+        setError("Your credentials were accepted, but we couldn't establish a session. Please try again.");
+        return;
+      }
+
+      clearPrivateClientState();
       navigate(from, { replace: true });
     } catch (requestError) {
       console.error("Failed to sign in:", requestError);
@@ -52,6 +61,12 @@ export default function Login() {
       description="Sign in to pick up where your training left off."
     >
       <form onSubmit={handleSubmit} className="space-y-5">
+        {notice && (
+          <div className="rounded-[var(--radius-md)] border border-[var(--primary)]/25 bg-[var(--primary-soft)] px-4 py-3 text-sm font-medium leading-relaxed text-[var(--primary)]">
+            {notice}
+          </div>
+        )}
+
         <Input
           id="email"
           label="Email address"

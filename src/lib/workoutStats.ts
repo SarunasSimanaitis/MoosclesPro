@@ -36,6 +36,33 @@ export type WeeklyStatistic = {
   workouts: number;
 };
 
+/** A saved session is meaningful only after at least one set is completed. */
+export function hasCompletedWork(
+  session: Pick<StoredWorkoutSession, "exercises">,
+): boolean {
+  return (
+    Array.isArray(session.exercises) &&
+    session.exercises.some((exercise) =>
+      Array.isArray(exercise.sets) &&
+      exercise.sets.some((set) => set.completed),
+    )
+  );
+}
+
+export function isCountableSession(
+  session: Pick<StoredWorkoutSession, "startedAt" | "completedAt" | "exercises">,
+): boolean {
+  const start = getValidTimestamp(session.startedAt);
+  const end = getValidTimestamp(session.completedAt);
+
+  return (
+    hasCompletedWork(session) &&
+    start !== null &&
+    end !== null &&
+    end >= start
+  );
+}
+
 function getValidTimestamp(
   value: string,
 ): number | null {
@@ -112,6 +139,10 @@ export function getCurrentStreak(
     new Set<string>();
 
   for (const session of sessions) {
+    if (!isCountableSession(session)) {
+      continue;
+    }
+
     const timestamp =
       getValidTimestamp(
         session.completedAt,
@@ -199,7 +230,13 @@ export function getSessionVolume(
 
   for (const exercise of session.exercises) {
     for (const set of exercise.sets) {
-      if (!set.completed) {
+      if (
+        !set.completed ||
+        !Number.isFinite(set.weight) ||
+        !Number.isFinite(set.reps) ||
+        set.weight < 0 ||
+        set.reps < 0
+      ) {
         continue;
       }
 
@@ -214,10 +251,11 @@ export function getSessionVolume(
 export function calculateOverview(
   sessions: StoredWorkoutSession[],
 ) {
+  const completedSessions = sessions.filter(isCountableSession);
   let totalVolume = 0;
   let totalTrainingSeconds = 0;
 
-  for (const session of sessions) {
+  for (const session of completedSessions) {
     totalVolume +=
       getSessionVolume(session);
 
@@ -228,7 +266,7 @@ export function calculateOverview(
   }
 
   return {
-    workouts: sessions.length,
+    workouts: completedSessions.length,
 
     volume: totalVolume,
 
@@ -254,6 +292,10 @@ export function calculateExerciseStatistics(
     >();
 
   for (const session of sessions) {
+    if (!isCountableSession(session)) {
+      continue;
+    }
+
     const seenInWorkout =
       new Set<string>();
 
@@ -265,7 +307,13 @@ export function calculateExerciseStatistics(
       let volume = 0;
 
       for (const set of exercise.sets) {
-        if (!set.completed) {
+        if (
+          !set.completed ||
+          !Number.isFinite(set.weight) ||
+          !Number.isFinite(set.reps) ||
+          set.weight < 0 ||
+          set.reps < 0
+        ) {
           continue;
         }
 
@@ -273,6 +321,10 @@ export function calculateExerciseStatistics(
 
         volume +=
           set.weight * set.reps;
+      }
+
+      if (completedSets === 0) {
+        continue;
       }
 
       if (!statistics.has(exerciseId)) {
@@ -359,6 +411,10 @@ export function calculateWeeklyActivity(
     new Map<string, number>();
 
   for (const session of sessions) {
+    if (!isCountableSession(session)) {
+      continue;
+    }
+
     const timestamp =
       getValidTimestamp(
         session.completedAt,

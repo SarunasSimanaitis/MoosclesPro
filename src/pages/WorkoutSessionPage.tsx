@@ -404,6 +404,11 @@ function WorkoutSession({
       return;
     }
 
+    if (completedSets === 0) {
+      setSaveError("Complete at least one set before finishing this workout.");
+      return;
+    }
+
     const isIncomplete =
       totalSets > 0 &&
       completedSets < totalSets;

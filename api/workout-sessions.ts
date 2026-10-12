@@ -1,4 +1,5 @@
 import { database, ensureWorkoutIndexes } from "../src/lib/mongodb.js";
+import type { WorkoutSession } from "../src/types/WorkoutSession.js";
 
 import {
   internalServerErrorResponse,
@@ -11,14 +12,13 @@ import {
   parseWorkoutSessionRequestBody,
   validateWorkoutSessionPayload,
 } from "../src/lib/validation.js";
+import {
+  hasCompletedWork,
+  isCountableSession,
+} from "../src/lib/workoutStats.js";
 
-type StoredWorkoutSession = {
-  id: string;
+type StoredWorkoutSession = WorkoutSession & {
   userId: string;
-  routineId: string;
-  startedAt: string;
-  completedAt: string;
-  exercises: unknown[];
   createdAt: Date;
 };
 
@@ -75,7 +75,7 @@ export default {
                 },
               );
 
-            if (!session) {
+            if (!session || !isCountableSession(session)) {
               return Response.json(
                 {
                   error:
@@ -98,6 +98,7 @@ export default {
                 {
                   userId: user.id,
                   routineId,
+                  "exercises.sets.completed": true,
                 },
                 {
                   projection: {
@@ -115,42 +116,47 @@ export default {
               .limit(1)
               .next();
 
-            return Response.json(latest ?? null);
+            return Response.json(
+              latest && isCountableSession(latest)
+                ? latest
+                : null,
+            );
           }
 
-          const sessions =
-            await collection
-              .find(
-                {
-                  userId: user.id,
+          const cursor = collection
+            .find(
+              {
+                userId: user.id,
+                "exercises.sets.completed": true,
+              },
+              {
+                projection: {
+                  _id: 0,
+                  id: 1,
+                  routineId: 1,
+                  startedAt: 1,
+                  completedAt: 1,
+                  exercises: 1,
+                  createdAt: 1,
                 },
-                {
-                  projection: {
-                    _id: 0,
-                    id: 1,
-                    routineId: 1,
-                    startedAt: 1,
-                    completedAt: 1,
-                    exercises: 1,
-                    createdAt: 1,
-                  },
-                },
-              )
-              .sort({ completedAt: -1 })
-              .limit(Math.min(
+              },
+            )
+            .sort({ completedAt: -1 });
+          const requestedLimit = url.searchParams.get("limit");
+          const sessions = await (
+            requestedLimit === "all"
+              ? cursor
+              : cursor.limit(Math.min(
                 200,
                 Math.max(
                   1,
-                  Number.parseInt(
-                    url.searchParams.get("limit") ?? "100",
-                    10,
-                  ) || 100,
+                  Number.parseInt(requestedLimit ?? "100", 10) || 100,
                 ),
               ))
-              .toArray();
+          ).toArray();
 
           return Response.json(
-            sessions,
+            sessions.filter(isCountableSession),
           );
         }
 
@@ -248,6 +254,17 @@ export default {
               {
                 error:
                   validation.error,
+              },
+              {
+                status: 400,
+              },
+            );
+          }
+
+          if (!hasCompletedWork(validation.data)) {
+            return Response.json(
+              {
+                error: "Complete at least one set before saving a workout.",
               },
               {
                 status: 400,

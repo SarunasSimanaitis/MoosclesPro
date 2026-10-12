@@ -1,4 +1,4 @@
-import { Menu, Moon, Settings, Sun, X } from "lucide-react";
+import { LogOut, Menu, Moon, Settings, Sun, X } from "lucide-react";
 import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 
@@ -8,25 +8,38 @@ import {
 } from "../../data/navigation";
 import { useTheme } from "../../hooks/useTheme";
 import { preloadRoute } from "../../lib/routePreload";
-import { invalidateCached } from "../../api/cache";
 import { authClient } from "../../lib/auth-client";
+import { clearPrivateClientState } from "../../lib/privateClientState";
 import Button from "../ui/Button";
 
 export default function Navbar() {
   const { theme, toggleTheme } = useTheme();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [signOutError, setSignOutError] = useState("");
   const navigate = useNavigate();
   const { data: session, isPending } = authClient.useSession();
   const loggedIn = Boolean(session?.user);
   const navigation = loggedIn ? authenticatedNavigation : publicNavigation;
 
   async function handleSignOut() {
+    setSignOutError("");
     try {
-      await authClient.signOut();
-    } finally {
-      invalidateCached("routines:list", "workout-sessions:list", "statistics:get", "dashboard:get");
+      const result = await authClient.signOut();
+      if (result.error) {
+        throw new Error(result.error.message ?? "Sign out failed.");
+      }
+
+      const sessionResult = await authClient.getSession();
+      if (sessionResult.data?.user) {
+        throw new Error("The current session is still active.");
+      }
+
+      clearPrivateClientState();
       setMenuOpen(false);
       navigate("/");
+    } catch (error) {
+      console.error("Failed to sign out:", error);
+      setSignOutError("We couldn't sign you out. Check your connection and try again.");
     }
   }
 
@@ -76,18 +89,23 @@ export default function Navbar() {
 
         <div className="ml-auto flex shrink-0 items-center gap-2">
           {!isPending && loggedIn && (
-            <button
-              type="button"
-              onClick={() => navigate("/settings")}
-              className="hidden min-h-11 items-center gap-2 rounded-full px-2.5 text-sm font-semibold text-[var(--text)] transition-colors hover:bg-[var(--surface-soft)] sm:flex"
-              aria-label="Open settings"
-            >
-              <span className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border-strong)] bg-[var(--surface-soft)] text-xs font-black text-[var(--primary)]">
-                {initial}
-              </span>
-              <span className="hidden xl:inline">{name}</span>
-              <Settings size={16} className="text-[var(--text-muted)]" aria-hidden="true" />
-            </button>
+            <details className="group relative hidden sm:block">
+              <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-full px-2.5 text-sm font-semibold text-[var(--text)] transition-colors hover:bg-[var(--surface-soft)] [&::-webkit-details-marker]:hidden">
+                <span className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border-strong)] bg-[var(--surface-soft)] text-xs font-black text-[var(--primary)]">
+                  {initial}
+                </span>
+                <span className="hidden xl:inline">{name}</span>
+                <Settings size={16} className="text-[var(--text-muted)]" aria-hidden="true" />
+              </summary>
+              <div className="absolute right-0 top-[calc(100%+0.5rem)] z-50 min-w-52 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-2 shadow-[var(--shadow-lg)]">
+                <NavLink to="/settings" className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold text-[var(--text)] hover:bg-[var(--surface-soft)]">
+                  <Settings size={16} aria-hidden="true" /> Settings
+                </NavLink>
+                <button type="button" onClick={() => void handleSignOut()} className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-semibold text-[var(--danger)] hover:bg-[var(--danger-soft)]">
+                  <LogOut size={16} aria-hidden="true" /> Sign out
+                </button>
+              </div>
+            </details>
           )}
 
           {!isPending && !loggedIn && (
@@ -123,6 +141,12 @@ export default function Navbar() {
           </Button>
         </div>
       </div>
+
+      {signOutError && (
+        <div role="alert" className="mx-auto max-w-[1720px] px-4 pb-3 text-sm font-medium text-[var(--danger)] sm:px-7 lg:px-10">
+          {signOutError}
+        </div>
+      )}
 
       <div
         id="mobile-navigation"

@@ -9,6 +9,7 @@ import { database, ensureWorkoutIndexes } from "../src/lib/mongodb.js";
 
 import {
   calculateOverview,
+  isCountableSession,
   getRoutineDuration,
   type StoredWorkoutSession,
 } from "../src/lib/workoutStats.js";
@@ -122,7 +123,7 @@ export default {
        * recently updated custom routine.
        */
       const mostRecentWorkout =
-        workoutSessions[0];
+        workoutSessions.find(isCountableSession);
 
       const recentRoutine =
         mostRecentWorkout
@@ -163,6 +164,10 @@ export default {
       const weeklyWorkouts =
         workoutSessions.filter(
           (workout) => {
+            if (!isCountableSession(workout)) {
+              return false;
+            }
+
             const completedAt =
               new Date(
                 workout.completedAt,

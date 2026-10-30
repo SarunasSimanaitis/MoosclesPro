@@ -15,6 +15,7 @@ import {
 
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
+import BrandLogo from "../components/ui/BrandLogo";
 
 const features = [
   {
@@ -55,6 +56,9 @@ export default function LandingPage() {
 
         <div className="relative grid items-center gap-10 lg:grid-cols-[1.05fr_0.95fr]">
           <div>
+            <div className="mb-8 inline-flex items-center gap-3">
+              <BrandLogo />
+            </div>
             <div className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-sm font-semibold text-[var(--text-muted)] shadow-sm">
               <Sparkles
                 size={15}

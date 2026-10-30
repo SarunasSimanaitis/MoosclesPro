@@ -169,7 +169,6 @@ export default function Statistics() {
           description="Exercises contributing the most total weight."
           exercises={statistics.topVolumeExercises}
           valueFormatter={(item) => `${formatVolume(item.volume, weightUnit)} ${weightUnit}`}
-          tone="primary"
         />
       </section>
 

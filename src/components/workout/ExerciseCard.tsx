@@ -2,6 +2,7 @@ import {
   CheckCircle2,
   Circle,
   Clock3,
+  Info,
   Plus,
 } from "lucide-react";
 
@@ -76,6 +77,7 @@ export default function ExerciseCard({
   const isCompleted =
     sets.length > 0 &&
     completedSets === sets.length;
+  const remainingSets = sets.length - completedSets;
 
   const progress =
     sets.length > 0
@@ -164,9 +166,12 @@ export default function ExerciseCard({
                   </Badge>
                 </div>
 
-                <p className="mt-3 max-w-xl text-xs leading-relaxed text-[var(--text-muted)] sm:text-sm">
-                  Enter the weight you used and the reps you completed, then log the set when you're done.
-                </p>
+                {!isCompleted && (
+                  <div className="mt-3 flex max-w-xl items-start gap-2 rounded-xl border border-[var(--primary)]/15 bg-[var(--primary-soft)] px-3 py-2.5 text-xs leading-relaxed text-[var(--text-muted)] sm:text-sm">
+                    <Info size={15} className="mt-0.5 shrink-0 text-[var(--primary)]" aria-hidden="true" />
+                    <span><strong className="font-bold text-[var(--text)]">Your next step:</strong> Enter the load and reps you completed, then tap <strong className="font-bold text-[var(--text)]">Log set</strong>.</span>
+                  </div>
+                )}
               </div>
           </div>
 
@@ -189,13 +194,12 @@ export default function ExerciseCard({
                 }
               `}
             >
-              {completedSets}/
-              {sets.length} complete
+              {isCompleted ? "All done" : `${remainingSets} left`}
             </div>
           </div>
         </div>
 
-        <div className="mt-3 h-1 overflow-hidden rounded-full bg-[var(--surface-soft)] sm:mt-5">
+        <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[var(--surface-soft)] sm:mt-5" role="progressbar" aria-label="Exercise set completion" aria-valuemin={0} aria-valuemax={sets.length} aria-valuenow={completedSets}>
           <div
             className={`
               h-full

@@ -577,6 +577,22 @@ function RoutineEditor({
         </Card>
       )}
 
+      <section className="grid gap-2 sm:grid-cols-3" aria-label="Routine creation steps">
+        {[
+          ["01", "Name your routine", "Give it a name you'll recognize."],
+          ["02", "Choose exercises", "Add movements and set your targets."],
+          ["03", "Save and train", "Your routine will be ready to use."],
+        ].map(([number, title, description], index) => (
+          <div key={number} className={`rounded-2xl border p-4 ${index === 0 ? "border-[var(--primary)]/35 bg-[var(--primary-soft)]" : "border-[var(--border)] bg-[var(--surface)]"}`}>
+            <div className="flex items-center gap-2">
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[var(--primary)] text-xs font-black text-white">{number}</span>
+              <p className="text-sm font-bold text-[var(--text)]">{title}</p>
+            </div>
+            <p className="mt-2 pl-9 text-xs leading-relaxed text-[var(--text-muted)]">{description}</p>
+          </div>
+        ))}
+      </section>
+
       {/* Routine details */}
       <Card className="p-5 sm:p-7">
         <div className="flex items-center gap-3">

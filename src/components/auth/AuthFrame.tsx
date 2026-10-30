@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { ArrowUpRight, Dumbbell, Sparkles } from "lucide-react";
+import BrandLogo from "../ui/BrandLogo";
 import { Link } from "react-router-dom";
 
 export default function AuthFrame({
@@ -17,13 +18,8 @@ export default function AuthFrame({
     <main className="auth-shell min-h-screen px-4 py-6 text-[var(--text)] sm:px-7 sm:py-8 lg:p-10">
       <div className="mx-auto grid min-h-[calc(100vh-3rem)] w-full max-w-6xl overflow-hidden rounded-[2rem] border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-xl)] sm:min-h-[calc(100vh-4rem)] lg:grid-cols-[1.03fr_0.97fr]">
         <section className="flex flex-col p-6 sm:p-10 lg:p-14">
-          <Link to="/" className="inline-flex w-fit items-center gap-3 rounded-full focus-visible:outline-none">
-            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[var(--primary)] text-[var(--primary-foreground)]">
-              <Dumbbell size={19} strokeWidth={2.5} />
-            </span>
-            <span className="text-lg font-black tracking-tight">
-              Mooscles<span className="text-[var(--primary)]">Pro</span>
-            </span>
+          <Link to="/" className="inline-flex w-fit items-center rounded-full focus-visible:outline-none">
+            <BrandLogo />
           </Link>
 
           <div className="mx-auto my-auto w-full max-w-md py-12">

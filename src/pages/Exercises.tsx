@@ -167,7 +167,7 @@ export default function Exercises() {
               key={exercise.id}
               type="button"
               onClick={() => navigate(`/exercises/${exercise.id}`)}
-              className="group text-left"
+              className="group text-left focus-visible:rounded-[var(--radius-lg)]"
             >
               <Card hover className="h-full p-4 sm:p-5">
                 {exercise.imageUrl && (
@@ -182,7 +182,7 @@ export default function Exercises() {
                       exercise.category === "Strength"
                         ? "bg-[var(--primary-soft)] text-[var(--primary)]"
                         : exercise.category === "Hypertrophy"
-                          ? "bg-[var(--success-soft)] text-[var(--success)]"
+                          ? "bg-[var(--primary-soft)] text-[var(--primary)]"
                           : exercise.category === "Mobility"
                             ? "bg-[var(--primary-soft)] text-[var(--primary)]"
                             : "bg-[var(--danger-soft)] text-[var(--danger)]"

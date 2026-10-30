@@ -176,7 +176,7 @@ export default function Dashboard() {
                   : "Create a simple routine once, then come back and press start whenever you're ready."}
               </p>
             </div>
-            <div className="hidden h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[var(--success-soft)] text-[var(--success)] sm:flex">
+            <div className="hidden h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[var(--primary-soft)] text-[var(--primary)] sm:flex">
               <Dumbbell size={22} />
             </div>
           </div>
@@ -199,8 +199,8 @@ export default function Dashboard() {
           </NavLink>
         </Card>
 
-        <Card className="border-[var(--success)]/25 bg-[var(--success-soft)] p-5 sm:p-7">
-          <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--success)]">
+        <Card className="border-[var(--primary)]/20 bg-[var(--primary-soft)] p-5 sm:p-7">
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--primary)]">
             This week
           </p>
           <div className="mt-3 flex items-end justify-between gap-3">

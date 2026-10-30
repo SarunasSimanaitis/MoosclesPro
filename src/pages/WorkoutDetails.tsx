@@ -219,7 +219,7 @@ export default function WorkoutDetails() {
       </Link>
 
       {/* Header */}
-      <section className="relative overflow-hidden rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--surface)] p-6 md:p-8">
+      <section className="relative overflow-hidden rounded-[var(--radius-xl)] border border-[var(--primary)]/15 bg-[var(--surface)] p-6 shadow-[var(--shadow-md)] md:p-8">
 
 
         <div className="relative">
@@ -289,7 +289,7 @@ export default function WorkoutDetails() {
               </span>
             </div>
 
-            <div className="mt-3 h-2 overflow-hidden rounded-full bg-[var(--surface-soft)]">
+            <div className="mt-3 h-2 overflow-hidden rounded-full bg-[var(--surface-soft)]" role="progressbar" aria-label="Workout completion" aria-valuemin={0} aria-valuemax={100} aria-valuenow={completionPercentage}>
               <div
                 className="h-full rounded-full bg-[var(--primary)] transition-[width] duration-500"
                 style={{
@@ -340,7 +340,7 @@ export default function WorkoutDetails() {
             return (
               <Card
                 key={exercise.exercise.id}
-                className="overflow-hidden"
+                className="overflow-hidden border-[var(--border)] transition-colors hover:border-[var(--primary)]/25"
               >
                 <div className="p-6 md:p-7">
                   <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-start">

@@ -163,6 +163,10 @@ export default function ExerciseCard({
                     {formatRest(restSeconds)}
                   </Badge>
                 </div>
+
+                <p className="mt-3 max-w-xl text-xs leading-relaxed text-[var(--text-muted)] sm:text-sm">
+                  Enter the weight you used and the reps you completed, then log the set when you're done.
+                </p>
               </div>
           </div>
 

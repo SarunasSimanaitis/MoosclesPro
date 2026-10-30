@@ -4,7 +4,6 @@ import {
   History,
   House,
   NotebookTabs,
-  NotebookTabs,
   Sparkles,
 } from "lucide-react";
 

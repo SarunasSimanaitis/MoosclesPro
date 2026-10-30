@@ -411,3 +411,28 @@ textarea {
     transform: none;
   }
 }
+
+/* Responsive finishing touches: safe-area support and stable mobile menu sizing. */
+.mobile-navigation-open {
+  max-height: min(75dvh, 36rem);
+  padding-bottom: env(safe-area-inset-bottom);
+  overscroll-behavior: contain;
+}
+
+@media (max-width: 639px) {
+  .app-content {
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
+
+  .site-card-hover:hover {
+    transform: none;
+  }
+}
+
+@media (max-width: 359px) {
+  .app-content {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+}

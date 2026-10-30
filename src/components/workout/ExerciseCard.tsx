@@ -90,6 +90,7 @@ export default function ExerciseCard({
   const exerciseRecords = personalRecords.filter(
     (record) => record.exerciseId === exercise.id,
   );
+  const nextSetId = sets.find((set) => !set.completed)?.id;
 
   return (
     <Card
@@ -226,6 +227,7 @@ export default function ExerciseCard({
             <SetRow
               key={set.id}
               workoutSet={set}
+              isNext={set.id === nextSetId}
               weightUnit={weightUnit}
               personalRecordLabels={exerciseRecords.filter((record) => record.setId === set.id).map((record) => getRecordLabel(record.kind))}
               onToggle={() =>

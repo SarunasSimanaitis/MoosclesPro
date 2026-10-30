@@ -47,7 +47,7 @@ export default function Settings() {
         <div className="space-y-8">
           <section className="space-y-4">
             <SectionHeading icon={<UserCircle2 size={19} />} eyebrow="Profile" title="Your account" />
-            <Card className="p-5 sm:p-7 lg:p-8">
+            <Card className="border-[var(--primary)]/15 p-5 sm:p-7 lg:p-8">
               {isPending ? (
                 <AccountSkeleton />
               ) : (
@@ -100,12 +100,12 @@ export default function Settings() {
                 <div>
                   <h2 className="text-lg font-bold">Choose your finish</h2>
                   <p className="mt-1 max-w-xl text-sm leading-relaxed text-[var(--text-muted)]">
-                    Warm marble for daylight, deep obsidian for a quieter session.
+                    Cool blue-white surfaces for daylight, deep navy for a quieter session.
                   </p>
                 </div>
                 <div role="group" aria-label="Theme selection" className="grid w-full grid-cols-2 gap-3 sm:w-fit">
-                  <ThemeOption active={theme === "light"} icon={<Sun size={18} />} label="Marble" detail="Warm light" onClick={() => theme !== "light" && toggleTheme()} />
-                  <ThemeOption active={theme === "dark"} icon={<Moon size={18} />} label="Obsidian" detail="Deep dark" onClick={() => theme !== "dark" && toggleTheme()} />
+                  <ThemeOption active={theme === "light"} icon={<Sun size={18} />} label="Cool light" detail="Blue-white" onClick={() => theme !== "light" && toggleTheme()} />
+                  <ThemeOption active={theme === "dark"} icon={<Moon size={18} />} label="Midnight" detail="Deep navy" onClick={() => theme !== "dark" && toggleTheme()} />
                 </div>
               </div>
             </Card>

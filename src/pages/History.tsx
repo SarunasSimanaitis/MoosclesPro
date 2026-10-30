@@ -231,7 +231,7 @@ export default function History() {
             </div>
           </Card>
           <Card className="flex items-center gap-4 p-5 sm:p-6">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[var(--success-soft)] text-[var(--success)]"><CalendarDays size={22} aria-hidden="true" /></div>
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[var(--primary-soft)] text-[var(--primary)]"><CalendarDays size={22} aria-hidden="true" /></div>
             <div>
               <p className="text-xs font-black uppercase tracking-[0.14em] text-[var(--text-muted)]">A useful pattern</p>
               <p className="mt-1 text-lg font-black">{leadingFocus ? `${leadingFocus} is your most trained focus` : "Your training story is taking shape"}</p>
@@ -330,7 +330,7 @@ function HistoryItem({
     <button
       type="button"
       onClick={onOpen}
-      className="group block w-full text-left"
+      className="group block w-full rounded-[var(--radius-lg)] text-left focus-visible:outline-none"
     >
       <Card hover className="p-4 sm:p-5">
         <div className="flex items-start gap-4">
@@ -397,7 +397,7 @@ function FilterButton({
       onClick={onClick}
       className={`min-h-10 rounded-[var(--radius-sm)] px-2 text-xs font-bold transition-colors sm:text-sm ${
         active
-          ? "bg-[var(--surface)] text-[var(--text)]"
+          ? "bg-[var(--surface)] text-[var(--primary)] shadow-sm ring-1 ring-[var(--primary)]/15"
           : "text-[var(--text-muted)] hover:text-[var(--text)]"
       }`}
     >

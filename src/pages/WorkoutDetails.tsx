@@ -4,6 +4,7 @@ import {
   CheckCircle2,
   Clock3,
   Dumbbell,
+  Trophy,
 } from "lucide-react";
 import {
   useEffect,
@@ -28,6 +29,7 @@ import { useRoutineStore } from "../stores/routineStore";
 import type { WorkoutSession } from "../types/WorkoutSession";
 import { getAppPreferences } from "../lib/preferences";
 import { formatVolume, formatWeight } from "../lib/units";
+import { collectPersonalRecords, findWorkoutPersonalRecords } from "../lib/personalRecords";
 
 import {
   formatWorkoutDate,
@@ -65,6 +67,8 @@ export default function WorkoutDetails() {
     setIsLoading,
   ] = useState(true);
 
+  const [previousSessions, setPreviousSessions] = useState<WorkoutSession[]>([]);
+
   const [
     error,
     setError,
@@ -84,13 +88,14 @@ export default function WorkoutDetails() {
           );
         }
 
-        const data =
-          await workoutSessionsApi.get(
-            sessionId,
-          );
+        const [data, allSessions] = await Promise.all([
+          workoutSessionsApi.get(sessionId),
+          workoutSessionsApi.list(),
+        ]);
 
         if (!cancelled) {
           setSession(data);
+          setPreviousSessions(allSessions.filter((item) => item.id !== data.id));
         }
       } catch (requestError) {
         console.error(
@@ -190,6 +195,14 @@ export default function WorkoutDetails() {
   const duration =
     getSessionDuration(session);
 
+  const completedExercises = session.exercises.filter((exercise) =>
+    exercise.sets.some((set) => set.completed),
+  ).length;
+  const newPersonalRecords = findWorkoutPersonalRecords(
+    session.exercises,
+    collectPersonalRecords(previousSessions),
+  );
+
   const completionPercentage =
     totalSets > 0
       ? Math.round(
@@ -260,7 +273,7 @@ export default function WorkoutDetails() {
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-2 sm:gap-3">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
               <SummaryStat
                 label="Exercises"
                 value={session.exercises.length.toString()}
@@ -300,6 +313,29 @@ export default function WorkoutDetails() {
           </div>
         </div>
       </section>
+
+      {newPersonalRecords.length > 0 && (
+        <section aria-labelledby="session-records-heading" className="space-y-3">
+          <div className="flex items-center gap-2 text-[var(--primary)]">
+            <Trophy size={18} aria-hidden="true" />
+            <p className="text-xs font-black uppercase tracking-[0.18em]">New personal records</p>
+          </div>
+          <Card className="grid gap-3 border-[var(--primary)]/25 bg-[var(--primary-soft)] p-4 sm:grid-cols-2 sm:p-5">
+            {newPersonalRecords.map((record) => (
+              <div key={`${record.exerciseId}-${record.kind}`} className="rounded-2xl border border-[var(--primary)]/15 bg-[var(--surface)] px-4 py-3">
+                <p className="text-sm font-black text-[var(--text)]">{record.exerciseName}</p>
+                <p className="mt-1 text-xs font-semibold text-[var(--text-muted)]">
+                  {record.kind === "load" ? "Heaviest set" : record.kind === "estimated-one-rep-max" ? "Estimated 1RM" : "Rep record"}
+                </p>
+                <p className="mt-1 text-lg font-black tabular-nums text-[var(--primary)]">
+                  {record.kind === "reps" ? `${record.value} reps` : record.kind === "estimated-one-rep-max" ? `≈ ${formatWeight(record.value, weightUnit)} ${weightUnit}` : `${formatWeight(record.value, weightUnit)} ${weightUnit} × ${record.reps}`}
+                </p>
+                {record.previousValue === null && <p className="mt-1 text-[11px] text-[var(--text-muted)]">First record logged</p>}
+              </div>
+            ))}
+          </Card>
+        </section>
+      )}
 
       {/* Exercise breakdown */}
       <section className="space-y-5">

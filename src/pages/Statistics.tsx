@@ -140,7 +140,7 @@ export default function Statistics() {
                 </span>
                 <div className="flex h-36 w-full items-end rounded-[var(--radius-md)] bg-[var(--surface-soft)] p-1">
                   <div
-                    className={`w-full rounded-[var(--radius-sm)] ${highest ? "bg-[var(--primary)]" : "bg-[var(--success)]"}`}
+                    className={`w-full rounded-[var(--radius-sm)] ${highest ? "bg-[var(--primary)]" : "bg-[var(--primary)]/45"}`}
                     style={{ height: `${height}%` }}
                   />
                 </div>
@@ -212,10 +212,8 @@ function ExerciseRanking({
   valueFormatter: (exercise: ExerciseStatistic) => string;
   tone: "primary" | "success";
 }) {
-  const color =
-    tone === "primary" ? "var(--primary)" : "var(--primary)";
-  const bg =
-    tone === "primary" ? "var(--primary-soft)" : "var(--primary-soft)";
+  const color = "var(--primary)";
+  const bg = "var(--primary-soft)";
 
   return (
     <Card className="p-5 sm:p-7">

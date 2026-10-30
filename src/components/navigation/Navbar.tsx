@@ -11,6 +11,7 @@ import { preloadRoute } from "../../lib/routePreload";
 import { authClient } from "../../lib/auth-client";
 import { clearPrivateClientState } from "../../lib/privateClientState";
 import Button from "../ui/Button";
+import BrandLogo from "../ui/BrandLogo";
 
 export default function Navbar() {
   const { theme, toggleTheme } = useTheme();
@@ -56,10 +57,10 @@ export default function Navbar() {
         <NavLink
           to={loggedIn ? "/dashboard" : "/"}
           onClick={closeMenu}
-          className="shrink-0 text-xl font-black tracking-[-0.05em] sm:text-2xl"
+          className="shrink-0"
           aria-label="MoosclesPro home"
         >
-          Mooscles<span className="text-[var(--primary)]">Pro</span>
+          <BrandLogo />
         </NavLink>
 
         <nav className="ml-4 hidden min-w-0 flex-1 items-center gap-1 lg:flex" aria-label="Primary navigation">

@@ -90,7 +90,10 @@ export default function WorkoutDetails() {
 
         const [data, allSessions] = await Promise.all([
           workoutSessionsApi.get(sessionId),
-          workoutSessionsApi.list(),
+          workoutSessionsApi.list().catch((historyError: unknown) => {
+            console.error("Could not load previous sessions for personal records:", historyError);
+            return [];
+          }),
         ]);
 
         if (!cancelled) {
@@ -275,8 +278,8 @@ export default function WorkoutDetails() {
 
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
               <SummaryStat
-                label="Exercises"
-                value={session.exercises.length.toString()}
+                label="Exercises done"
+                value={`${completedExercises}/${session.exercises.length}`}
               />
 
               <SummaryStat

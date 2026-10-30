@@ -4,6 +4,7 @@ import {
   History,
   House,
   NotebookTabs,
+  NotebookTabs,
   Sparkles,
 } from "lucide-react";
 
@@ -21,6 +22,7 @@ export const publicNavigation: NavigationItem[] = [
 export const authenticatedNavigation: NavigationItem[] = [
   { label: "Home", path: "/dashboard", icon: House },
   { label: "Workouts", path: "/workouts", icon: Dumbbell },
+  { label: "Exercises", path: "/exercises", icon: NotebookTabs },
   { label: "History", path: "/history", icon: History },
   { label: "Statistics", path: "/statistics", icon: ChartColumn },
   { label: "Mindset", path: "/mindset", icon: Sparkles },

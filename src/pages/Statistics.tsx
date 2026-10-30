@@ -162,7 +162,6 @@ export default function Statistics() {
           valueFormatter={(item) =>
             `${item.workouts} ${item.workouts === 1 ? "workout" : "workouts"}`
           }
-          tone="primary"
         />
         <ExerciseRanking
           eyebrow="Volume"
@@ -203,14 +202,12 @@ function ExerciseRanking({
   description,
   exercises,
   valueFormatter,
-  tone,
 }: {
   eyebrow: string;
   title: string;
   description: string;
   exercises: ExerciseStatistic[];
   valueFormatter: (exercise: ExerciseStatistic) => string;
-  tone: "primary" | "success";
 }) {
   const color = "var(--primary)";
   const bg = "var(--primary-soft)";

@@ -428,17 +428,14 @@ function WorkoutSession({
     setSaveError(null);
 
     try {
-      const session =
-        createSession();
+      const session = createSession();
 
-      await workoutSessionsApi.create(
-        session,
-      );
+      await workoutSessionsApi.create(session);
 
       stopRestTimer();
       clearActiveWorkout();
 
-      navigate("/history", {
+      navigate(`/history/${session.id}`, {
         replace: true,
       });
     } catch (error) {

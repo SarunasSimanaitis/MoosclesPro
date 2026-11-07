@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { describe, it } from "node:test";
+import { describe, it, expect } from "vitest";
 
 import {
   calculateExerciseStatistics,
@@ -7,6 +7,8 @@ import {
   calculateWeeklyActivity,
   hasCompletedWork,
 } from "../src/lib/workoutStats.ts";
+
+
 
 function session({
   id = "session-1",

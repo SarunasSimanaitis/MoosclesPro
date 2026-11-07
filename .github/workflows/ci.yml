@@ -1,32 +1,28 @@
-name: CI
+name: Continuous Integration
 
 on:
   push:
-    branches: ["main"]
+    branches: [ main, master ]
   pull_request:
-
-permissions:
-  contents: read
+    branches: [ main, master ]
 
 jobs:
-  quality:
+  test:
+    name: Run Unit Tests
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v5
+      - name: Checkout Code Repository
+        uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v6
+      - name: Setup Node.js Environment
+        uses: actions/setup-node@v4
         with:
-          node-version: 24
-          cache: npm
+          node-version: 20
+          cache: 'npm'
 
-      - name: Install dependencies
+      - name: Install Dependencies
         run: npm ci
 
-      - name: Lint
-        run: npm run lint
-
-      - name: Build
-        run: npm run build
+      - name: Run Test Suite
+        run: npm run test -- --run

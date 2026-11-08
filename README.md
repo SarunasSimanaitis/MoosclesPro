@@ -8,9 +8,12 @@ MoosclesPro is a focused workout tracking and logging app built around one simpl
 
 - Dashboard with current training overview
 - Reusable workout routines and ready-made programs
-- Set-by-set logging for weight, reps and completion
-- Previous-performance prefill when starting a routine
-- Accurate workout and rest timers
+- Set-by-set logging for weight, reps, RPE and completion, with every exercise on one screen
+- A "Previous" column showing last time's sets (tap to copy them)
+- Rest timer per exercise, adjustable mid-workout and remembered for next time (premade routines too)
+- Rest timer that keeps counting through refreshes and a locked phone, with sound and vibration at the end
+- Skip an exercise or add and remove sets during a workout
+- Celebrations for new personal records and finished workouts
 - Resumable active workouts stored locally
 - Completed workout history and session details
 - Training statistics, volume and streaks
@@ -22,9 +25,11 @@ MoosclesPro is a focused workout tracking and logging app built around one simpl
 ## 🧪 Automated Testing & Business Logic
 To guarantee reliability across complex workout tracking state machines and mathematical calculations, this project includes comprehensive unit test suites powered by **Vitest**.
 
-### Key Test Coverage
-- **Metric Analytics Engine:** Verifies multi-set aggregate volume calculation boundaries.
-- **Workflow State Verification:** Validates that incomplete exercises or unstarted workout routines are safely excluded from persistent long-term history statistics.
+### What the tests cover
+- **Statistics:** volume and counts only include completed sets and sessions.
+- **Workout engine:** creating workouts, pre-filling from last time, adding/removing/skipping sets and exercises, per-exercise rest.
+- **Saving:** server validation of sets (RPE range, pound weights, impossible numbers) and that only known fields are stored.
+- **Rest timer:** countdown from an end time, ±15 s adjustments, and edge cases.
 
 To execute the test runner locally:
 ```bash

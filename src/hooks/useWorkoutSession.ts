@@ -2,7 +2,20 @@ import { useMemo, useRef } from "react";
 
 import type { WorkoutExercise } from "../types/WorkoutExercise";
 import type { WorkoutSession } from "../types/WorkoutSession";
-import { updateWorkoutSet, calculateWorkoutMetrics, buildWorkoutSession, normalizeWeight, normalizeReps } from "../lib/workoutEngine";
+import {
+  addWorkoutSet,
+  buildWorkoutSession,
+  calculateWorkoutMetrics,
+  normalizeReps,
+  normalizeWeight,
+  removeWorkoutSet,
+  setExerciseRest,
+  setExerciseSkipped,
+  updateWorkoutSet,
+  type PreviousPerformanceMap,
+  type PreviousSet,
+} from "../lib/workoutEngine";
+import { isValidRpe } from "../lib/rpe";
 
 import { useActiveWorkoutStore } from "../stores/activeWorkoutStore";
 
@@ -43,6 +56,12 @@ type UseWorkoutSessionResult = {
   ) => void;
 
   addSet: (exerciseId: string) => void;
+  removeSet: (exerciseId: string, setId: string) => void;
+  updateRpe: (exerciseId: string, setId: string, rpe: number | null) => void;
+  fillSet: (exerciseId: string, setId: string, source: PreviousSet) => void;
+  setRest: (exerciseId: string, seconds: number) => void;
+  setSkipped: (exerciseId: string, skipped: boolean) => void;
+  previous: PreviousPerformanceMap;
 
   createSession: (
     completedAt?: string,
@@ -284,32 +303,52 @@ export function useWorkoutSession(): UseWorkoutSessionResult {
     );
   }
 
+  const previous = useMemo(
+    () => activeWorkout?.previous ?? {},
+    [activeWorkout?.previous],
+  );
+
   function addSet(exerciseId: string) {
     updateExercises((currentExercises) =>
-      currentExercises.map((exercise) => {
-        if (exercise.exercise.id !== exerciseId) return exercise;
+      addWorkoutSet(currentExercises, exerciseId, previous[exerciseId]),
+    );
+  }
 
-        const order = exercise.sets.reduce(
-          (largest, set) => Math.max(largest, set.order),
-          0,
-        ) + 1;
-        const previous = exercise.sets[exercise.sets.length - 1];
+  function removeSet(exerciseId: string, setId: string) {
+    updateExercises((currentExercises) =>
+      removeWorkoutSet(currentExercises, exerciseId, setId),
+    );
+  }
 
-        return {
-          ...exercise,
-          targetSets: Math.max(exercise.targetSets, order),
-          sets: [
-            ...exercise.sets,
-            {
-              id: crypto.randomUUID(),
-              order,
-              weight: previous?.weight ?? 0,
-              reps: previous?.reps ?? 0,
-              completed: false,
-            },
-          ],
-        };
-      }),
+  function updateRpe(exerciseId: string, setId: string, rpe: number | null) {
+    updateExercises((currentExercises) =>
+      updateWorkoutSet(currentExercises, exerciseId, setId, (set) => ({
+        ...set,
+        rpe: isValidRpe(rpe) ? rpe : null,
+      })),
+    );
+  }
+
+  /** Copies last time's numbers into a set (tapping the "Previous" column). */
+  function fillSet(exerciseId: string, setId: string, source: PreviousSet) {
+    updateExercises((currentExercises) =>
+      updateWorkoutSet(currentExercises, exerciseId, setId, (set) => ({
+        ...set,
+        weight: normalizeWeight(source.weight),
+        reps: normalizeReps(source.reps),
+      })),
+    );
+  }
+
+  function setRest(exerciseId: string, seconds: number) {
+    updateExercises((currentExercises) =>
+      setExerciseRest(currentExercises, exerciseId, seconds),
+    );
+  }
+
+  function setSkipped(exerciseId: string, skipped: boolean) {
+    updateExercises((currentExercises) =>
+      setExerciseSkipped(currentExercises, exerciseId, skipped),
     );
   }
 
@@ -342,6 +381,12 @@ export function useWorkoutSession(): UseWorkoutSessionResult {
     commitReps,
     toggleSet,
     addSet,
+    removeSet,
+    updateRpe,
+    fillSet,
+    setRest,
+    setSkipped,
+    previous,
     createSession,
   };
 }

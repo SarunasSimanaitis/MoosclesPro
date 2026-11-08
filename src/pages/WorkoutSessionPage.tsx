@@ -1,48 +1,41 @@
 import {
   ArrowLeft,
   ArrowRight,
-  CheckCircle2,
-  Circle,
+  ChevronLeft,
   Dumbbell,
+  Pause,
+  Play,
+  Trash2,
   TriangleAlert,
 } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 
-import {
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
-
-import {
-  useNavigate,
-  useParams,
-} from "react-router-dom";
-
-import {
-  workoutSessionsApi,
-} from "../api/workoutSessions";
-
-import ExerciseCard from "../components/workout/ExerciseCard";
-import RestTimerPanel from "../components/workout/RestTimerPanel";
-import WorkoutFinishCard from "../components/workout/WorkoutFinishCard";
-import WorkoutSessionHeader from "../components/workout/WorkoutSessionHeader";
-import PersonalRecordBanner from "../components/workout/PersonalRecordBanner";
-
-import type { Routine } from "../types/Routine";
-import type { WorkoutExercise } from "../types/WorkoutExercise";
-import { applyPreviousPerformance } from "../lib/workoutEngine";
+import { workoutSessionsApi } from "../api/workoutSessions";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
-
+import CelebrationToast from "../components/workout/CelebrationToast";
+import PersonalRecordBanner from "../components/workout/PersonalRecordBanner";
+import RestTimerDock from "../components/workout/RestTimer";
+import WorkoutExerciseCard, { type ExerciseActions } from "../components/workout/WorkoutExerciseCard";
 import { routines } from "../data/routines";
-import { useRestTimer } from "../hooks/useRestTimer";
+import { useCustomRoutines } from "../hooks/useCustomRoutines";
 import { useWorkoutSession } from "../hooks/useWorkoutSession";
 import { useWorkoutTimer } from "../hooks/useWorkoutTimer";
-import { useRoutineStore } from "../stores/routineStore";
-import { useActiveWorkoutStore } from "../stores/activeWorkoutStore";
 import { authClient } from "../lib/auth-client";
-import { getAppPreferences } from "../lib/preferences";
-import { collectPersonalRecords, findWorkoutPersonalRecords } from "../lib/personalRecords";
+import { launchConfetti } from "../lib/confetti";
+import { primeAudio, tapFeedback, vibrate } from "../lib/feedback";
+import {
+  collectPersonalRecords,
+  findWorkoutPersonalRecords,
+  getRecordLabel,
+  type WorkoutPersonalRecord,
+} from "../lib/personalRecords";
+import { getAppPreferences, getRestOverrides, saveRestOverride } from "../lib/preferences";
+import { formatVolume } from "../lib/units";
+import { useActiveWorkoutStore } from "../stores/activeWorkoutStore";
+import { useRestTimerStore } from "../stores/restTimerStore";
+import type { Routine } from "../types/Routine";
 
 export default function WorkoutSessionPage() {
   const navigate = useNavigate();
@@ -58,10 +51,12 @@ export default function WorkoutSessionPage() {
     isPending: sessionPending,
   } = authClient.useSession();
 
-  const customRoutines =
-    useRoutineStore(
-      (state) => state.customRoutines,
-    );
+  const isBuiltInRoutine = routines.some((item) => item.id === routineId);
+
+  const {
+    customRoutines,
+    status: customRoutinesStatus,
+  } = useCustomRoutines(Boolean(session?.user) && !isBuiltInRoutine);
 
   const activeWorkout =
     useActiveWorkoutStore(
@@ -69,7 +64,6 @@ export default function WorkoutSessionPage() {
     );
 
   const startWorkout = useActiveWorkoutStore((state) => state.startWorkout);
-  const updateExercises = useActiveWorkoutStore((state) => state.updateExercises);
 
   const clearActiveWorkout =
     useActiveWorkoutStore(
@@ -78,6 +72,8 @@ export default function WorkoutSessionPage() {
     );
 
   const [isStarting, setIsStarting] = useState(false);
+  /* Bumped to start a fresh workout (with last-time prefill) after discarding one. */
+  const [startRequest, setStartRequest] = useState(0);
   const userId = session?.user?.id;
 
   const allRoutines = useMemo(
@@ -120,18 +116,17 @@ export default function WorkoutSessionPage() {
           return;
         }
 
-        const created = startWorkout(routine!, currentUserId);
-
-        if (previous) {
-          updateExercises(() =>
-            applyPreviousPerformance(created.exercises, previous),
-          );
-        }
+        startWorkout(routine!, currentUserId, {
+          previousSession: previous,
+          restOverrides: getRestOverrides(routine!.id),
+        });
       } catch (error) {
         console.error("Could not load previous workout performance:", error);
 
         if (!cancelled) {
-          startWorkout(routine!, currentUserId);
+          startWorkout(routine!, currentUserId, {
+            restOverrides: getRestOverrides(routine!.id),
+          });
         }
       } finally {
         if (!cancelled) {
@@ -151,7 +146,7 @@ export default function WorkoutSessionPage() {
     userId,
     sessionPending,
     startWorkout,
-    updateExercises,
+    startRequest,
   ]);
 
   useEffect(() => {
@@ -168,6 +163,10 @@ export default function WorkoutSessionPage() {
 
   if (!session?.user) {
     return null;
+  }
+
+  if (!routine && customRoutinesStatus === "loading") {
+    return <SessionLoading />;
   }
 
   if (!routine) {
@@ -218,11 +217,7 @@ export default function WorkoutSessionPage() {
         }
         onStartNew={() => {
           clearActiveWorkout();
-
-          startWorkout(
-            routine,
-            session.user.id,
-          );
+          setStartRequest((value) => value + 1);
         }}
         onBack={() =>
           navigate("/workouts")
@@ -258,7 +253,6 @@ function WorkoutSession({
   routine: Routine;
   onBack: () => void;
 }) {
-
   const navigate = useNavigate();
   const weightUnit = getAppPreferences().weightUnit;
 
@@ -268,16 +262,22 @@ function WorkoutSession({
     totalSets,
     progress,
     totalVolume,
+    previous,
     updateWeight,
     commitWeight,
     updateReps,
     commitReps,
+    updateRpe,
+    fillSet,
     toggleSet,
     addSet,
+    removeSet,
+    setRest,
+    setSkipped,
     createSession,
-  } =
-    useWorkoutSession();
+  } = useWorkoutSession();
 
+  /* Earlier sessions, used to spot new personal records as sets are ticked. */
   const [recordSessions, setRecordSessions] = useState(() => workoutSessionsApi.cachedList() ?? []);
   const [recordsReady, setRecordsReady] = useState(() => workoutSessionsApi.cachedList() !== undefined);
 
@@ -305,123 +305,95 @@ function WorkoutSession({
     () => recordsReady ? findWorkoutPersonalRecords(workoutExercises, previousRecords) : [],
     [previousRecords, recordsReady, workoutExercises],
   );
-  const [activeExerciseId, setActiveExerciseId] = useState<string | null>(null);
-  const activeExercise =
-    workoutExercises.find((exercise) => exercise.exercise.id === activeExerciseId) ??
-    workoutExercises.find((exercise) => exercise.sets.some((set) => !set.completed)) ??
-    workoutExercises[0];
-  const activeExerciseIndex = activeExercise
-    ? workoutExercises.findIndex((exercise) => exercise.exercise.id === activeExercise.exercise.id)
-    : 0;
+  const recordLabels = useMemo(() => {
+    const labels = new Map<string, string>();
+    for (const record of newPersonalRecords) {
+      if (!labels.has(record.setId)) labels.set(record.setId, getRecordLabel(record.kind));
+    }
+    return labels;
+  }, [newPersonalRecords]);
 
-  function focusExercise(exerciseId: string) {
-    setActiveExerciseId(exerciseId);
-    window.requestAnimationFrame(() => {
-      document.getElementById("active-exercise-card")?.scrollIntoView({ block: "start", behavior: "smooth" });
+  const { isPaused, formattedTime, togglePause } = useWorkoutTimer();
+  const startRest = useRestTimerStore((state) => state.start);
+  const stopRest = useRestTimerStore((state) => state.stop);
+  const clearActiveWorkout = useActiveWorkoutStore((state) => state.clearActiveWorkout);
+
+  const [isFinishing, setIsFinishing] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [celebration, setCelebration] = useState<{ id: number; title: string; detail: string } | null>(null);
+  const dismissCelebration = useCallback(() => setCelebration(null), []);
+
+  function celebrateRecords(records: WorkoutPersonalRecord[]) {
+    // One set can beat several records at once (e.g. weight and estimated 1RM).
+    const kinds = [...new Set(records.map((record) => getRecordLabel(record.kind)))];
+    setCelebration({
+      id: Date.now(),
+      title: "New personal record!",
+      detail: `${records[0].exerciseName} · ${kinds.join(", ")}`,
     });
+    launchConfetti({ y: 0.35, count: 90 });
+    vibrate([40, 60, 40, 60, 120]);
   }
 
-  const {
-    isPaused,
-    formattedTime,
-    togglePause,
-  } = useWorkoutTimer();
+  function handleToggleSet(exerciseId: string, setId: string) {
+    const exercise = workoutExercises.find((item) => item.exercise.id === exerciseId);
+    const set = exercise?.sets.find((item) => item.id === setId);
+    if (!exercise || !set) return;
 
-  const {
-    restTime,
-    restDuration,
-    start: startRestTimer,
-    stop: stopRestTimer,
-    addTime,
-    removeTime,
-  } = useRestTimer();
+    const completing = !set.completed;
+    toggleSet(exerciseId, setId);
 
-  const clearActiveWorkout =
-    useActiveWorkoutStore(
-      (state) =>
-        state.clearActiveWorkout,
-    );
+    if (!completing) return;
 
-  const [
-    isFinishing,
-    setIsFinishing,
-  ] = useState(false);
+    tapFeedback();
+    primeAudio();
 
-  const [
-    saveError,
-    setSaveError,
-  ] = useState<string | null>(
-    null,
-  );
-
-  function handleToggleSet(
-    exerciseId: string,
-    setId: string,
-  ) {
-    const exercise =
-      workoutExercises.find(
-        (item) =>
-          item.exercise.id ===
-          exerciseId,
-      );
-
-    if (!exercise) {
-      return;
+    if (exercise.restSeconds > 0) {
+      startRest(exercise.restSeconds, exercise.exercise.name);
     }
 
-    const set = exercise.sets.find(
-      (item) =>
-        item.id === setId,
-    );
+    // The store updates synchronously, so the new state is already readable here.
+    const latest = useActiveWorkoutStore.getState().activeWorkout?.exercises ?? [];
 
-    if (!set) {
-      return;
-    }
-
-    toggleSet(
-      exerciseId,
-      setId,
-    );
-
-    if (!set.completed) {
-      startRestTimer(
-        exercise.restSeconds,
-      );
-
-      const exerciseFinished = exercise.sets.every((item) => item.id === setId || item.completed);
-      if (exerciseFinished) {
-        const currentIndex = workoutExercises.findIndex((item) => item.exercise.id === exerciseId);
-        const nextExercise = workoutExercises
-          .slice(currentIndex + 1)
-          .find((item) => item.sets.some((itemSet) => !itemSet.completed));
-        if (nextExercise) focusExercise(nextExercise.exercise.id);
-      }
+    if (recordsReady) {
+      const records = findWorkoutPersonalRecords(latest, previousRecords).filter((record) => record.setId === setId);
+      if (records.length > 0) celebrateRecords(records);
     }
   }
+
+  function changeRest(exerciseId: string, seconds: number) {
+    setRest(exerciseId, seconds);
+    saveRestOverride(routine.id, exerciseId, seconds);
+  }
+
+  const actions: ExerciseActions = {
+    updateWeight,
+    commitWeight,
+    updateReps,
+    commitReps,
+    updateRpe,
+    fillSet,
+    toggleSet: handleToggleSet,
+    addSet,
+    removeSet,
+    changeRest,
+    setSkipped,
+  };
 
   async function finishWorkout() {
-    if (isFinishing) {
-      return;
-    }
+    if (isFinishing) return;
 
     if (completedSets === 0) {
-      setSaveError("Complete at least one set before finishing this workout.");
+      setSaveError("Tick at least one set before finishing this workout.");
       return;
     }
 
-    const isIncomplete =
-      totalSets > 0 &&
-      completedSets < totalSets;
-
-    if (isIncomplete) {
-      const confirmed =
-        window.confirm(
-          `You have completed ${completedSets} of ${totalSets} sets. Finish the workout anyway?`,
-        );
-
-      if (!confirmed) {
-        return;
-      }
+    const remaining = totalSets - completedSets;
+    if (remaining > 0) {
+      const confirmed = window.confirm(
+        `${remaining} ${remaining === 1 ? "set isn't" : "sets aren't"} ticked yet. Finish the workout anyway?`,
+      );
+      if (!confirmed) return;
     }
 
     setIsFinishing(true);
@@ -429,237 +401,149 @@ function WorkoutSession({
 
     try {
       const session = createSession();
-
       await workoutSessionsApi.create(session);
-
-      stopRestTimer();
+      stopRest();
       clearActiveWorkout();
-
       navigate(`/history/${session.id}`, {
         replace: true,
+        state: { justFinished: true, records: newPersonalRecords.length },
       });
     } catch (error) {
-      console.error(
-        "Failed to save workout:",
-        error,
-      );
-
+      console.error("Failed to save workout:", error);
       setSaveError(
         error instanceof Error
           ? error.message
           : "Could not save your workout. Please try again.",
       );
-
       setIsFinishing(false);
     }
   }
 
-  function handleExit() {
-    stopRestTimer();
-    onBack();
+  function discardWorkout() {
+    if (!window.confirm("Discard this workout? Nothing from it will be saved.")) return;
+
+    stopRest();
+    clearActiveWorkout();
+    navigate("/workouts", { replace: true });
   }
 
+  const finishedAll = totalSets > 0 && completedSets === totalSets;
+
   return (
-    <main className="mx-auto max-w-7xl space-y-6 pb-10">
-      <button
-        type="button"
-        onClick={handleExit}
-        className="
-          inline-flex
-          items-center
-          gap-2
-          text-sm
-          font-semibold
-          text-[var(--text-muted)]
-          transition-colors
-          hover:text-[var(--primary)]
-        "
-      >
-        <ArrowLeft size={17} />
-        Leave workout
-      </button>
+    <div className="mx-auto max-w-2xl pb-40">
+      {/* Sticky workout header: timer, progress and Finish are always in reach. */}
+      <header className="sticky top-[calc(var(--topbar-height)+env(safe-area-inset-top))] z-30 -mx-4 border-b border-[var(--border)] bg-[var(--background)] px-4 py-2.5 sm:mx-0 sm:px-0 md:top-0">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={onBack}
+            aria-label="Leave workout (it keeps running)"
+            title="Leave workout. It keeps running."
+            className="-ml-2 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[var(--text)] hover:bg-[var(--surface-soft)]"
+          >
+            <ChevronLeft size={24} aria-hidden="true" />
+          </button>
 
-      <WorkoutSessionHeader
-        routineName={routine.name}
-        exerciseCount={
-          workoutExercises.length
-        }
-        completedSets={
-          completedSets
-        }
-        totalSets={totalSets}
-        progress={progress}
-        totalVolume={totalVolume}
-        weightUnit={weightUnit}
-        formattedTime={
-          formattedTime
-        }
-        isPaused={isPaused}
-        onTogglePause={
-          togglePause
-        }
-      />
-
-      {saveError && (
-        <Card
-          role="alert"
-          className="border-[var(--danger)]/30 bg-[var(--danger-soft)] p-5 shadow-none"
-        >
-          <div className="flex items-start gap-3">
-            <TriangleAlert
-              size={19}
-              className="mt-0.5 shrink-0 text-[var(--danger)]"
-            />
-
-            <div>
-              <p className="font-bold text-[var(--danger)]">
-                Your workout wasn't saved
-              </p>
-
-              <p className="mt-1 text-sm text-[var(--danger)]">
-                {saveError}
-              </p>
-            </div>
+          <div className="min-w-0 flex-1">
+            <h1 className="truncate text-[17px] font-bold leading-tight text-[var(--text)]">{routine.name}</h1>
+            <p className="mt-0.5 flex items-center gap-1.5 text-xs text-[var(--text-muted)]">
+              <span className={`font-mono font-semibold tabular-nums ${isPaused ? "text-[var(--warning)]" : "text-[var(--text)]"}`}>
+                {formattedTime}
+              </span>
+              <span aria-hidden="true">·</span>
+              <span>{completedSets}/{totalSets} sets</span>
+              <span aria-hidden="true">·</span>
+              <span className="truncate">{formatVolume(totalVolume, weightUnit)} {weightUnit}</span>
+            </p>
           </div>
-        </Card>
-      )}
 
-      {restTime !== null && (
-        <RestTimerPanel
-          restTime={restTime}
-          restDuration={
-            restDuration
-          }
-          onAdd={() =>
-            addTime(15)
-          }
-          onRemove={() =>
-            removeTime(15)
-          }
-          onStop={
-            stopRestTimer
-          }
-        />
-      )}
+          <button
+            type="button"
+            onClick={togglePause}
+            aria-label={isPaused ? "Resume workout timer" : "Pause workout timer"}
+            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${isPaused ? "bg-[var(--warning-soft)] text-[var(--warning)]" : "bg-[var(--surface-soft)] text-[var(--text)]"}`}
+          >
+            {isPaused ? <Play size={17} aria-hidden="true" /> : <Pause size={17} aria-hidden="true" />}
+          </button>
 
-      <section
-        aria-label="Workout exercises"
-        className="space-y-5"
-      >
-        {activeExercise && (
-          <>
-            <ExerciseFocusNavigation
-              exercises={workoutExercises}
-              activeExercise={activeExercise}
-              activeIndex={activeExerciseIndex}
-              onSelect={focusExercise}
-            />
-            <div id="active-exercise-card" className="scroll-mt-44">
-              <ExerciseCard
-                key={activeExercise.exercise.id}
-                workoutExercise={activeExercise}
-                weightUnit={weightUnit}
-                personalRecords={newPersonalRecords}
-                updateWeight={updateWeight}
-                commitWeight={commitWeight}
-                updateReps={updateReps}
-                commitReps={commitReps}
-                updateCompleted={handleToggleSet}
-                onAddSet={addSet}
-              />
-            </div>
-          </>
-        )}
-      </section>
-
-      <PersonalRecordBanner
-        records={newPersonalRecords}
-        weightUnit={weightUnit}
-      />
-
-      <WorkoutFinishCard
-        completedSets={
-          completedSets
-        }
-        totalSets={totalSets}
-        personalRecordCount={newPersonalRecords.length}
-        isFinishing={isFinishing}
-        onFinish={() =>
-          void finishWorkout()
-        }
-      />
-    </main>
-  );
-}
-
-function ExerciseFocusNavigation({
-  exercises,
-  activeExercise,
-  activeIndex,
-  onSelect,
-}: {
-  exercises: WorkoutExercise[];
-  activeExercise: WorkoutExercise;
-  activeIndex: number;
-  onSelect: (exerciseId: string) => void;
-}) {
-  const previous = exercises[activeIndex - 1];
-  const next = exercises[activeIndex + 1];
-  const isComplete = activeExercise.sets.length > 0 && activeExercise.sets.every((set) => set.completed);
-
-  return (
-    <Card className="sticky top-[4.25rem] z-30 overflow-hidden border-[var(--border-strong)] bg-[var(--surface)]/95 p-2.5 shadow-[var(--shadow-md)] backdrop-blur-2xl sm:top-[4.75rem] sm:px-4 sm:py-3">
-      <div className="flex min-w-0 items-center gap-2">
-        <button
-          type="button"
-          onClick={() => previous && onSelect(previous.exercise.id)}
-          disabled={!previous}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-[var(--text-muted)] transition-[background-color,color,opacity] hover:bg-[var(--surface-soft)] hover:text-[var(--text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] disabled:opacity-30"
-          aria-label="Previous exercise"
-        >
-          <ArrowLeft size={18} aria-hidden="true" />
-        </button>
-
-        <div className="min-w-0 flex-1">
-          <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[var(--primary)]">
-            Exercise {activeIndex + 1} of {exercises.length}{isComplete ? " · Complete" : " · In progress"}
-          </p>
-          <p className="truncate text-sm font-black text-[var(--text)] sm:text-base">{activeExercise.exercise.name}</p>
+          <Button size="sm" onClick={() => void finishWorkout()} loading={isFinishing} className="shrink-0">
+            Finish
+          </Button>
         </div>
 
+        <div
+          className="mt-2.5 h-1 overflow-hidden rounded-full bg-[var(--surface-soft)]"
+          role="progressbar"
+          aria-label="Sets completed"
+          aria-valuemin={0}
+          aria-valuemax={totalSets}
+          aria-valuenow={completedSets}
+        >
+          <div
+            className={`h-full rounded-full transition-[width] duration-500 ease-out ${finishedAll ? "bg-[var(--success)]" : "bg-[var(--primary)]"}`}
+            style={{ width: `${Math.round(progress)}%` }}
+          />
+        </div>
+      </header>
+
+      {isPaused && (
+        <p className="mt-3 rounded-[var(--radius-md)] bg-[var(--warning-soft)] px-3 py-2 text-sm text-[var(--warning)]">
+          Workout timer paused. Tap play to carry on.
+        </p>
+      )}
+
+      {saveError && (
+        <div role="alert" className="mt-3 flex items-start gap-3 rounded-[var(--radius-md)] bg-[var(--danger-soft)] p-3 text-sm text-[var(--danger)]">
+          <TriangleAlert size={18} className="mt-0.5 shrink-0" aria-hidden="true" />
+          <div>
+            <p className="font-semibold">Your workout wasn't saved</p>
+            <p className="mt-0.5">{saveError}</p>
+          </div>
+        </div>
+      )}
+
+      <section aria-label="Exercises" className="mt-4 space-y-3">
+        {workoutExercises.map((workoutExercise) => (
+          <WorkoutExerciseCard
+            key={workoutExercise.exercise.id}
+            workoutExercise={workoutExercise}
+            previousSets={previous[workoutExercise.exercise.id] ?? []}
+            weightUnit={weightUnit}
+            recordLabels={recordLabels}
+            actions={actions}
+          />
+        ))}
+      </section>
+
+      <div className="mt-5">
+        <PersonalRecordBanner records={newPersonalRecords} weightUnit={weightUnit} />
+      </div>
+
+      <div className="mt-5 space-y-2">
+        <Button size="lg" className="w-full" onClick={() => void finishWorkout()} loading={isFinishing}>
+          {finishedAll ? "Finish workout 🎉" : "Finish workout"}
+        </Button>
         <button
           type="button"
-          onClick={() => next && onSelect(next.exercise.id)}
-          disabled={!next}
-          className="flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-2xl bg-[var(--primary-soft)] px-3 text-xs font-black text-[var(--primary)] transition-[background-color,opacity,transform] hover:bg-[var(--primary)] hover:text-[var(--primary-foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] active:scale-[0.97] disabled:opacity-35 disabled:hover:bg-[var(--primary-soft)] disabled:hover:text-[var(--primary)]"
-          aria-label={next ? `Next exercise: ${next.exercise.name}` : "Last exercise"}
+          onClick={discardWorkout}
+          className="flex h-11 w-full items-center justify-center gap-2 rounded-[var(--radius-md)] text-sm font-semibold text-[var(--danger)] hover:bg-[var(--danger-soft)]"
         >
-          Next
-          <ArrowRight size={15} aria-hidden="true" />
+          <Trash2 size={16} aria-hidden="true" />
+          Discard workout
         </button>
       </div>
 
-      <div className="mt-2 flex gap-1.5 overflow-x-auto pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" role="group" aria-label="Choose an exercise">
-        {exercises.map((exercise, index) => {
-          const selected = exercise.exercise.id === activeExercise.exercise.id;
-          const done = exercise.sets.length > 0 && exercise.sets.every((set) => set.completed);
+      <RestTimerDock />
 
-          return (
-            <button
-              key={exercise.exercise.id}
-              type="button"
-              onClick={() => onSelect(exercise.exercise.id)}
-              aria-current={selected ? "step" : undefined}
-              aria-label={`Go to exercise ${index + 1}: ${exercise.exercise.name}${done ? ", complete" : ""}`}
-              className={`inline-flex min-h-8 shrink-0 items-center gap-1.5 rounded-full border px-3 text-[11px] font-bold transition-[background-color,border-color,color] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] ${selected ? "border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary)]" : "border-[var(--border)] bg-[var(--surface)] text-[var(--text-muted)] hover:bg-[var(--surface-soft)]"}`}
-            >
-              {done ? <CheckCircle2 size={13} aria-hidden="true" /> : <Circle size={12} aria-hidden="true" />}
-              <span>{index + 1}</span>
-            </button>
-          );
-        })}
-      </div>
-    </Card>
+      {celebration && (
+        <CelebrationToast
+          key={celebration.id}
+          title={celebration.title}
+          detail={celebration.detail}
+          onDone={dismissCelebration}
+        />
+      )}
+    </div>
   );
 }
 
@@ -669,13 +553,13 @@ function MissingWorkout({
   onBack: () => void;
 }) {
   return (
-    <main className="mx-auto flex min-h-[65vh] max-w-2xl items-center justify-center">
+    <div className="mx-auto flex min-h-[65vh] max-w-2xl items-center justify-center">
       <Card className="w-full p-10 text-center">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--primary-soft)] text-[var(--primary)]">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-[var(--radius-lg)] bg-[var(--primary-soft)] text-[var(--primary)]">
           <Dumbbell size={28} />
         </div>
 
-        <h1 className="mt-6 text-3xl font-black text-[var(--text)]">
+        <h1 className="mt-6 font-bold text-[var(--text)] text-[22px] sm:text-2xl">
           Workout not found
         </h1>
 
@@ -694,7 +578,7 @@ function MissingWorkout({
           Back to workouts
         </Button>
       </Card>
-    </main>
+    </div>
   );
 }
 
@@ -712,17 +596,17 @@ function WorkoutConflict({
   onBack: () => void;
 }) {
   return (
-    <main className="mx-auto flex min-h-[65vh] max-w-2xl items-center justify-center">
+    <div className="mx-auto flex min-h-[65vh] max-w-2xl items-center justify-center">
       <Card className="w-full p-8 md:p-10">
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--warning-soft)] text-[var(--warning)]">
+        <div className="flex h-14 w-14 items-center justify-center rounded-[var(--radius-lg)] bg-[var(--warning-soft)] text-[var(--warning)]">
           <TriangleAlert size={25} />
         </div>
 
-        <p className="mt-6 text-xs font-bold uppercase tracking-[0.2em] text-[var(--primary)]">
+        <p className="mt-6 text-xs font-semibold text-[var(--text-muted)]">
           Workout already active
         </p>
 
-        <h1 className="mt-2 text-3xl font-black tracking-tight text-[var(--text)]">
+        <h1 className="mt-2 font-bold tracking-tight text-[var(--text)] text-[22px] sm:text-2xl">
           Finish what you started?
         </h1>
 
@@ -764,13 +648,13 @@ function WorkoutConflict({
           Back to workouts
         </button>
       </Card>
-    </main>
+    </div>
   );
 }
 
 function SessionLoading() {
   return (
-    <main
+    <div
       role="status"
       aria-label="Loading workout"
       className="mx-auto max-w-7xl space-y-6"
@@ -784,6 +668,6 @@ function SessionLoading() {
       <div className="h-64 animate-pulse rounded-[var(--radius-xl)] bg-[var(--surface-soft)]" />
 
       <div className="h-96 animate-pulse rounded-[var(--radius-xl)] bg-[var(--surface-soft)]" />
-    </main>
+    </div>
   );
 }

@@ -182,3 +182,9 @@ function toWorkoutRecord(
     reps: set.reps,
   };
 }
+
+export function getRecordLabel(kind: PersonalRecordKind) {
+  if (kind === "load") return "Heaviest weight";
+  if (kind === "estimated-one-rep-max") return "Best est. 1RM";
+  return "Most reps";
+}

@@ -19,6 +19,18 @@ MoosclesPro is a focused workout tracking and logging app built around one simpl
 - Responsive desktop and mobile layouts
 - Session-based authentication and user-scoped MongoDB data
 
+## 🧪 Automated Testing & Business Logic
+To guarantee reliability across complex workout tracking state machines and mathematical calculations, this project includes comprehensive unit test suites powered by **Vitest**.
+
+### Key Test Coverage
+- **Metric Analytics Engine:** Verifies multi-set aggregate volume calculation boundaries.
+- **Workflow State Verification:** Validates that incomplete exercises or unstarted workout routines are safely excluded from persistent long-term history statistics.
+
+To execute the test runner locally:
+```bash
+npm run test
+```
+
 ## Architecture
 
 - **React + TypeScript + Vite** — browser application

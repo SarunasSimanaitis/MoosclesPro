@@ -1,5 +1,4 @@
-import assert from "node:assert/strict";
-import { describe, it } from "node:test";
+import { describe, it, expect } from "vitest";
 
 import {
   calculateExerciseStatistics,
@@ -47,10 +46,10 @@ describe("completed workout statistics", () => {
       }),
     ]);
 
-    assert.equal(result.workouts, 1);
-    assert.equal(result.volume, 500);
-    assert.equal(result.trainingHours, 1.5);
-    assert.equal(result.streak, 1);
+    expect(result.workouts).toBe(1);
+    expect(result.volume).toBe(500);
+    expect(result.trainingHours).toBe(1.5);
+    expect(result.streak).toBe(1);
   });
 
   it("does not count sessions without completed work or valid timing", () => {
@@ -68,15 +67,15 @@ describe("completed workout statistics", () => {
       startedAt: "not-a-date",
     });
 
-    assert.equal(hasCompletedWork(empty), false);
-    assert.deepEqual(calculateOverview([empty, invalidTime]), {
+    expect(hasCompletedWork(empty)).toBe(false);
+    expect(calculateOverview([empty, invalidTime])).toEqual({
       workouts: 0,
       volume: 0,
       trainingHours: 0,
       streak: 0,
     });
-    assert.deepEqual(calculateExerciseStatistics([empty]), []);
-    assert.equal(calculateWeeklyActivity([empty]).at(-1).workouts, 0);
+    expect(calculateExerciseStatistics([empty])).toEqual([]);
+    expect(calculateWeeklyActivity([empty]).at(-1).workouts).toBe(0);
   });
 
   it("counts an exercise once per workout and excludes incomplete exercises", () => {
@@ -96,7 +95,7 @@ describe("completed workout statistics", () => {
       ],
     });
 
-    assert.deepEqual(calculateExerciseStatistics([workout]), [
+    expect(calculateExerciseStatistics([workout])).toEqual([
       {
         exerciseId: "squat",
         name: "Barbell squat",

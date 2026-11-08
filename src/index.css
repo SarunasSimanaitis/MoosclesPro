@@ -1,269 +1,432 @@
 @import "tailwindcss";
 
+/*
+ * MoosclesPro design tokens.
+ *
+ * One flat, quiet system: white (light) or black (dark) surfaces separated by
+ * hairline borders, one blue accent taken from the logo, and small radii.
+ * Components only ever reference these variables, so a colour change happens
+ * here and nowhere else.
+ */
 :root {
   color-scheme: light;
-  --background: #CCD0CF;
-  --surface: #e5e8e7;
-  --surface-soft: #9BA8AB;
-  --surface-hover: #b8c1c1;
-  --primary: #253745;
-  --primary-hover: #11212D;
-  --primary-soft: rgba(37, 55, 69, 0.12);
-  --primary-foreground: #CCD0CF;
-  --text: #06141B;
-  --text-muted: #253745;
-  --text-subtle: #4A5C6A;
-  --border: rgba(6, 20, 27, 0.14);
-  --border-strong: rgba(6, 20, 27, 0.26);
-  --success: #34835d;
-  --success-soft: rgba(52, 131, 93, 0.12);
-  --warning: #a66b2c;
-  --warning-soft: rgba(166, 107, 44, 0.12);
-  --danger: #bd514d;
-  --danger-soft: rgba(189, 81, 77, 0.1);
-  --focus-ring: rgba(37, 55, 69, 0.24);
-  --shadow-sm: 0 3px 12px rgba(6, 20, 27, 0.07);
-  --shadow-lg: 0 18px 48px rgba(6, 20, 27, 0.12);
-  --shadow-xl: 0 28px 72px rgba(6, 20, 27, 0.16);
-  --radius-sm: 0.75rem;
-  --radius-md: 1rem;
-  --radius-lg: 1.25rem;
-  --radius-xl: 1.5rem;
-  --content-width: 1720px;
+  --background: #ffffff;
+  --surface: #ffffff;
+  --surface-soft: #efefef;
+  --surface-hover: #e3e3e3;
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --primary-soft: rgba(37, 99, 235, 0.08);
+  --primary-foreground: #ffffff;
+  --text: #0c1014;
+  --text-muted: #737373;
+  --text-subtle: #8e8e8e;
+  --border: #dbdbdb;
+  --border-strong: #c7c7c7;
+  --success: #16a34a;
+  --success-soft: rgba(22, 163, 74, 0.1);
+  --warning: #d97706;
+  --warning-soft: rgba(217, 119, 6, 0.1);
+  --danger: #ed4956;
+  --danger-soft: rgba(237, 73, 86, 0.1);
+  --focus-ring: rgba(37, 99, 235, 0.35);
+  --shadow-sm: none;
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 28px rgba(0, 0, 0, 0.12);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.16);
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 12px;
+  --content-width: 975px;
+
+  /* Program cards and other "featured" surfaces use the regular palette. */
+  --feature-background: var(--surface-soft);
+  --feature-surface: var(--surface);
+  --feature-border: var(--border);
+  --feature-text: var(--text);
+  --feature-muted: var(--text-muted);
+  --feature-subtle: var(--text-subtle);
+
+  /* Shell measurements shared by the navigation and fixed elements. */
+  --topbar-height: 3.25rem;
+  --bottom-nav-height: 3.25rem;
+  --bottom-offset: 0px;
 }
 
 .dark {
   color-scheme: dark;
-  --background: #06141B;
-  --surface: #11212D;
-  --surface-soft: #253745;
-  --surface-hover: #4A5C6A;
-  --primary: #9BA8AB;
-  --primary-hover: #CCD0CF;
-  --primary-soft: rgba(155, 168, 171, 0.14);
-  --primary-foreground: #06141B;
-  --text: #CCD0CF;
-  --text-muted: #9BA8AB;
-  --text-subtle: #9BA8AB;
-  --border: rgba(155, 168, 171, 0.14);
-  --border-strong: rgba(155, 168, 171, 0.26);
-  --success: #5dbb88;
-  --success-soft: rgba(93, 187, 136, 0.14);
-  --warning: #e4b477;
-  --warning-soft: rgba(228, 180, 119, 0.14);
-  --danger: #ee928b;
-  --danger-soft: rgba(238, 146, 139, 0.14);
-  --focus-ring: rgba(155, 168, 171, 0.32);
-  --shadow-sm: 0 4px 16px rgba(0, 0, 0, 0.2);
-  --shadow-lg: 0 20px 56px rgba(0, 0, 0, 0.34);
-  --shadow-xl: 0 32px 88px rgba(0, 0, 0, 0.46);
+  --background: #000000;
+  --surface: #000000;
+  --surface-soft: #262626;
+  --surface-hover: #363636;
+  --primary: #4b8bff;
+  --primary-hover: #6ea1ff;
+  --primary-soft: rgba(75, 139, 255, 0.12);
+  --primary-foreground: #ffffff;
+  --text: #f5f5f5;
+  --text-muted: #a8a8a8;
+  --text-subtle: #8e8e8e;
+  --border: #262626;
+  --border-strong: #363636;
+  --success: #4ade80;
+  --success-soft: rgba(74, 222, 128, 0.12);
+  --warning: #fbbf24;
+  --warning-soft: rgba(251, 191, 36, 0.12);
+  --danger: #ff6b76;
+  --danger-soft: rgba(255, 107, 118, 0.12);
+  --focus-ring: rgba(75, 139, 255, 0.45);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 8px 28px rgba(0, 0, 0, 0.6);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.7);
 }
 
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
+/* Elevated layers (menus, dialogs, floating panels) sit on a lifted surface in dark mode. */
+.dark .elevated {
+  --surface: #121212;
+  --surface-soft: #262626;
 }
 
-html {
-  min-width: 320px;
-  scroll-behavior: smooth;
-  text-size-adjust: 100%;
+/*
+ * Element defaults live in the base layer so Tailwind utilities (e.g. `hidden`
+ * on an icon) always win over them.
+ */
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    min-width: 320px;
+    /* Anything scrolled into view (focus, "next exercise") stays clear of the fixed bars. */
+    scroll-padding-top: calc(var(--topbar-height) + 1rem);
+    scroll-padding-bottom: calc(var(--bottom-offset) + 1rem);
+    text-size-adjust: 100%;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    margin: 0;
+    min-width: 320px;
+    min-height: 100dvh;
+    background-color: var(--background);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.45;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  @media (min-width: 640px) {
+    body {
+      font-size: 15px;
+    }
+  }
+
+  #root {
+    min-height: 100dvh;
+  }
+
+  * {
+    scrollbar-color: var(--border-strong) transparent;
+  }
+
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
+    color: inherit;
+  }
+
+  button {
+    cursor: pointer;
+  }
+
+  button:disabled {
+    cursor: not-allowed;
+  }
+
+  button,
+  a,
+  input,
+  select,
+  textarea,
+  summary {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  button:not(:disabled),
+  a {
+    transition-property: color, background-color, border-color, opacity;
+    transition-duration: 120ms;
+    transition-timing-function: ease;
+  }
+
+  img,
+  svg {
+    display: block;
+  }
+
+  img {
+    max-width: 100%;
+  }
+
+  a {
+    color: inherit;
+    text-decoration-color: var(--border-strong);
+    text-underline-offset: 0.2em;
+  }
+
+  input,
+  select,
+  textarea {
+    color: var(--text);
+  }
+
+  ::placeholder {
+    color: var(--text-subtle);
+    opacity: 1;
+  }
+
+  ::selection {
+    background: var(--primary);
+    color: var(--primary-foreground);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
 }
 
-body {
-  margin: 0;
-  min-width: 320px;
-  min-height: 100vh;
-  background-color: var(--background);
-  background-image:
-    radial-gradient(ellipse at 8% 2%, rgba(74, 92, 106, 0.12), transparent 38%),
-    radial-gradient(ellipse at 96% 92%, rgba(74, 92, 106, 0.10), transparent 40%);
-  color: var(--text);
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  transition: background-color 180ms ease, color 180ms ease;
-}
-
-.dark body {
-  background-image:
-    radial-gradient(ellipse at 8% 2%, rgba(74, 92, 106, 0.14), transparent 38%),
-    radial-gradient(ellipse at 96% 92%, rgba(74, 92, 106, 0.10), transparent 40%);
-}
+/* ---------- Application shell ---------- */
 
 .app-shell {
-  min-height: 100vh;
-  background:
-    radial-gradient(ellipse at 14% 0%, rgba(74, 92, 106, 0.06), transparent 40%),
-    transparent;
+  min-height: 100dvh;
+  background: var(--background);
 }
 
-.dark .app-shell {
-  background:
-    radial-gradient(ellipse at 14% 0%, rgba(74, 92, 106, 0.08), transparent 42%),
-    transparent;
+.app-content {
+  padding-top: 1rem;
+  padding-bottom: calc(2rem + var(--bottom-offset));
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
+}
+
+@media (min-width: 640px) {
+  .app-content {
+    padding: 1.75rem 1.5rem 3rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .app-content {
+    padding: 2rem 2.5rem 4rem;
+  }
+}
+
+/* On phones the bottom tab bar is fixed, so fixed and sticky elements sit above it. */
+@media (min-width: 768px) {
+  html {
+    scroll-padding-top: 1rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .has-bottom-nav {
+    --bottom-offset: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom));
+  }
+}
+
+.page-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
 }
 
 .auth-shell {
-  background-color: var(--background);
-  background-image:
-    radial-gradient(ellipse at 14% 10%, rgba(255, 255, 255, 0.8), transparent 45%),
-    radial-gradient(ellipse at 95% 92%, rgba(74, 92, 106, 0.14), transparent 42%);
-}
-
-.dark .auth-shell {
-  background-image:
-    radial-gradient(ellipse at 14% 10%, rgba(74, 92, 106, 0.14), transparent 45%),
-    radial-gradient(ellipse at 95% 92%, rgba(155, 168, 171, 0.10), transparent 42%);
+  background: var(--background);
 }
 
 .auth-art {
-  background:
-    radial-gradient(ellipse at 82% 20%, rgba(74, 92, 106, 0.18), transparent 46%),
-    radial-gradient(ellipse at 15% 90%, rgba(255, 255, 255, 0.72), transparent 50%);
-}
-
-.dark .auth-art {
-  background:
-    radial-gradient(ellipse at 82% 20%, rgba(74, 92, 106, 0.18), transparent 46%),
-    radial-gradient(ellipse at 15% 90%, rgba(74, 92, 106, 0.10), transparent 50%);
-}
-
-* {
-  scrollbar-color: var(--border-strong) transparent;
-}
-
-button,
-input,
-textarea,
-select {
-  font: inherit;
-}
-
-button {
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-}
-
-button:disabled {
-  cursor: not-allowed;
-}
-
-img,
-svg {
-  display: block;
-}
-
-img {
-  max-width: 100%;
-}
-
-a {
-  color: inherit;
-  text-decoration-color: var(--border-strong);
-  text-underline-offset: 0.2em;
-}
-
-input::placeholder,
-textarea::placeholder {
-  color: var(--text-muted);
-  opacity: 0.72;
-}
-
-::selection {
-  background: var(--primary);
-  color: var(--primary-foreground);
-}
-
-:focus-visible {
-  outline: 2px solid var(--primary);
-  outline-offset: 3px;
-}
-
-#root {
-  min-height: 100vh;
+  background: var(--surface-soft);
 }
 
 .theme-toggle {
   display: inline-flex;
-  min-width: 44px;
-  min-height: 44px;
+  min-width: 40px;
+  min-height: 40px;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  border: 1px solid var(--border-strong);
-  border-radius: 999px;
-  background: var(--surface-soft);
+  border-radius: var(--radius-md);
   color: var(--text);
-  box-shadow: var(--shadow-sm);
-  transition: transform 160ms ease, border-color 160ms ease, background-color 160ms ease;
 }
 
 .theme-toggle:hover {
-  transform: translateY(-1px);
-  border-color: var(--primary);
-  background: var(--primary-soft);
+  background: var(--surface-soft);
 }
 
-.theme-toggle svg {
-  color: var(--primary);
-}
+/* ---------- Surfaces ---------- */
 
 .site-card {
-  box-shadow: var(--shadow-sm);
-  backdrop-filter: blur(18px);
+  border-color: var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+
+.site-card-hover {
+  transition: border-color 120ms ease, background-color 120ms ease;
 }
 
 .site-card-hover:hover {
-  box-shadow: var(--shadow-lg);
+  border-color: var(--border-strong);
 }
 
 .mindset-quote {
-  background:
-    radial-gradient(ellipse at 95% 5%, rgba(218, 182, 113, 0.17), transparent 45%),
-    var(--surface);
+  background: var(--surface);
 }
 
-.dark .mindset-quote {
-  background:
-    radial-gradient(ellipse at 95% 5%, rgba(218, 182, 113, 0.13), transparent 45%),
-    var(--surface);
+/* ---------- Motion ---------- */
+
+.page-transition {
+  animation: page-enter 160ms ease-out backwards;
 }
 
-@media (max-width: 639px) {
-  body {
-    overflow-x: hidden;
+@keyframes page-enter {
+  from {
+    opacity: 0;
   }
-
-  .app-content {
-    padding-bottom: calc(1.5rem + env(safe-area-inset-bottom));
-  }
-
-  .page-stack {
-    gap: 1.15rem;
+  to {
+    opacity: 1;
   }
 }
 
-@media (min-width: 1600px) {
-  html {
-    font-size: 17px;
+.set-row-completed {
+  animation: set-confirmed 280ms ease-out both;
+}
+
+.set-row-record {
+  animation: record-earned 420ms ease-out both;
+}
+
+.personal-record-banner {
+  animation: record-banner-enter 260ms ease-out both;
+}
+
+@keyframes set-confirmed {
+  0% {
+    transform: scale(0.99);
+  }
+  60% {
+    transform: scale(1.004);
+  }
+  100% {
+    transform: scale(1);
   }
 }
 
-@media (min-width: 2200px) {
-  html {
-    font-size: 18px;
+@keyframes record-earned {
+  0% {
+    box-shadow: 0 0 0 0 rgba(217, 119, 6, 0);
+  }
+  45% {
+    box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.2);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(217, 119, 6, 0);
+  }
+}
+
+@keyframes record-banner-enter {
+  from {
+    opacity: 0;
+    transform: translateY(0.25rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ---------- Workout logger ---------- */
+
+/* Set table: Set · Previous · weight · reps · RPE · done */
+.set-grid {
+  display: grid;
+  grid-template-columns: 2rem minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 0.85fr) 2.75rem 2.5rem;
+  column-gap: 0.375rem;
+}
+
+@media (min-width: 640px) {
+  .set-grid {
+    grid-template-columns: 2.5rem minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr) 3.25rem 2.75rem;
+    column-gap: 0.5rem;
+  }
+}
+
+.set-check.is-done svg {
+  animation: check-pop 320ms cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+
+.exercise-done {
+  animation: check-pop 420ms cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+
+.set-input-invalid {
+  animation: shake 320ms ease-in-out both;
+}
+
+.rest-finished,
+.celebration-toast {
+  animation: slide-up 260ms cubic-bezier(0.2, 1, 0.4, 1) both;
+}
+
+@keyframes check-pop {
+  0% {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(1.18);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-4px);
+  }
+  75% {
+    transform: translateX(4px);
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
-
   *,
   *::before,
   *::after {
@@ -274,165 +437,8 @@ textarea::placeholder {
   }
 }
 
-.mobile-navigation {
-  max-height: 0;
-  overflow: hidden;
-  opacity: 0;
-  transform: translateY(-0.5rem);
-  visibility: hidden;
-  transition: max-height 260ms cubic-bezier(0.22, 1, 0.36, 1), opacity 180ms ease, transform 220ms ease, visibility 220ms;
-}
-
-.mobile-navigation-open {
-  max-height: min(75vh, 36rem);
-  overflow-y: auto;
-  opacity: 1;
-  transform: translateY(0);
-  visibility: visible;
-}
-
-.page-transition {
-  animation: page-enter 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-@keyframes page-enter {
-  from {
-    opacity: 0;
-    transform: translateY(0.35rem);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.set-row-completed {
-  animation: set-confirmed 360ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
-}
-
-.set-row-record {
-  animation: record-earned 520ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
-}
-
-.personal-record-banner {
-  animation: record-banner-enter 380ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
-}
-
-@keyframes set-confirmed {
-  0% {
-    transform: scale(0.985);
-    box-shadow: 0 0 0 0 rgba(84, 125, 102, 0);
-  }
-  55% {
-    transform: scale(1.006);
-    box-shadow: 0 0 0 4px rgba(84, 125, 102, 0.12);
-  }
-  100% {
-    transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(84, 125, 102, 0);
-  }
-}
-
-@keyframes record-earned {
-  0% {
-    box-shadow: 0 0 0 0 rgba(153, 114, 70, 0);
-  }
-  45% {
-    box-shadow: 0 0 0 4px rgba(153, 114, 70, 0.17), 0 12px 36px rgba(153, 114, 70, 0.1);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(153, 114, 70, 0);
-  }
-}
-
-@keyframes record-banner-enter {
-  from {
-    opacity: 0;
-    transform: translateY(0.5rem) scale(0.99);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-
-/* Calm, consistent surfaces and clearer interaction states across every page. */
-.site-card {
-  border-color: var(--border);
-  border-radius: var(--radius-lg);
-  background: var(--surface);
-  box-shadow: var(--shadow-sm);
-}
-
-.site-card-hover {
-  transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
-}
-
-.site-card-hover:hover {
-  border-color: var(--border-strong);
-  box-shadow: var(--shadow-lg);
-  transform: translateY(-2px);
-}
-
-button,
-a,
-input,
-select,
-textarea {
-  -webkit-tap-highlight-color: transparent;
-}
-
-button:not(:disabled),
-a {
-  transition-property: color, background-color, border-color, box-shadow, transform;
-  transition-duration: 160ms;
-  transition-timing-function: ease;
-}
-
-input,
-select,
-textarea {
-  color: var(--text);
-}
-
-::placeholder {
-  color: var(--text-subtle);
-}
-
 @media (max-width: 639px) {
-  .app-content {
-    padding-top: 1.25rem;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .site-card-hover:hover {
-    transform: none;
-  }
-}
-
-/* Responsive finishing touches: safe-area support and stable mobile menu sizing. */
-.mobile-navigation-open {
-  max-height: min(75dvh, 36rem);
-  padding-bottom: env(safe-area-inset-bottom);
-  overscroll-behavior: contain;
-}
-
-@media (max-width: 639px) {
-  .app-content {
-    padding-left: max(1rem, env(safe-area-inset-left));
-    padding-right: max(1rem, env(safe-area-inset-right));
-  }
-
-  .site-card-hover:hover {
-    transform: none;
-  }
-}
-
-@media (max-width: 359px) {
-  .app-content {
-    padding-left: 0.75rem;
-    padding-right: 0.75rem;
+  body {
+    overflow-x: hidden;
   }
 }

@@ -103,12 +103,12 @@ export default function Dashboard() {
     const requiresSignIn = error?.includes("session could not be verified") ?? false;
 
     return (
-      <main className="mx-auto max-w-2xl">
+      <div className="mx-auto max-w-2xl">
         <Card className="p-7 text-center sm:p-10">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--danger-soft)] text-[var(--danger)]">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-[var(--radius-lg)] bg-[var(--danger-soft)] text-[var(--danger)]">
             <Target size={26} />
           </div>
-          <h1 className="mt-5 text-2xl font-black">Something went wrong</h1>
+          <h1 className="mt-5 font-bold text-[22px] sm:text-2xl">Something went wrong</h1>
           <p className="mx-auto mt-2 max-w-md leading-relaxed text-[var(--text-muted)]">
             {error ?? "Your dashboard could not be loaded."}
           </p>
@@ -123,7 +123,7 @@ export default function Dashboard() {
             {requiresSignIn ? "Sign in again" : "Try again"}
           </Button>
         </Card>
-      </main>
+      </div>
     );
   }
 
@@ -137,7 +137,7 @@ export default function Dashboard() {
   const remaining = Math.max(0, weeklyTarget - weeklyCompleted);
 
   return (
-    <main className="space-y-6 sm:space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       <PageHeader
         eyebrow="Today"
         title={`Good to see you, ${firstName}.`}
@@ -153,7 +153,7 @@ export default function Dashboard() {
         }
       />
 
-      <section className="grid gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <section className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-4">
         <StatCard icon={<Flame size={20} />} label="Streak" value={stats.streak.toString()} suffix={stats.streak === 1 ? "day" : "days"} tone="success" />
         <StatCard icon={<Dumbbell size={20} />} label="Workouts" value={stats.workouts.toString()} suffix="completed" tone="success" />
         <StatCard icon={<TrendingUp size={20} />} label="Volume" value={formatVolumeForUnit(stats.volume, weightUnit)} suffix={weightUnit} />
@@ -167,7 +167,7 @@ export default function Dashboard() {
               <span className="inline-flex min-h-7 items-center rounded-full bg-[var(--primary-soft)] px-3 py-1 text-xs font-bold text-[var(--primary)]">
                 {todayWorkout ? "Up next" : "Get started"}
               </span>
-              <h2 className="mt-4 text-2xl font-black tracking-tight sm:text-3xl">
+              <h2 className="mt-4 font-bold tracking-tight text-lg sm:text-xl">
                 {todayWorkout?.title ?? "Build your first routine"}
               </h2>
               <p className="mt-2 max-w-xl text-sm leading-relaxed text-[var(--text-muted)] sm:text-base">
@@ -176,7 +176,7 @@ export default function Dashboard() {
                   : "Create a simple routine once, then come back and press start whenever you're ready."}
               </p>
             </div>
-            <div className="hidden h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[var(--primary-soft)] text-[var(--primary)] sm:flex">
+            <div className="hidden h-12 w-12 shrink-0 items-center justify-center rounded-[var(--radius-lg)] bg-[var(--primary-soft)] text-[var(--primary)] sm:flex">
               <Dumbbell size={22} />
             </div>
           </div>
@@ -200,17 +200,17 @@ export default function Dashboard() {
         </Card>
 
         <Card className="border-[var(--primary)]/20 bg-[var(--primary-soft)] p-5 sm:p-7">
-          <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--primary)]">
+          <p className="text-xs font-semibold text-[var(--text-muted)]">
             This week
           </p>
           <div className="mt-3 flex items-end justify-between gap-3">
             <div>
-              <p className="text-4xl font-black tracking-tight">{weeklyCompleted}</p>
+              <p className="text-2xl font-bold tracking-tight">{weeklyCompleted}</p>
               <p className="text-sm font-semibold text-[var(--text-muted)]">
                 of {weeklyTarget} workouts
               </p>
             </div>
-            <span className="text-sm font-black text-[var(--success)]">
+            <span className="text-sm font-bold text-[var(--success)]">
               {weeklyPercentage}%
             </span>
           </div>
@@ -253,15 +253,15 @@ export default function Dashboard() {
           tone="primary"
         />
       </section>
-    </main>
+    </div>
   );
 }
 
 function InfoTile({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-[var(--radius-md)] bg-[var(--surface-soft)] p-4">
-      <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[var(--text-muted)]">{label}</p>
-      <p className="mt-1 font-black">{value}</p>
+      <p className="text-[11px] font-bold text-[var(--text-muted)]">{label}</p>
+      <p className="mt-1 font-bold">{value}</p>
     </div>
   );
 }
@@ -290,13 +290,13 @@ function QuickLink({
       className="group flex min-h-28 items-center gap-4 rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--surface)] p-5 transition-colors hover:bg-[var(--surface-hover)]"
     >
       <div
-        className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl"
+        className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[var(--radius-lg)]"
         style={{ backgroundColor: styles[0], color: styles[1] }}
       >
         {icon}
       </div>
       <div className="min-w-0 flex-1">
-        <h3 className="font-black">{title}</h3>
+        <h3 className="font-bold">{title}</h3>
         <p className="mt-1 text-sm leading-relaxed text-[var(--text-muted)]">{description}</p>
       </div>
       <ArrowRight size={17} className="shrink-0 text-[var(--text-muted)] transition-transform group-hover:translate-x-0.5" />
@@ -306,13 +306,13 @@ function QuickLink({
 
 function DashboardSkeleton() {
   return (
-    <main className="space-y-6">
+    <div className="space-y-6">
       <div className="space-y-3">
         <div className="h-4 w-20 animate-pulse rounded bg-[var(--surface-soft)]" />
-        <div className="h-10 w-80 max-w-full animate-pulse rounded-xl bg-[var(--surface-soft)]" />
+        <div className="h-10 w-80 max-w-full animate-pulse rounded-[var(--radius-md)] bg-[var(--surface-soft)]" />
         <div className="h-5 w-full max-w-xl animate-pulse rounded bg-[var(--surface-soft)]" />
       </div>
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-4">
         {Array.from({ length: 4 }, (_, index) => (
           <div key={index} className="h-32 animate-pulse rounded-[var(--radius-xl)] bg-[var(--surface-soft)]" />
         ))}
@@ -321,6 +321,6 @@ function DashboardSkeleton() {
         <div className="h-72 animate-pulse rounded-[var(--radius-xl)] bg-[var(--surface-soft)]" />
         <div className="h-72 animate-pulse rounded-[var(--radius-xl)] bg-[var(--surface-soft)]" />
       </div>
-    </main>
+    </div>
   );
 }

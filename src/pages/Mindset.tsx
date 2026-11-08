@@ -246,7 +246,7 @@ export default function Mindset() {
   }
 
   return (
-    <main className="page-stack mx-auto max-w-[1500px] space-y-7 sm:space-y-9">
+    <div className="page-stack mx-auto max-w-[1500px] space-y-7 sm:space-y-9">
       <PageHeader
         eyebrow="Mindset"
         icon={<Sparkles size={15} />}
@@ -255,7 +255,7 @@ export default function Mindset() {
       />
 
       {notice && (
-        <div role="status" className="flex flex-col gap-3 rounded-2xl border border-[var(--primary)]/25 bg-[var(--primary-soft)] px-4 py-3 text-sm text-[var(--text)] sm:flex-row sm:items-center sm:justify-between">
+        <div role="status" className="flex flex-col gap-3 rounded-[var(--radius-lg)] border border-[var(--primary)]/25 bg-[var(--primary-soft)] px-4 py-3 text-sm text-[var(--text)] sm:flex-row sm:items-center sm:justify-between">
           <span>{notice}</span>
           {!signedIn && !isSessionPending && (
             <Link to="/login" className="font-bold text-[var(--primary)] underline">Sign in to join in</Link>
@@ -264,7 +264,7 @@ export default function Mindset() {
       )}
 
       {error && (
-        <div role="alert" className="rounded-2xl border border-[var(--danger)]/25 bg-[var(--danger-soft)] px-4 py-3 text-sm font-semibold text-[var(--danger)]">
+        <div role="alert" className="rounded-[var(--radius-lg)] border border-[var(--danger)]/25 bg-[var(--danger-soft)] px-4 py-3 text-sm font-semibold text-[var(--danger)]">
           {error}
         </div>
       )}
@@ -305,8 +305,8 @@ export default function Mindset() {
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--primary)]">The feed</p>
-              <h2 className="mt-1 text-2xl font-black tracking-tight sm:text-3xl">{view === "saved" ? "Your saved reminders" : view === "hidden" ? "Hidden from you" : "Notes for the journey"}</h2>
+              <p className="text-xs font-semibold text-[var(--text-muted)]">The feed</p>
+              <h2 className="mt-1 font-bold tracking-tight text-lg sm:text-xl">{view === "saved" ? "Your saved reminders" : view === "hidden" ? "Hidden from you" : "Notes for the journey"}</h2>
             </div>
             <div role="group" aria-label="Mindset feed filter" className="grid grid-cols-3 rounded-full border border-[var(--border)] bg-[var(--surface)] p-1">
               <FeedFilter active={view === "all"} onClick={() => changeView("all")}>Feed</FeedFilter>
@@ -352,7 +352,7 @@ export default function Mindset() {
           ) : (
             <Card className="p-8 text-center sm:p-12">
               <Bookmark size={25} className="mx-auto text-[var(--primary)]" aria-hidden="true" />
-              <h3 className="mt-4 text-xl font-black">{view === "saved" ? "Nothing saved yet" : view === "hidden" ? "Your hidden posts are clear" : "A quiet moment"}</h3>
+              <h3 className="mt-4 text-xl font-bold">{view === "saved" ? "Nothing saved yet" : view === "hidden" ? "Your hidden posts are clear" : "A quiet moment"}</h3>
               <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-[var(--text-muted)]">
                 {view === "saved"
                   ? "Tap Save on a quote or note and it will be here next time."
@@ -364,19 +364,19 @@ export default function Mindset() {
           )}
         </div>
 
-        <aside className="space-y-5 xl:sticky xl:top-28">
+        <aside className="space-y-5 xl:sticky xl:top-8">
           <Card className="mindset-quote p-6 sm:p-8">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--primary-soft)] text-[var(--primary)]">
+            <div className="flex h-11 w-11 items-center justify-center rounded-[var(--radius-lg)] bg-[var(--primary-soft)] text-[var(--primary)]">
               <Quote size={20} aria-hidden="true" />
             </div>
-            <p className="mt-6 text-xs font-black uppercase tracking-[0.18em] text-[var(--primary)]">A note to keep</p>
-            <blockquote className="mt-3 text-2xl font-black leading-tight tracking-tight sm:text-3xl">
+            <p className="mt-6 text-xs font-semibold text-[var(--text-muted)]">A note to keep</p>
+            <blockquote className="mt-3 text-2xl font-bold leading-tight tracking-tight sm:text-3xl">
               “Progress is built in the sessions you choose to return to.”
             </blockquote>
             <p className="mt-4 text-sm text-[var(--text-muted)]">A MoosclesPro reminder</p>
             <div className="mt-7 h-px bg-[var(--border)]" />
             <div className="mt-5 flex items-start gap-3">
-              <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[var(--success-soft)] text-[var(--success)]">
+              <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-md)] bg-[var(--success-soft)] text-[var(--success)]">
                 <Sparkles size={17} aria-hidden="true" />
               </div>
               <p className="text-sm leading-relaxed text-[var(--text-muted)]">
@@ -385,7 +385,7 @@ export default function Mindset() {
             </div>
           </Card>
           <Card className="p-5 sm:p-6">
-            <p className="text-xs font-black uppercase tracking-[0.16em] text-[var(--text-muted)]">A gentle reminder</p>
+            <p className="text-xs font-bold text-[var(--text-muted)]">A gentle reminder</p>
             <p className="mt-3 text-lg font-bold leading-snug">You are allowed to begin again at any time.</p>
             <Link to="/workouts" className="mt-5 inline-flex min-h-11 items-center gap-2 text-sm font-bold text-[var(--primary)]">
               Back to your training <span aria-hidden="true">→</span>
@@ -393,7 +393,7 @@ export default function Mindset() {
           </Card>
         </aside>
       </div>
-    </main>
+    </div>
   );
 }
 
@@ -403,7 +403,7 @@ function FeedFilter({ active, onClick, children }: { active: boolean; onClick: (
       type="button"
       aria-pressed={active}
       onClick={onClick}
-      className={"min-h-10 rounded-full px-4 text-xs font-bold transition-colors sm:text-sm " + (active ? "bg-[var(--primary)] text-[var(--primary-foreground)] shadow-sm" : "text-[var(--text-muted)] hover:text-[var(--text)]")}
+      className={"min-h-10 rounded-full px-4 text-xs font-bold transition-colors sm:text-sm " + (active ? "bg-[var(--primary)] text-[var(--primary-foreground)]" : "text-[var(--text-muted)] hover:text-[var(--text)]")}
     >
       {children}
     </button>
@@ -458,14 +458,14 @@ function PostCard({
       {post.kind === "quote" && (
         <div className="mindset-quote border-b border-[var(--border)] px-5 pb-5 pt-6 sm:px-7 sm:pb-6 sm:pt-7">
           <Quote size={20} className="text-[var(--primary)]" aria-hidden="true" />
-          {post.title && <p className="mt-4 text-[10px] font-black uppercase tracking-[0.18em] text-[var(--primary)]">{post.title}</p>}
-          <p className="mt-2 text-xl font-black leading-snug tracking-tight sm:text-2xl">“{post.text}”</p>
+          {post.title && <p className="mt-4 text-xs font-semibold text-[var(--text-muted)]">{post.title}</p>}
+          <p className="mt-2 text-xl font-bold leading-snug tracking-tight sm:text-2xl">“{post.text}”</p>
         </div>
       )}
 
       <div className="p-5 sm:p-6">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface-soft)] text-sm font-black text-[var(--primary)]">{initials}</div>
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface-soft)] text-sm font-bold text-[var(--primary)]">{initials}</div>
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-bold">{post.author || currentUserName}</p>
             <p className="mt-0.5 text-xs text-[var(--text-muted)]">{post.kind === "quote" ? "Daily reminder" : formatTime(post.createdAt)}</p>
@@ -500,7 +500,7 @@ function PostCard({
                 {comments.map((comment) => (
                   <div key={comment.id} className="flex items-start gap-2.5">
                     <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--surface-soft)] text-xs font-bold text-[var(--primary)]">{comment.author.slice(0, 1).toUpperCase()}</span>
-                    <p className="min-w-0 flex-1 rounded-2xl bg-[var(--surface-soft)] px-3.5 py-2.5 text-sm leading-relaxed">
+                    <p className="min-w-0 flex-1 rounded-[var(--radius-lg)] bg-[var(--surface-soft)] px-3.5 py-2.5 text-sm leading-relaxed">
                       <span className="font-bold">{comment.author}</span>
                       <span className="text-[var(--text-muted)]"> {comment.text}</span>
                     </p>

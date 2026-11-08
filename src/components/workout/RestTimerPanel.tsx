@@ -169,11 +169,11 @@ export default function RestTimerPanel({
   return createPortal(
     <div
       ref={panelRef}
-      className={`fixed left-1/2 z-[60] w-[min(23rem,calc(100vw-1.5rem))] -translate-x-1/2 sm:bottom-5 sm:left-auto sm:right-5 sm:translate-x-0 ${position ? "" : "bottom-[calc(env(safe-area-inset-bottom)+1rem)]"}`}
+      className={`fixed left-1/2 z-[60] w-[min(23rem,calc(100vw-1.5rem))] -translate-x-1/2 md:bottom-5 md:left-auto md:right-5 md:translate-x-0 ${position ? "" : "bottom-[calc(var(--bottom-offset)+0.75rem)]"}`}
       style={floatingStyle}
     >
       {isCollapsed ? (
-        <Card className="overflow-hidden border-[var(--border-strong)] bg-[var(--surface)] shadow-[var(--shadow-lg)] backdrop-blur-2xl">
+        <Card className="overflow-hidden border-[var(--border-strong)] bg-[var(--surface)] shadow-[var(--shadow-lg)]">
           <div className="flex min-h-14 items-center gap-2 px-2.5">
             <button
               type="button"
@@ -182,7 +182,7 @@ export default function RestTimerPanel({
               onPointerUp={handleDragEnd}
               onPointerCancel={handleDragEnd}
               onKeyDown={handleDragKeys}
-              className="flex h-10 w-8 shrink-0 touch-none cursor-grab items-center justify-center rounded-xl text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-soft)] hover:text-[var(--text)] active:cursor-grabbing"
+              className="flex h-10 w-8 shrink-0 touch-none cursor-grab items-center justify-center rounded-[var(--radius-md)] text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-soft)] hover:text-[var(--text)] active:cursor-grabbing"
               aria-label="Move rest timer. Use arrow keys to reposition."
               title="Drag to move"
             >
@@ -190,16 +190,16 @@ export default function RestTimerPanel({
             </button>
 
             <Bell size={16} className="shrink-0 text-[var(--primary)]" aria-hidden="true" />
-            <span className="min-w-0 flex-1 text-xs font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">
+            <span className="min-w-0 flex-1 text-xs font-bold text-[var(--text-muted)]">
               Rest
             </span>
-            <span className="font-mono text-lg font-black tabular-nums text-[var(--text)]" aria-live="polite">
+            <span className="font-mono text-lg font-bold tabular-nums text-[var(--text)]" aria-live="polite">
               {formatRestTime(restTime)}
             </span>
             <button
               type="button"
               onClick={() => setPosition(null)}
-              className="flex h-9 shrink-0 items-center justify-center gap-1 rounded-xl px-2 text-[10px] font-bold text-[var(--text-muted)] transition-[background-color,color] hover:bg-[var(--surface-soft)] hover:text-[var(--primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
+              className="flex h-9 shrink-0 items-center justify-center gap-1 rounded-[var(--radius-md)] px-2 text-[11px] font-bold text-[var(--text-muted)] transition-[background-color,color] hover:bg-[var(--surface-soft)] hover:text-[var(--primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
               aria-label="Return rest timer to its dock"
               title="Return to dock"
             >
@@ -209,7 +209,7 @@ export default function RestTimerPanel({
             <button
               type="button"
               onClick={() => toggleCollapsed(false)}
-              className="ml-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-[var(--text-muted)] transition-[background-color,color,transform] duration-200 hover:bg-[var(--surface-soft)] hover:text-[var(--text)] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
+              className="ml-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-md)] text-[var(--text-muted)] transition-[background-color,color,transform] duration-200 hover:bg-[var(--surface-soft)] hover:text-[var(--text)] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
               aria-label="Expand rest timer controls"
             >
               <ChevronUp size={18} aria-hidden="true" />
@@ -220,7 +220,7 @@ export default function RestTimerPanel({
         <Card
           role="region"
           aria-label="Rest timer"
-          className="overflow-hidden border-[var(--border-strong)] bg-[var(--surface)] shadow-[var(--shadow-lg)] backdrop-blur-2xl"
+          className="overflow-hidden border-[var(--border-strong)] bg-[var(--surface)] shadow-[var(--shadow-lg)]"
         >
           <div className="flex items-center gap-2.5 px-3.5 pb-2 pt-3 sm:px-4 sm:pt-3.5">
             <button
@@ -230,28 +230,28 @@ export default function RestTimerPanel({
               onPointerUp={handleDragEnd}
               onPointerCancel={handleDragEnd}
               onKeyDown={handleDragKeys}
-              className="flex h-10 w-8 shrink-0 touch-none cursor-grab items-center justify-center rounded-xl text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-soft)] hover:text-[var(--text)] active:cursor-grabbing"
+              className="flex h-10 w-8 shrink-0 touch-none cursor-grab items-center justify-center rounded-[var(--radius-md)] text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-soft)] hover:text-[var(--text)] active:cursor-grabbing"
               aria-label="Move rest timer. Use arrow keys to reposition."
               title="Drag to move"
             >
               <GripVertical size={17} aria-hidden="true" />
             </button>
 
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[var(--primary-soft)] text-[var(--primary)]">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-md)] bg-[var(--primary-soft)] text-[var(--primary)]">
               <Bell size={17} strokeWidth={2.1} aria-hidden="true" />
             </span>
             <div className="min-w-0 flex-1">
-              <p className="text-[0.65rem] font-extrabold uppercase tracking-[0.16em] text-[var(--text-muted)]">
+              <p className="text-[0.65rem] font-extrabold text-[var(--text-muted)]">
                 Rest timer
               </p>
             </div>
-            <span className="font-mono text-2xl font-black tabular-nums tracking-tight text-[var(--text)]" aria-live="polite">
+            <span className="font-mono text-2xl font-bold tabular-nums tracking-tight text-[var(--text)]" aria-live="polite">
               {formatRestTime(restTime)}
             </span>
             <button
               type="button"
               onClick={() => setPosition(null)}
-              className="flex h-9 shrink-0 items-center justify-center gap-1 rounded-xl px-2 text-[10px] font-bold text-[var(--text-muted)] transition-[background-color,color] hover:bg-[var(--surface-soft)] hover:text-[var(--primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
+              className="flex h-9 shrink-0 items-center justify-center gap-1 rounded-[var(--radius-md)] px-2 text-[11px] font-bold text-[var(--text-muted)] transition-[background-color,color] hover:bg-[var(--surface-soft)] hover:text-[var(--primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
               aria-label="Return rest timer to its dock"
               title="Return to dock"
             >
@@ -261,7 +261,7 @@ export default function RestTimerPanel({
             <button
               type="button"
               onClick={() => toggleCollapsed(true)}
-              className="ml-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-[var(--text-muted)] transition-[background-color,color,transform] duration-200 hover:bg-[var(--surface-soft)] hover:text-[var(--text)] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
+              className="ml-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-md)] text-[var(--text-muted)] transition-[background-color,color,transform] duration-200 hover:bg-[var(--surface-soft)] hover:text-[var(--text)] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
               aria-label="Minimize rest timer"
             >
               <ChevronDown size={18} aria-hidden="true" />
@@ -288,7 +288,7 @@ export default function RestTimerPanel({
             <button
               type="button"
               onClick={onRemove}
-              className="flex min-h-11 items-center justify-center gap-1.5 rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] px-3 text-sm font-bold text-[var(--text)] transition-[background-color,border-color,transform] duration-200 hover:border-[var(--border-strong)] hover:bg-[var(--surface-hover)] active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
+              className="flex min-h-11 items-center justify-center gap-1.5 rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface-soft)] px-3 text-sm font-bold text-[var(--text)] transition-[background-color,border-color,transform] duration-200 hover:border-[var(--border-strong)] hover:bg-[var(--surface-hover)] active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
               aria-label="Remove 15 seconds from rest timer"
             >
               <Minus size={15} aria-hidden="true" />
@@ -297,7 +297,7 @@ export default function RestTimerPanel({
             <button
               type="button"
               onClick={onAdd}
-              className="flex min-h-11 items-center justify-center gap-1.5 rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] px-3 text-sm font-bold text-[var(--text)] transition-[background-color,border-color,transform] duration-200 hover:border-[var(--border-strong)] hover:bg-[var(--surface-hover)] active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
+              className="flex min-h-11 items-center justify-center gap-1.5 rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface-soft)] px-3 text-sm font-bold text-[var(--text)] transition-[background-color,border-color,transform] duration-200 hover:border-[var(--border-strong)] hover:bg-[var(--surface-hover)] active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
               aria-label="Add 15 seconds to rest timer"
             >
               <Plus size={15} aria-hidden="true" />
@@ -306,7 +306,7 @@ export default function RestTimerPanel({
             <button
               type="button"
               onClick={onStop}
-              className="flex min-h-11 items-center justify-center gap-1.5 rounded-2xl bg-[var(--primary)] px-3.5 text-sm font-bold text-[var(--primary-foreground)] shadow-sm transition-[background-color,box-shadow,transform] duration-200 hover:bg-[var(--primary-hover)] hover:shadow-md active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface)]"
+              className="flex min-h-11 items-center justify-center gap-1.5 rounded-[var(--radius-lg)] bg-[var(--primary)] px-3.5 text-sm font-bold text-[var(--primary-foreground)] transition-[background-color,box-shadow,transform] duration-200 hover:bg-[var(--primary-hover)] hover:shadow-md active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface)]"
               aria-label="Skip rest timer"
             >
               <RotateCcw size={14} aria-hidden="true" />
@@ -331,9 +331,13 @@ function clampPanelPosition(position: Position, width: number, height: number): 
   const viewportWidth = viewport?.width ?? window.innerWidth;
   const viewportHeight = viewport?.height ?? window.innerHeight;
 
+  // Keep the panel clear of the phone tab bar, which is fixed to the bottom edge.
+  const bottomNav = document.querySelector<HTMLElement>("[data-bottom-nav]");
+  const bottomInset = bottomNav?.getBoundingClientRect().height ?? 0;
+
   return {
     left: clamp(position.left, offsetLeft + 8, offsetLeft + viewportWidth - width - 8),
-    top: clamp(position.top, offsetTop + 8, offsetTop + viewportHeight - height - 16),
+    top: clamp(position.top, offsetTop + 8, offsetTop + viewportHeight - height - 16 - bottomInset),
   };
 }
 

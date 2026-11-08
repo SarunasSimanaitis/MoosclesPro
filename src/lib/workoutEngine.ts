@@ -150,12 +150,20 @@ export function applyPreviousPerformance(
 ): WorkoutExercise[] {
   if (!previousSession) return exercises;
 
-  const previousByExercise = new Map(
-    previousSession.exercises.map((exercise) => [
-      exercise.exercise.id,
-      exercise.sets,
-    ]),
-  );
+  /*
+   * Only sets that were actually completed count as "last time". Sets that
+   * were skipped or left half-filled would otherwise pre-fill numbers the
+   * user never lifted.
+   */
+  const previousByExercise = new Map<string, WorkoutSet[]>();
+  for (const exercise of previousSession.exercises) {
+    if (previousByExercise.has(exercise.exercise.id)) continue;
+
+    const completedSets = exercise.sets.filter((set) => set.completed);
+    if (completedSets.length > 0) {
+      previousByExercise.set(exercise.exercise.id, completedSets);
+    }
+  }
 
   return exercises.map((exercise) => {
     const previousSets = previousByExercise.get(exercise.exercise.id);

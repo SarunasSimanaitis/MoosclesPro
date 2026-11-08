@@ -79,7 +79,7 @@ export default function Exercises() {
   }
 
   return (
-    <main className="space-y-6 sm:space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       <PageHeader
         eyebrow="Exercise library"
         icon={<Dumbbell size={15} />}
@@ -152,7 +152,7 @@ export default function Exercises() {
       {filtered.length === 0 ? (
         <Card className="border-dashed p-8 text-center sm:p-10">
           <Filter size={24} className="mx-auto text-[var(--text-muted)]" />
-          <h2 className="mt-4 text-xl font-black">No matches</h2>
+          <h2 className="mt-4 font-bold text-lg sm:text-xl">No matches</h2>
           <p className="mt-2 text-sm text-[var(--text-muted)]">
             Try a different search or clear the filters.
           </p>
@@ -173,12 +173,12 @@ export default function Exercises() {
                 {exercise.imageUrl && (
                   <div className="relative mb-4 aspect-[16/10] overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface-soft)]">
                     <img src={exercise.imageUrl} alt={`Movement reference: ${exercise.imageSourceName ?? exercise.name}`} loading="lazy" decoding="async" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.025]" />
-                    <span className="absolute bottom-2 left-2 rounded-full border border-white/30 bg-black/65 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.14em] text-white">Movement guide</span>
+                    <span className="absolute bottom-2 left-2 rounded-full border border-white/30 bg-black/65 px-2.5 py-1 text-[11px] font-bold text-white">Movement guide</span>
                   </div>
                 )}
                 <div className="flex items-start justify-between gap-3">
                   <div
-                    className={`flex h-11 w-11 items-center justify-center rounded-2xl ${
+                    className={`flex h-11 w-11 items-center justify-center rounded-[var(--radius-lg)] ${
                       exercise.category === "Strength"
                         ? "bg-[var(--primary-soft)] text-[var(--primary)]"
                         : exercise.category === "Hypertrophy"
@@ -193,7 +193,7 @@ export default function Exercises() {
                   <Badge>{exercise.category}</Badge>
                 </div>
 
-                <h2 className="mt-5 text-lg font-black group-hover:text-[var(--primary)] sm:text-xl">
+                <h2 className="mt-5 font-bold group-hover:text-[var(--primary)] text-lg sm:text-xl">
                   {exercise.name}
                 </h2>
 
@@ -210,6 +210,6 @@ export default function Exercises() {
           ))}
         </section>
       )}
-    </main>
+    </div>
   );
 }

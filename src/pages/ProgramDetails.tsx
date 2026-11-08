@@ -44,7 +44,7 @@ function ProgramHighlight({
         {icon}
       </div>
 
-      <p className="mt-3 text-xs font-bold uppercase tracking-[0.16em] text-[var(--feature-subtle)]">
+      <p className="mt-3 text-xs font-bold text-[var(--feature-subtle)]">
         {label}
       </p>
 
@@ -71,7 +71,7 @@ export default function ProgramDetails() {
 
   if (!program) {
     return (
-      <main className="space-y-6">
+      <div className="space-y-6">
         <Button
           variant="ghost"
           size="sm"
@@ -89,7 +89,7 @@ export default function ProgramDetails() {
             <Target size={24} />
           </div>
 
-          <h1 className="mt-6 text-3xl font-black tracking-tight text-[var(--text)]">
+          <h1 className="mt-6 font-bold tracking-tight text-[var(--text)] text-[22px] sm:text-2xl">
             Program not found
           </h1>
 
@@ -108,7 +108,7 @@ export default function ProgramDetails() {
             Return to workouts
           </Button>
         </Card>
-      </main>
+      </div>
     );
   }
 
@@ -141,7 +141,7 @@ export default function ProgramDetails() {
   }
 
   return (
-    <main className="mx-auto max-w-6xl space-y-7 sm:space-y-9">
+    <div className="mx-auto max-w-6xl space-y-7 sm:space-y-9">
       {/* Navigation */}
       <Button
         variant="ghost"
@@ -198,7 +198,7 @@ export default function ProgramDetails() {
             </span>
           </div>
 
-          <h1 className="mt-6 max-w-4xl text-3xl font-black tracking-tight text-[var(--feature-text)] sm:text-4xl md:text-6xl">
+          <h1 className="mt-6 max-w-4xl font-bold tracking-tight text-[var(--feature-text)] text-[22px] sm:text-2xl">
             {program.name}
           </h1>
 
@@ -237,11 +237,11 @@ export default function ProgramDetails() {
             </div>
 
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--primary)]">
+              <p className="text-xs font-semibold text-[var(--text-muted)]">
                 Program overview
               </p>
 
-              <h2 className="mt-1 text-2xl font-black tracking-tight text-[var(--text)]">
+              <h2 className="mt-1 font-bold tracking-tight text-[var(--text)] text-lg sm:text-xl">
                 What you'll be doing
               </h2>
             </div>
@@ -278,7 +278,7 @@ export default function ProgramDetails() {
         </Card>
 
         <Card className="p-7">
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--primary)]">
+          <p className="text-xs font-semibold text-[var(--text-muted)]">
             Built for
           </p>
 
@@ -316,11 +316,11 @@ export default function ProgramDetails() {
       {/* Weekly structure */}
       <section className="space-y-6">
         <div>
-          <p className="text-sm font-bold uppercase tracking-[0.2em] text-[var(--primary)]">
+          <p className="text-sm font-bold text-[var(--primary)]">
             Your week
           </p>
 
-          <h2 className="mt-2 text-3xl font-black tracking-tight text-[var(--text)] md:text-4xl">
+          <h2 className="mt-2 font-bold tracking-tight text-[var(--text)] text-lg sm:text-xl">
             Weekly structure
           </h2>
 
@@ -358,16 +358,16 @@ export default function ProgramDetails() {
                 >
                   <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
                     <div className="flex min-w-0 gap-5">
-                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[var(--radius-md)] bg-[var(--primary-soft)] font-black text-[var(--primary)]">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[var(--radius-md)] bg-[var(--primary-soft)] font-bold text-[var(--primary)]">
                         {day}
                       </div>
 
                       <div className="min-w-0">
-                        <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--text-muted)]">
+                        <p className="text-xs font-bold text-[var(--text-muted)]">
                           Day {day}
                         </p>
 
-                        <h3 className="mt-1 text-2xl font-black tracking-tight text-[var(--text)]">
+                        <h3 className="mt-1 text-2xl font-bold tracking-tight text-[var(--text)]">
                           {name}
                         </h3>
 
@@ -437,11 +437,11 @@ export default function ProgramDetails() {
       {/* Future personalization */}
       <section className="overflow-hidden rounded-[var(--radius-xl)] bg-[var(--surface-soft)] p-7 md:p-10">
         <div className="max-w-3xl">
-          <p className="text-sm font-bold uppercase tracking-[0.2em] text-[var(--primary)]">
+          <p className="text-sm font-bold text-[var(--primary)]">
             One size doesn't fit everyone
           </p>
 
-          <h2 className="mt-4 text-3xl font-black tracking-tight text-[var(--text)] md:text-4xl">
+          <h2 className="mt-4 font-bold tracking-tight text-[var(--text)] text-lg sm:text-xl">
             Need a different plan?
           </h2>
 
@@ -461,6 +461,6 @@ export default function ProgramDetails() {
           </Button>
         </div>
       </section>
-    </main>
+    </div>
   );
 }

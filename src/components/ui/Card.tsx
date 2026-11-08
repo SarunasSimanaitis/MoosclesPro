@@ -12,8 +12,8 @@ export default function Card({
   ...props
 }: CardProps) {
   const classes = [
-    "site-card overflow-hidden rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--surface)]",
-    hover ? "site-card-hover transition-[transform,box-shadow,border-color] duration-200 hover:-translate-y-0.5 hover:border-[var(--border-strong)]" : "",
+    "site-card overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)]",
+    hover ? "site-card-hover" : "",
     className,
   ].join(" ");
 

@@ -43,7 +43,7 @@ export default function WorkoutFinishCard({
               shrink-0
               items-center
               justify-center
-              rounded-2xl
+              rounded-[var(--radius-lg)]
               ${personalRecordCount > 0
                 ? "bg-[var(--primary-soft)] text-[var(--primary)]"
                 : isComplete
@@ -62,7 +62,7 @@ export default function WorkoutFinishCard({
 
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <p className="font-black tracking-tight text-[var(--text)]">
+              <p className="font-bold tracking-tight text-[var(--text)]">
                 {!hasStarted
                   ? "Ready when you are"
                   : isComplete
@@ -70,7 +70,7 @@ export default function WorkoutFinishCard({
                     : "Nice work. Keep going or wrap up."}
               </p>
               {isComplete && (
-                <span className="rounded-full bg-[var(--success-soft)] px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-[var(--success)]">
+                <span className="rounded-full bg-[var(--success-soft)] px-2.5 py-1 text-[11px] font-bold tracking-wide text-[var(--success)]">
                   100% complete
                 </span>
               )}

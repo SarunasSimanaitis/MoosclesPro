@@ -1,5 +1,5 @@
 import {
-  Check,
+
   Dumbbell,
   Moon,
   Palette,
@@ -11,15 +11,19 @@ import {
   Plus,
   Target,
 } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { useState, type ReactNode } from "react";
 
 import Card from "../components/ui/Card";
+import Button from "../components/ui/Button";
+import { useSignOut } from "../hooks/useSignOut";
 import { useTheme } from "../hooks/useTheme";
 import { authClient } from "../lib/auth-client";
 import { getAppPreferences, saveAppPreferences } from "../lib/preferences";
 
 export default function Settings() {
-  const { theme, toggleTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
+  const { signOut, signingOut, error: signOutError } = useSignOut();
   const { data: session, isPending } = authClient.useSession();
   const [preferences, setPreferences] = useState(getAppPreferences);
   const user = session?.user;
@@ -32,48 +36,55 @@ export default function Settings() {
     }));
   }
 
-
   return (
-    <main className="page-stack mx-auto max-w-7xl 2xl:max-w-[1500px] space-y-8 sm:space-y-10">
-      <header className="max-w-4xl">
-        <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--primary)] sm:text-sm">Your space</p>
-        <h1 className="mt-2 text-4xl font-black tracking-[-0.05em] sm:text-5xl lg:text-6xl">Settings</h1>
-        <p className="mt-3 max-w-2xl text-base leading-relaxed text-[var(--text-muted)] sm:text-lg">
+    <div className="page-stack space-y-6">
+      <header>
+        <h1 className="font-bold tracking-tight text-[22px] sm:text-2xl">Settings</h1>
+        <p className="mt-1.5 text-sm text-[var(--text-muted)]">
           Make MoosclesPro feel right for the way you train.
         </p>
       </header>
 
-      <div className="grid gap-7 xl:grid-cols-[minmax(0,1.25fr)_minmax(320px,0.75fr)] xl:gap-9">
-        <div className="space-y-8">
+      <div className="grid gap-6">
+        <div className="space-y-6">
           <section className="space-y-4">
             <SectionHeading icon={<UserCircle2 size={19} />} eyebrow="Profile" title="Your account" />
-            <Card className="border-[var(--primary)]/15 p-5 sm:p-7 lg:p-8">
+            <Card className="p-4 sm:p-5">
               {isPending ? (
                 <AccountSkeleton />
               ) : (
-                <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-                  <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[1.4rem] bg-[var(--primary-soft)] text-xl font-black text-[var(--primary)]">
+                <div className="flex items-center gap-4">
+                  <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-[var(--surface-soft)] text-2xl font-semibold text-[var(--text)]">
                     {firstName.charAt(0).toUpperCase()}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-xl font-black">{user?.name ?? firstName}</p>
-                    <p className="mt-1 break-all text-sm text-[var(--text-muted)]">{email}</p>
+                    <p className="truncate text-lg font-semibold">{user?.name ?? firstName}</p>
+                    <p className="truncate text-sm text-[var(--text-muted)]">{email}</p>
                   </div>
-                  <div className="inline-flex items-center gap-2 self-start rounded-full bg-[var(--success-soft)] px-3.5 py-2 text-xs font-bold text-[var(--success)] sm:self-center">
-                    <Check size={14} aria-hidden="true" />
-                    Account active
-                  </div>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => void signOut()}
+                    loading={signingOut}
+                    className="shrink-0"
+                  >
+                    {!signingOut && <LogOut size={15} aria-hidden="true" />}
+                    Sign out
+                  </Button>
                 </div>
+              )}
+              {signOutError && (
+                <p role="alert" className="mt-3 text-sm text-[var(--danger)]">{signOutError}</p>
               )}
             </Card>
           </section>
 
           <section className="space-y-4">
             <SectionHeading icon={<Dumbbell size={19} />} eyebrow="Training units" title="Weight display" />
-            <Card className="p-5 sm:p-7 lg:p-8">
+            <Card className="p-4 sm:p-5">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <h2 className="text-lg font-bold">Choose your units</h2>
+                  <h2 className="font-bold text-lg sm:text-xl">Choose your units</h2>
                   <p className="mt-1 max-w-xl text-sm leading-relaxed text-[var(--text-muted)]">Your workouts stay safely stored in kilograms. This choice converts every entry and progress summary across the app.</p>
                 </div>
                 <div role="group" aria-label="Weight unit" className="grid grid-cols-2 gap-2 rounded-full border border-[var(--border)] bg-[var(--surface-soft)] p-1">
@@ -83,7 +94,7 @@ export default function Settings() {
                       type="button"
                       aria-pressed={preferences.weightUnit === unit}
                       onClick={() => setPreferences(saveAppPreferences({ weightUnit: unit }))}
-                      className={"min-h-11 min-w-20 rounded-full px-5 text-sm font-black transition-[background-color,color,box-shadow] duration-200 " + (preferences.weightUnit === unit ? "bg-[var(--primary)] text-[var(--primary-foreground)] shadow-sm" : "text-[var(--text-muted)] hover:text-[var(--text)]")}
+                      className={"min-h-11 min-w-20 rounded-full px-5 text-sm font-bold transition-[background-color,color,box-shadow] duration-200 " + (preferences.weightUnit === unit ? "bg-[var(--primary)] text-[var(--primary-foreground)]" : "text-[var(--text-muted)] hover:text-[var(--text)]")}
                     >
                       {unit.toUpperCase()}
                     </button>
@@ -94,18 +105,18 @@ export default function Settings() {
           </section>
 
           <section className="space-y-4">
-            <SectionHeading icon={<Palette size={19} />} eyebrow="Appearance" title="Set the mood" />
-            <Card className="p-5 sm:p-7 lg:p-8">
+            <SectionHeading icon={<Palette size={19} />} eyebrow="Appearance" title="Theme" />
+            <Card className="p-4 sm:p-5">
               <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
                 <div>
-                  <h2 className="text-lg font-bold">Choose your finish</h2>
+                  <h2 className="font-bold text-lg sm:text-xl">Light or dark</h2>
                   <p className="mt-1 max-w-xl text-sm leading-relaxed text-[var(--text-muted)]">
-                    Cool blue-white surfaces for daylight, deep navy for a quieter session.
+                    White for daylight, black for late-night sessions and OLED screens.
                   </p>
                 </div>
                 <div role="group" aria-label="Theme selection" className="grid w-full grid-cols-2 gap-3 sm:w-fit">
-                  <ThemeOption active={theme === "light"} icon={<Sun size={18} />} label="Cool light" detail="Blue-white" onClick={() => theme !== "light" && toggleTheme()} />
-                  <ThemeOption active={theme === "dark"} icon={<Moon size={18} />} label="Midnight" detail="Deep navy" onClick={() => theme !== "dark" && toggleTheme()} />
+                  <ThemeOption active={theme === "light"} icon={<Sun size={18} />} label="Light" detail="White background" onClick={() => setTheme("light")} />
+                  <ThemeOption active={theme === "dark"} icon={<Moon size={18} />} label="Dark" detail="Black background" onClick={() => setTheme("dark")} />
                 </div>
               </div>
             </Card>
@@ -113,10 +124,10 @@ export default function Settings() {
 
           <section className="space-y-4">
             <SectionHeading icon={<ShieldCheck size={19} />} eyebrow="Security" title="Your privacy" />
-            <Card className="p-5 sm:p-7 lg:p-8">
+            <Card className="p-4 sm:p-5">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <h2 className="text-lg font-bold">Secure account</h2>
+                  <h2 className="font-bold text-lg sm:text-xl">Secure account</h2>
                   <p className="mt-1 max-w-xl text-sm leading-relaxed text-[var(--text-muted)]">
                     Your workouts and account are protected by your signed-in session.
                   </p>
@@ -139,8 +150,8 @@ export default function Settings() {
               </p>
               <div className="mt-6 flex items-center justify-between gap-3 rounded-[var(--radius-lg)] bg-[var(--surface-soft)] p-4 sm:p-5">
                 <div>
-                  <p className="text-xs font-bold uppercase tracking-[0.13em] text-[var(--text-muted)]">Workouts per week</p>
-                  <p className="mt-1 text-3xl font-black tracking-tight">{preferences.weeklyGoalTarget}</p>
+                  <p className="text-xs font-bold text-[var(--text-muted)]">Workouts per week</p>
+                  <p className="mt-1 text-3xl font-bold tracking-tight">{preferences.weeklyGoalTarget}</p>
                 </div>
                 <div className="flex gap-2">
                   <StepButton label="Reduce weekly goal" disabled={preferences.weeklyGoalTarget <= 1} onClick={() => updateWeeklyGoal(-1)}><Minus size={17} /></StepButton>
@@ -165,7 +176,7 @@ export default function Settings() {
                     key={seconds}
                     aria-pressed={preferences.defaultRestSeconds === seconds}
                     onClick={() => setPreferences(saveAppPreferences({ defaultRestSeconds: seconds }))}
-                    className={"min-h-11 rounded-2xl border px-3 text-xs font-bold transition-[background-color,border-color,color,transform] duration-200 active:scale-[0.98] " + (preferences.defaultRestSeconds === seconds ? "border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary)] shadow-sm" : "border-[var(--border)] bg-[var(--surface)] text-[var(--text-muted)] hover:border-[var(--border-strong)] hover:text-[var(--text)]")}
+                    className={"min-h-11 rounded-[var(--radius-lg)] border px-3 text-xs font-bold transition-[background-color,border-color,color,transform] duration-200 active:scale-[0.98] " + (preferences.defaultRestSeconds === seconds ? "border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary)]" : "border-[var(--border)] bg-[var(--surface)] text-[var(--text-muted)] hover:border-[var(--border-strong)] hover:text-[var(--text)]")}
                   >
                     {formatDuration(seconds)}
                   </button>
@@ -182,7 +193,7 @@ export default function Settings() {
           </div>
         </aside>
       </div>
-    </main>
+    </div>
   );
 }
 
@@ -193,10 +204,10 @@ function formatDuration(seconds: number) {
 function SectionHeading({ icon, eyebrow, title }: { icon: ReactNode; eyebrow: string; title: string }) {
   return (
     <div className="flex items-center gap-3">
-      <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[var(--primary-soft)] text-[var(--primary)]">{icon}</div>
+      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--surface-soft)] text-[var(--text)] [&_svg]:h-4 [&_svg]:w-4">{icon}</div>
       <div>
-        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[var(--primary)] sm:text-xs">{eyebrow}</p>
-        <h2 className="mt-0.5 text-xl font-black tracking-tight sm:text-2xl">{title}</h2>
+        <p className="text-xs font-semibold text-[var(--text-muted)]">{eyebrow}</p>
+        <h2 className="mt-0.5 font-bold tracking-tight text-lg sm:text-xl">{title}</h2>
       </div>
     </div>
   );
@@ -208,7 +219,7 @@ function ThemeOption({ active, icon, label, detail, onClick }: { active: boolean
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={"flex min-h-[84px] min-w-32 flex-col items-start justify-center gap-1 rounded-[var(--radius-lg)] border px-4 text-left transition-all " + (active ? "border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--text)] shadow-sm" : "border-[var(--border)] bg-[var(--surface)] text-[var(--text-muted)] hover:border-[var(--border-strong)]")}
+      className={"flex min-h-[84px] min-w-32 flex-col items-start justify-center gap-1 rounded-[var(--radius-lg)] border px-4 text-left transition-all " + (active ? "border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--text)]" : "border-[var(--border)] bg-[var(--surface)] text-[var(--text-muted)] hover:border-[var(--border-strong)]")}
     >
       <span className="flex items-center gap-2 text-sm font-bold">{icon}{label}</span>
       <span className="text-xs text-[var(--text-muted)]">{detail}</span>
@@ -233,7 +244,7 @@ function StepButton({ children, label, disabled, onClick }: { children: ReactNod
 function AccountSkeleton() {
   return (
     <div className="flex items-center gap-5" role="status" aria-label="Loading account">
-      <div className="h-16 w-16 animate-pulse rounded-2xl bg-[var(--surface-soft)]" />
+      <div className="h-16 w-16 animate-pulse rounded-[var(--radius-lg)] bg-[var(--surface-soft)]" />
       <div className="space-y-2">
         <div className="h-5 w-32 animate-pulse rounded bg-[var(--surface-soft)]" />
         <div className="h-4 w-48 animate-pulse rounded bg-[var(--surface-soft)]" />

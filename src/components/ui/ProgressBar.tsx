@@ -14,7 +14,7 @@ export default function ProgressBar({
   const percentage = max > 0 ? Math.min(100, Math.max(0, (value / max) * 100)) : 0;
   return (
     <div
-      className={`h-2.5 overflow-hidden rounded-full bg-[var(--surface-soft)] ${className}`}
+      className={`h-1.5 overflow-hidden rounded-full bg-[var(--surface-soft)] ${className}`}
       role="progressbar"
       aria-label={label}
       aria-valuemin={0}

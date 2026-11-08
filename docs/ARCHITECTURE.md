@@ -31,10 +31,22 @@
 
 ## UI system
 
-Light mode uses a milky off-white base, warm gold as the primary accent, soft green for positive progress and red for warnings.
+The interface is flat and quiet: white (light) or true black (dark) surfaces separated by hairline borders, one blue accent taken from the logo, small 8–12px radii and system fonts. Every colour, radius and shadow is a CSS variable in `src/index.css`; components never hard-code colours.
 
-Dark mode uses an obsidian-black base, clean white typography, warm gold for primary actions, soft green for encouragement and red for warnings.
+Navigation:
 
-The primary navigation is always at the top. Desktop and mobile use the same navigation model; mobile collapses secondary links into a top menu rather than adding a second bottom navigation system.
+- **Desktop / tablet (≥ 768px):** a fixed left sidebar. It shows icons only up to 1280px and icons with labels above that.
+- **Phones:** a slim top bar (logo, Exercises, Mindset, theme) and a fixed bottom tab bar (Home, Workouts, History, Statistics, Profile).
+- **Signed out:** a single top header with Log in / Sign up.
 
-The workout logger is intentionally touch-first: large controls, readable spacing, concise labels and no dense spreadsheet-style layout on small screens.
+The bottom tab bar's height is exposed as `--bottom-offset` on `<html>` (class `has-bottom-nav`), so fixed and sticky elements (rest timer, routine builder save bar, active-workout bar) sit above it, including ones portalled to `<body>`.
+
+While a workout is running, a slim "workout in progress" bar appears on every other page so it can be resumed in one tap. It is lazy-loaded, so it never adds to the first download.
+
+The workout logger is touch-first: large controls, readable spacing and no dense spreadsheet layout on small screens.
+
+## Client data rules
+
+- Theme is one shared value (`useTheme`); every toggle reads and writes the same state, and `index.html` applies it before the first paint.
+- Screens that can be opened directly and need a custom routine (the workout page, the active-workout bar) call `useCustomRoutines`, which loads the user's routines through the shared request cache.
+- "Last time" pre-fill only uses sets that were completed in the previous session.

@@ -18,7 +18,6 @@ import Card from "../components/ui/Card";
 import PageHeader from "../components/ui/PageHeader";
 import StatCard from "../components/ui/StatCard";
 import { routines } from "../data/routines";
-import { useRoutineStore } from "../stores/routineStore";
 import {
   formatWorkoutDate,
   getCompletedSets,
@@ -29,12 +28,13 @@ import type { WorkoutSession } from "../types/WorkoutSession";
 import { getAppPreferences } from "../lib/preferences";
 import { formatVolume, formatWeight } from "../lib/units";
 import { collectPersonalRecords } from "../lib/personalRecords";
+import { useCustomRoutines } from "../hooks/useCustomRoutines";
 
 type HistoryFilter = "all" | "this-week" | "this-month" | "last-month";
 
 export default function History() {
   const navigate = useNavigate();
-  const customRoutines = useRoutineStore((state) => state.customRoutines);
+  const { customRoutines } = useCustomRoutines();
 
   const [sessions, setSessions] = useState<WorkoutSession[]>(() => workoutSessionsApi.cachedList() ?? []);
   const [isLoading, setIsLoading] = useState(() => workoutSessionsApi.cachedList() === undefined);
@@ -147,23 +147,23 @@ export default function History() {
 
   if (error) {
     return (
-      <main className="mx-auto max-w-2xl">
+      <div className="mx-auto max-w-2xl">
         <Card className="p-7 text-center sm:p-10">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--danger-soft)] text-[var(--danger)]">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-[var(--radius-lg)] bg-[var(--danger-soft)] text-[var(--danger)]">
             <HistoryIcon size={25} />
           </div>
-          <h1 className="mt-5 text-2xl font-black">History is unavailable</h1>
+          <h1 className="mt-5 font-bold text-[22px] sm:text-2xl">History is unavailable</h1>
           <p className="mt-2 leading-relaxed text-[var(--text-muted)]">{error}</p>
           <Button variant="secondary" className="mt-6" onClick={() => window.location.reload()}>
             Try again
           </Button>
         </Card>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className="space-y-6 sm:space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       <PageHeader
         eyebrow="Training log"
         icon={<HistoryIcon size={15} />}
@@ -177,7 +177,7 @@ export default function History() {
         }
       />
 
-      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-4">
         <StatCard label={filter === "all" ? "Workouts" : "In this view"} value={filtered.length.toString()} suffix={filtered.length === 1 ? "session" : "sessions"} />
         <StatCard label="Training volume" value={formatVolume(totalVolume, weightUnit)} suffix={weightUnit} />
         <StatCard label="Work sets" value={totalCompletedSets.toString()} suffix="completed" tone="success" />
@@ -188,21 +188,21 @@ export default function History() {
         <section aria-labelledby="personal-records-heading">
           <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--primary)]">Your strongest moments</p>
-              <h2 id="personal-records-heading" className="mt-1 text-xl font-black tracking-tight">Personal records</h2>
+              <p className="text-xs font-semibold text-[var(--text-muted)]">Your strongest moments</p>
+              <h2 id="personal-records-heading" className="mt-1 font-bold tracking-tight text-lg sm:text-xl">Personal records</h2>
             </div>
             <p className="text-xs text-[var(--text-muted)]">Updated each time you save a workout</p>
           </div>
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {personalRecords.filter((record) => record.bestWeight || record.bestBodyweightReps).slice(0, 6).map((record) => (
               <Card key={record.exerciseId} className="flex min-w-0 items-start gap-3.5 p-4 sm:p-5">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[var(--primary-soft)] text-[var(--primary)]">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-lg)] bg-[var(--primary-soft)] text-[var(--primary)]">
                   <Trophy size={19} aria-hidden="true" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h3 className="truncate text-sm font-black">{record.exerciseName}</h3>
+                  <h3 className="truncate text-sm font-bold">{record.exerciseName}</h3>
                   {record.bestWeight && (
-                    <p className="mt-2 text-sm font-black tabular-nums text-[var(--primary)]">
+                    <p className="mt-2 text-sm font-bold tabular-nums text-[var(--primary)]">
                       {formatWeight(record.bestWeight.weight, weightUnit)} {weightUnit} <span className="text-[var(--text-muted)]">× {record.bestWeight.reps}</span>
                     </p>
                   )}
@@ -212,7 +212,7 @@ export default function History() {
                     </p>
                   )}
                   {!record.bestWeight && record.bestBodyweightReps && (
-                    <p className="mt-2 text-sm font-black text-[var(--primary)]">{record.bestBodyweightReps.reps} reps</p>
+                    <p className="mt-2 text-sm font-bold text-[var(--primary)]">{record.bestBodyweightReps.reps} reps</p>
                   )}
                 </div>
               </Card>
@@ -224,17 +224,17 @@ export default function History() {
       {sessions.length > 0 && (
         <section className="grid gap-3 lg:grid-cols-2">
           <Card className="flex items-center gap-4 p-5 sm:p-6">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[var(--primary-soft)] text-[var(--primary)]"><Dumbbell size={22} aria-hidden="true" /></div>
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[var(--radius-lg)] bg-[var(--primary-soft)] text-[var(--primary)]"><Dumbbell size={22} aria-hidden="true" /></div>
             <div className="min-w-0">
-              <p className="text-xs font-black uppercase tracking-[0.14em] text-[var(--text-muted)]">Heaviest completed set · current view</p>
-              {bestSet ? <p className="mt-1 truncate text-lg font-black">{bestSet.exerciseName} <span className="text-[var(--primary)]">{formatWeight(bestSet.weight, weightUnit)} {weightUnit} × {bestSet.reps}</span></p> : <p className="mt-1 text-sm text-[var(--text-muted)]">Complete a weighted set to see it here.</p>}
+              <p className="text-xs font-bold text-[var(--text-muted)]">Heaviest completed set · current view</p>
+              {bestSet ? <p className="mt-1 truncate text-lg font-bold">{bestSet.exerciseName} <span className="text-[var(--primary)]">{formatWeight(bestSet.weight, weightUnit)} {weightUnit} × {bestSet.reps}</span></p> : <p className="mt-1 text-sm text-[var(--text-muted)]">Complete a weighted set to see it here.</p>}
             </div>
           </Card>
           <Card className="flex items-center gap-4 p-5 sm:p-6">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[var(--primary-soft)] text-[var(--primary)]"><CalendarDays size={22} aria-hidden="true" /></div>
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[var(--radius-lg)] bg-[var(--primary-soft)] text-[var(--primary)]"><CalendarDays size={22} aria-hidden="true" /></div>
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.14em] text-[var(--text-muted)]">A useful pattern</p>
-              <p className="mt-1 text-lg font-black">{leadingFocus ? `${leadingFocus} is your most trained focus` : "Your training story is taking shape"}</p>
+              <p className="text-xs font-bold text-[var(--text-muted)]">A useful pattern</p>
+              <p className="mt-1 text-lg font-bold">{leadingFocus ? `${leadingFocus} is your most trained focus` : "Your training story is taking shape"}</p>
               <p className="mt-1 text-sm text-[var(--text-muted)]">Based on the sessions in this view.</p>
             </div>
           </Card>
@@ -243,10 +243,10 @@ export default function History() {
 
       {sessions.length === 0 ? (
         <Card className="border-dashed p-7 text-center sm:p-10">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--primary-soft)] text-[var(--primary)]">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-[var(--radius-lg)] bg-[var(--primary-soft)] text-[var(--primary)]">
             <HistoryIcon size={25} />
           </div>
-          <h2 className="mt-5 text-2xl font-black">Your history starts here</h2>
+          <h2 className="mt-5 font-bold text-lg sm:text-xl">Your history starts here</h2>
           <p className="mx-auto mt-2 max-w-md leading-relaxed text-[var(--text-muted)]">
             Finish a workout and we'll keep the session here so you can look back at the work.
           </p>
@@ -259,11 +259,11 @@ export default function History() {
         <>
           <Card className="p-4 sm:p-5">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[var(--surface-soft)] text-[var(--text-muted)]">
+              <div className="flex h-10 w-10 items-center justify-center rounded-[var(--radius-lg)] bg-[var(--surface-soft)] text-[var(--text-muted)]">
                 <Filter size={18} />
               </div>
               <div>
-                <p className="text-sm font-black">Filter history</p>
+                <p className="text-sm font-bold">Filter history</p>
                 <p className="text-xs text-[var(--text-muted)]">
                   {filtered.length} {filtered.length === 1 ? "workout" : "workouts"} shown
                 </p>
@@ -272,7 +272,7 @@ export default function History() {
 
             <label className="relative mt-4 block">
               <Search size={17} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" aria-hidden="true" />
-              <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search workouts, exercises, or focus" className="min-h-12 w-full rounded-2xl border border-[var(--border)] bg-[var(--surface-soft)] pl-11 pr-4 text-sm outline-none transition focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--focus-ring)]" />
+              <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search workouts, exercises, or focus" className="min-h-12 w-full rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface-soft)] pl-11 pr-4 text-sm outline-none transition focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--focus-ring)]" />
               <span className="sr-only">Search workout history</span>
             </label>
 
@@ -287,7 +287,7 @@ export default function History() {
           {filtered.length === 0 ? (
             <Card className="p-8 text-center">
               <CalendarDays size={24} className="mx-auto text-[var(--text-muted)]" />
-              <h2 className="mt-4 text-xl font-black">No workouts in this period</h2>
+              <h2 className="mt-4 font-bold text-lg sm:text-xl">No workouts in this period</h2>
               <Button variant="secondary" className="mt-5" onClick={() => setFilter("all")}>
                 Show all
               </Button>
@@ -307,7 +307,7 @@ export default function History() {
           )}
         </>
       )}
-    </main>
+    </div>
   );
 }
 
@@ -334,13 +334,13 @@ function HistoryItem({
     >
       <Card hover className="p-4 sm:p-5">
         <div className="flex items-start gap-4">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[var(--success-soft)] text-[var(--success)]">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[var(--radius-lg)] bg-[var(--success-soft)] text-[var(--success)]">
             <CheckCircle2 size={21} />
           </div>
 
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-              <h2 className="truncate text-lg font-black sm:text-xl">{routineName}</h2>
+              <h2 className="truncate font-bold text-lg sm:text-xl">{routineName}</h2>
               <span className="text-xs font-semibold text-[var(--success)]">Completed</span>
             </div>
 
@@ -375,8 +375,8 @@ function HistoryItem({
 function Metric({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-[var(--radius-md)] bg-[var(--surface-soft)] px-3 py-3">
-      <p className="text-[10px] font-black uppercase tracking-[0.12em] text-[var(--text-muted)]">{label}</p>
-      <p className="mt-1 text-sm font-black">{value}</p>
+      <p className="text-[11px] font-bold text-[var(--text-muted)]">{label}</p>
+      <p className="mt-1 text-sm font-bold">{value}</p>
     </div>
   );
 }
@@ -397,7 +397,7 @@ function FilterButton({
       onClick={onClick}
       className={`min-h-10 rounded-[var(--radius-sm)] px-2 text-xs font-bold transition-colors sm:text-sm ${
         active
-          ? "bg-[var(--surface)] text-[var(--primary)] shadow-sm ring-1 ring-[var(--primary)]/15"
+          ? "bg-[var(--surface)] text-[var(--primary)] ring-1 ring-[var(--primary)]/15"
           : "text-[var(--text-muted)] hover:text-[var(--text)]"
       }`}
     >
@@ -408,10 +408,10 @@ function FilterButton({
 
 function HistorySkeleton() {
   return (
-    <main className="space-y-6" role="status" aria-label="Loading history">
+    <div className="space-y-6" role="status" aria-label="Loading history">
       <div className="space-y-3">
         <div className="h-4 w-24 animate-pulse rounded bg-[var(--surface-soft)]" />
-        <div className="h-10 w-48 animate-pulse rounded-xl bg-[var(--surface-soft)]" />
+        <div className="h-10 w-48 animate-pulse rounded-[var(--radius-md)] bg-[var(--surface-soft)]" />
         <div className="h-5 w-full max-w-xl animate-pulse rounded bg-[var(--surface-soft)]" />
       </div>
       <div className="grid gap-3 sm:grid-cols-3">
@@ -424,6 +424,6 @@ function HistorySkeleton() {
           <div key={item} className="h-36 animate-pulse rounded-[var(--radius-xl)] bg-[var(--surface-soft)]" />
         ))}
       </div>
-    </main>
+    </div>
   );
 }

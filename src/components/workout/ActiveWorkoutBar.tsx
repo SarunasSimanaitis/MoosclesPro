@@ -1,380 +1,119 @@
-import {
-  ArrowRight,
-  CheckCircle2,
-  Clock3,
-  Dumbbell,
-  Pause,
-  Play,
-  X,
-} from "lucide-react";
-import {
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
-import {
-  useLocation,
-  useNavigate,
-} from "react-router-dom";
+import { ChevronRight, Pause, Play } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import { routines } from "../../data/routines";
-import { useRoutineStore } from "../../stores/routineStore";
 import { authClient } from "../../lib/auth-client";
 import {
   formatElapsedTime,
   getActiveWorkoutCompletedSets,
   getActiveWorkoutTotalSets,
+  getElapsedSeconds,
 } from "../../lib/activeWorkout";
 import { useActiveWorkoutStore } from "../../stores/activeWorkoutStore";
+import { useCustomRoutines } from "../../hooks/useCustomRoutines";
+import { useRestCountdown } from "../../hooks/useRestCountdown";
+import { formatRestTime } from "../../stores/restTimerStore";
 
+/**
+ * A slim "workout in progress" strip shown on every page except the workout
+ * itself, so an unfinished workout is always one tap away.
+ */
 export default function ActiveWorkoutBar() {
   const navigate = useNavigate();
-  const location = useLocation();
+  const { pathname } = useLocation();
+  const { data: session } = authClient.useSession();
 
-  const {
-    data: session,
-  } = authClient.useSession();
+  const activeWorkout = useActiveWorkoutStore((state) => state.activeWorkout);
+  const togglePause = useActiveWorkoutStore((state) => state.togglePause);
+  const needsCustomRoutine = Boolean(
+    activeWorkout && !routines.some((item) => item.id === activeWorkout.routineId),
+  );
+  const { customRoutines } = useCustomRoutines(needsCustomRoutine);
 
-  const activeWorkout =
-    useActiveWorkoutStore(
-      (state) => state.activeWorkout,
-    );
+  const rest = useRestCountdown();
+  const [now, setNow] = useState(() => Date.now());
 
-  const togglePause =
-    useActiveWorkoutStore(
-      (state) => state.togglePause,
-    );
-
-  const clearActiveWorkout =
-    useActiveWorkoutStore(
-      (state) =>
-        state.clearActiveWorkout,
-    );
-
-  const customRoutines =
-    useRoutineStore(
-      (state) => state.customRoutines,
-    );
-
-  const [now, setNow] =
-    useState(() => Date.now());
+  const isRunning = Boolean(activeWorkout && !activeWorkout.isPaused);
 
   useEffect(() => {
-    if (!activeWorkout) {
-      return;
-    }
+    if (!isRunning) return;
 
-    const interval =
-      window.setInterval(() => {
-        setNow(Date.now());
-      }, 1000);
-
+    const tick = () => setNow(Date.now());
+    const firstTick = window.setTimeout(tick, 0);
+    const interval = window.setInterval(tick, 1000);
     return () => {
-      window.clearInterval(
-        interval,
-      );
+      window.clearTimeout(firstTick);
+      window.clearInterval(interval);
     };
-  }, [activeWorkout]);
+  }, [isRunning]);
 
   const routineName = useMemo(() => {
-    if (!activeWorkout) {
-      return "Active workout";
-    }
+    if (!activeWorkout) return "Workout";
 
-    const routine = [
-      ...routines,
-      ...customRoutines,
-    ].find(
-      (item) =>
-        item.id ===
-        activeWorkout.routineId,
-    );
+    const routine = [...customRoutines, ...routines].find((item) => item.id === activeWorkout.routineId);
+    return routine?.name ?? "Workout";
+  }, [activeWorkout, customRoutines]);
 
-    return (
-      routine?.name ??
-      "Active workout"
-    );
-  }, [
-    activeWorkout,
-    customRoutines,
-  ]);
+  const onWorkoutScreen = pathname.startsWith("/workout/") || pathname === "/session";
+  const belongsToCurrentUser = Boolean(activeWorkout && session?.user?.id === activeWorkout.userId);
 
-  const completedSets =
-    getActiveWorkoutCompletedSets(
-      activeWorkout,
-    );
-
-  const totalSets =
-    getActiveWorkoutTotalSets(
-      activeWorkout,
-    );
-
-  const progress =
-    totalSets > 0
-      ? Math.round(
-          (completedSets /
-            totalSets) *
-            100,
-        )
-      : 0;
-
-  const elapsed =
-    formatElapsedTime(
-      getElapsedSecondsForDisplay(
-        activeWorkout,
-        now,
-      ),
-    );
-
-  const isOnWorkoutPage =
-    location.pathname.startsWith(
-      "/workout/",
-    );
-
-  const isOnSessionPage =
-    location.pathname ===
-    "/session";
-
-  const belongsToCurrentUser =
-    Boolean(
-      activeWorkout &&
-        session?.user?.id ===
-          activeWorkout.userId,
-    );
-
-  /*
-   * The page itself already has all workout
-   * controls, so don't duplicate the bar there.
-   */
-  if (
-    !activeWorkout ||
-    !belongsToCurrentUser ||
-    isOnWorkoutPage ||
-    isOnSessionPage
-  ) {
+  if (!activeWorkout || !belongsToCurrentUser || onWorkoutScreen) {
     return null;
   }
 
-  function resumeWorkout() {
-    navigate(
-      `/workout/${encodeURIComponent(
-        activeWorkout!.routineId,
-      )}`,
-    );
-  }
-
-  function discardWorkout() {
-    const confirmed =
-      window.confirm(
-        "Discard this active workout? Your unsaved sets will be lost.",
-      );
-
-    if (!confirmed) {
-      return;
-    }
-
-    clearActiveWorkout();
-  }
+  const completedSets = getActiveWorkoutCompletedSets(activeWorkout);
+  const totalSets = getActiveWorkoutTotalSets(activeWorkout);
+  const progress = totalSets > 0 ? Math.round((completedSets / totalSets) * 100) : 0;
+  const elapsed = formatElapsedTime(getElapsedSeconds(activeWorkout, now));
 
   return (
-    <div
-      className="
-        fixed
-        bottom-[5.25rem]
-        left-3
-        right-3
-        z-50
-        sm:bottom-4
-        sm:left-auto
-        sm:right-6
-        sm:w-[min(30rem,calc(100vw-3rem))]
-      "
-    >
-      <div
-        className="
-          overflow-hidden
-          rounded-[var(--radius-xl)]
-          border
-          border-[var(--primary)]
-          bg-[var(--surface)]
-        "
-      >
-        <div className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--primary-soft)] text-[var(--primary)]">
-              <Dumbbell size={19} />
-            </div>
+    <div className="pointer-events-none fixed inset-x-0 bottom-[calc(var(--bottom-offset)+0.5rem)] z-30 px-3 md:bottom-5 md:left-auto md:right-5 md:w-[22rem] md:px-0">
+      <div className="elevated pointer-events-auto relative mx-auto flex max-w-md items-center gap-3 overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] py-2 pl-3 pr-2 shadow-[var(--shadow-md)]">
+        <button
+          type="button"
+          onClick={() => navigate(`/workout/${encodeURIComponent(activeWorkout.routineId)}`)}
+          className="flex min-w-0 flex-1 items-center gap-3 text-left"
+          aria-label={`Resume ${routineName}, ${completedSets} of ${totalSets} sets done, ${elapsed} elapsed`}
+        >
+          <span className="relative flex h-2.5 w-2.5 shrink-0" aria-hidden="true">
+            {isRunning && <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--primary)] opacity-60" />}
+            <span className={`relative inline-flex h-2.5 w-2.5 rounded-full ${isRunning ? "bg-[var(--primary)]" : "bg-[var(--text-subtle)]"}`} />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-sm font-semibold text-[var(--text)]">{routineName}</span>
+            {rest.running ? (
+              <span className="block text-xs font-semibold text-[var(--primary)]">
+                Rest <span className="font-mono tabular-nums">{formatRestTime(rest.remaining)}</span>
+                <span className="font-normal text-[var(--text-muted)]"> · {completedSets}/{totalSets} sets</span>
+              </span>
+            ) : (
+              <span className="block text-xs text-[var(--text-muted)]">
+                <span className="font-mono tabular-nums">{elapsed}</span>
+                {" · "}
+                {completedSets}/{totalSets} sets
+                {activeWorkout.isPaused ? " · Paused" : ""}
+              </span>
+            )}
+          </span>
+          <ChevronRight size={18} className="shrink-0 text-[var(--text-muted)]" aria-hidden="true" />
+        </button>
 
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2">
-                <span className="h-2 w-2 animate-pulse rounded-full bg-[var(--primary)]" />
+        <button
+          type="button"
+          onClick={togglePause}
+          aria-label={activeWorkout.isPaused ? "Resume timer" : "Pause timer"}
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--surface-soft)] text-[var(--text)] hover:bg-[var(--surface-hover)]"
+        >
+          {activeWorkout.isPaused ? <Play size={15} aria-hidden="true" /> : <Pause size={15} aria-hidden="true" />}
+        </button>
 
-                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--primary)]">
-                  Workout in progress
-                </p>
-              </div>
-
-              <h2 className="mt-0.5 truncate text-sm font-black text-[var(--text)]">
-                {routineName}
-              </h2>
-            </div>
-
-            <div className="text-right">
-              <p className="flex items-center justify-end gap-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text-muted)]">
-                <Clock3 size={12} />
-                Time
-              </p>
-
-              <p className="font-mono text-sm font-black text-[var(--text)]">
-                {elapsed}
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-4 flex items-center justify-between gap-4">
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center justify-between text-xs">
-                <span className="font-semibold text-[var(--text-muted)]">
-                  {completedSets}/
-                  {totalSets} sets
-                </span>
-
-                <span className="font-black text-[var(--primary)]">
-                  {progress}%
-                </span>
-              </div>
-
-              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--surface-soft)]">
-                <div
-                  className="h-full rounded-full bg-[var(--primary)] transition-[width] duration-300"
-                  style={{
-                    width: `${progress}%`,
-                  }}
-                />
-              </div>
-            </div>
-
-            <div className="flex shrink-0 items-center gap-1.5">
-              <button
-                type="button"
-                onClick={togglePause}
-                aria-label={
-                  activeWorkout.isPaused
-                    ? "Resume timer"
-                    : "Pause timer"
-                }
-                className="
-                  flex
-                  h-11
-                  w-11
-                  items-center
-                  justify-center
-                  rounded-xl
-                  border
-                  border-[var(--border)]
-                  bg-[var(--surface-soft)]
-                  text-[var(--text-muted)]
-                  transition-colors
-                  hover:border-[var(--primary)]
-                  hover:text-[var(--primary)]
-                "
-              >
-                {activeWorkout.isPaused ? (
-                  <Play size={15} />
-                ) : (
-                  <Pause size={15} />
-                )}
-              </button>
-
-              <button
-                type="button"
-                onClick={resumeWorkout}
-                className="
-                  inline-flex
-                  h-11
-                  items-center
-                  gap-1.5
-                  rounded-xl
-                  bg-[var(--primary)]
-                  px-3
-                  text-xs
-                  font-bold
-                  text-[var(--primary-foreground)]
-                  transition-colors
-                  hover:bg-[var(--primary-hover)]
-                "
-              >
-                Resume
-                <ArrowRight size={14} />
-              </button>
-
-              <button
-                type="button"
-                onClick={discardWorkout}
-                aria-label="Discard workout"
-                className="
-                  flex
-                  h-11
-                  w-11
-                  items-center
-                  justify-center
-                  rounded-xl
-                  text-[var(--text-muted)]
-                  transition-colors
-                  hover:bg-[var(--danger-soft)]
-                  hover:text-[var(--danger)]
-                "
-              >
-                <X size={16} />
-              </button>
-            </div>
-          </div>
-
-          {activeWorkout.isPaused && (
-            <div className="mt-3 flex items-center gap-2 text-xs font-semibold text-[var(--warning)]">
-              <CheckCircle2 size={13} />
-              Workout paused
-            </div>
-          )}
-        </div>
+        <span
+          aria-hidden="true"
+          className="absolute inset-x-0 bottom-0 h-0.5 origin-left bg-[var(--primary)] transition-transform duration-300"
+          style={{ transform: `scaleX(${progress / 100})` }}
+        />
       </div>
     </div>
-  );
-}
-
-function getElapsedSecondsForDisplay(
-  workout: typeof useActiveWorkoutStore extends never
-    ? never
-    : ReturnType<
-        typeof useActiveWorkoutStore.getState
-      >["activeWorkout"],
-  now: number,
-) {
-  if (!workout) {
-    return 0;
-  }
-
-  const startedAt = new Date(
-    workout.startedAt,
-  ).getTime();
-
-  if (!Number.isFinite(startedAt)) {
-    return 0;
-  }
-
-  const endTime =
-    workout.isPaused &&
-    workout.pauseStartedAt !== null
-      ? workout.pauseStartedAt
-      : now;
-
-  return Math.max(
-    0,
-    Math.floor(
-      (endTime -
-        startedAt -
-        workout.totalPausedMs) /
-        1000,
-    ),
   );
 }

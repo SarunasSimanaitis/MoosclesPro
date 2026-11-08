@@ -1,202 +1,289 @@
-import { LogOut, Menu, Moon, Settings, Sun, X } from "lucide-react";
-import { useState } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { LogOut, Moon, Sun } from "lucide-react";
+import { NavLink, useLocation } from "react-router-dom";
 
 import {
   authenticatedNavigation,
+  isSectionActive,
+  mobileTabNavigation,
+  mobileTopNavigation,
   publicNavigation,
+  type NavigationItem,
 } from "../../data/navigation";
+import { useSignOut } from "../../hooks/useSignOut";
 import { useTheme } from "../../hooks/useTheme";
 import { preloadRoute } from "../../lib/routePreload";
-import { authClient } from "../../lib/auth-client";
-import { clearPrivateClientState } from "../../lib/privateClientState";
-import Button from "../ui/Button";
 import BrandLogo from "../ui/BrandLogo";
 
-export default function Navbar() {
+type AccountProps = {
+  name: string;
+};
+
+function initialFor(name: string) {
+  return name.trim().charAt(0).toUpperCase() || "A";
+}
+
+function Avatar({ name, active = false, size = 24 }: AccountProps & { active?: boolean; size?: number }) {
+  return (
+    <span
+      aria-hidden="true"
+      style={{ width: size, height: size }}
+      className={[
+        "flex shrink-0 items-center justify-center rounded-full bg-[var(--surface-soft)] text-[11px] font-semibold text-[var(--text)]",
+        active ? "ring-2 ring-[var(--text)] ring-offset-1 ring-offset-[var(--background)]" : "",
+      ].join(" ")}
+    >
+      {initialFor(name)}
+    </span>
+  );
+}
+
+function ThemeToggleButton({ withLabel = false }: { withLabel?: boolean }) {
   const { theme, toggleTheme } = useTheme();
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [signOutError, setSignOutError] = useState("");
-  const navigate = useNavigate();
-  const { data: session, isPending } = authClient.useSession();
-  const loggedIn = Boolean(session?.user);
-  const navigation = loggedIn ? authenticatedNavigation : publicNavigation;
+  const label = theme === "light" ? "Switch to dark mode" : "Switch to light mode";
+  const Icon = theme === "light" ? Moon : Sun;
 
-  async function handleSignOut() {
-    setSignOutError("");
-    try {
-      const result = await authClient.signOut();
-      if (result.error) {
-        throw new Error(result.error.message ?? "Sign out failed.");
-      }
-
-      const sessionResult = await authClient.getSession();
-      if (sessionResult.data?.user) {
-        throw new Error("The current session is still active.");
-      }
-
-      clearPrivateClientState();
-      setMenuOpen(false);
-      navigate("/");
-    } catch (error) {
-      console.error("Failed to sign out:", error);
-      setSignOutError("We couldn't sign you out. Check your connection and try again.");
-    }
-  }
-
-  const name = session?.user?.name?.trim() || "Account";
-  const initial = name.charAt(0).toUpperCase() || "A";
-
-  function closeMenu() {
-    setMenuOpen(false);
+  if (withLabel) {
+    return (
+      <button type="button" onClick={toggleTheme} aria-label={label} title={label} className={sidebarItemClass(false)}>
+        <Icon size={24} strokeWidth={1.75} aria-hidden="true" className="shrink-0" />
+        <span className="hidden xl:inline">{theme === "light" ? "Dark mode" : "Light mode"}</span>
+      </button>
+    );
   }
 
   return (
-    <header className="sticky top-0 z-50 border-b border-[var(--border)] bg-[var(--background)]/90 shadow-sm backdrop-blur-2xl">
-      <div className="mx-auto flex min-h-[68px] max-w-[1720px] items-center gap-2 px-4 sm:px-7 lg:min-h-[76px] lg:px-10 2xl:px-14">
+    <button type="button" onClick={toggleTheme} aria-label={label} title={label} className="theme-toggle">
+      <Icon size={22} strokeWidth={1.75} aria-hidden="true" />
+    </button>
+  );
+}
+
+function sidebarItemClass(active: boolean) {
+  return [
+    "group flex h-12 w-full items-center gap-4 rounded-[var(--radius-md)] px-3 text-[15px] transition-colors hover:bg-[var(--surface-soft)] justify-center xl:justify-start",
+    active ? "font-bold text-[var(--text)]" : "font-normal text-[var(--text)]",
+  ].join(" ");
+}
+
+function SidebarLink({ item }: { item: NavigationItem }) {
+  const { pathname } = useLocation();
+  const active = isSectionActive(item.path, pathname);
+  const Icon = item.icon;
+
+  return (
+    <NavLink
+      to={item.path}
+      onPointerEnter={() => preloadRoute(item.path)}
+      onFocus={() => preloadRoute(item.path)}
+      aria-current={active ? "page" : undefined}
+      title={item.label}
+      className={sidebarItemClass(active)}
+    >
+      <Icon size={24} strokeWidth={active ? 2.5 : 1.75} aria-hidden="true" className="shrink-0 transition-transform group-hover:scale-105" />
+      <span className="hidden xl:inline">{item.label}</span>
+    </NavLink>
+  );
+}
+
+/** Desktop and tablet: a fixed left sidebar, icon-only until there's room for labels. */
+function Sidebar({ name }: AccountProps) {
+  const { pathname } = useLocation();
+  const { signOut, signingOut, error } = useSignOut();
+  const settingsActive = pathname === "/settings";
+
+  return (
+    <aside className="fixed inset-y-0 left-0 z-40 hidden w-[72px] flex-col border-r border-[var(--border)] bg-[var(--background)] px-3 pb-5 pt-6 md:flex xl:w-[244px]">
+      <NavLink to="/dashboard" aria-label="MoosclesPro home" className="mb-6 flex h-12 items-center justify-center px-1 xl:justify-start xl:px-3">
+        <span className="xl:hidden"><BrandLogo compact /></span>
+        <span className="hidden xl:block"><BrandLogo /></span>
+      </NavLink>
+
+      <nav aria-label="Primary navigation" className="flex flex-1 flex-col gap-1">
+        {authenticatedNavigation.map((item) => (
+          <SidebarLink key={item.path} item={item} />
+        ))}
+      </nav>
+
+      <div className="flex flex-col gap-1">
+        {error && (
+          <p role="alert" className="hidden px-3 pb-2 text-xs text-[var(--danger)] xl:block">
+            {error}
+          </p>
+        )}
+        <ThemeToggleButton withLabel />
         <NavLink
-          to={loggedIn ? "/dashboard" : "/"}
-          onClick={closeMenu}
-          className="shrink-0"
-          aria-label="MoosclesPro home"
+          to="/settings"
+          title="Profile and settings"
+          aria-current={settingsActive ? "page" : undefined}
+          className={sidebarItemClass(settingsActive)}
         >
-          <BrandLogo />
+          <Avatar name={name} active={settingsActive} />
+          <span className="hidden xl:inline">Profile</span>
+        </NavLink>
+        <button
+          type="button"
+          onClick={() => void signOut()}
+          disabled={signingOut}
+          title="Sign out"
+          aria-label="Sign out"
+          className={`${sidebarItemClass(false)} disabled:opacity-50`}
+        >
+          <LogOut size={24} strokeWidth={1.75} aria-hidden="true" className="shrink-0" />
+          <span className="hidden xl:inline">{signingOut ? "Signing out…" : "Sign out"}</span>
+        </button>
+      </div>
+    </aside>
+  );
+}
+
+/** Phones: slim top bar with the logo and two shortcuts. */
+function MobileTopBar() {
+  const { pathname } = useLocation();
+
+  return (
+    <header className="sticky top-0 z-40 border-b border-[var(--border)] bg-[var(--background)] pt-[env(safe-area-inset-top)] md:hidden">
+      <div className="flex h-[var(--topbar-height)] items-center justify-between px-4">
+        <NavLink to="/dashboard" aria-label="MoosclesPro home">
+          <BrandLogo compact />
         </NavLink>
 
-        <nav className="ml-4 hidden min-w-0 flex-1 items-center gap-1 lg:flex" aria-label="Primary navigation">
-          {navigation.map((item) => {
+        <div className="flex items-center gap-1">
+          {mobileTopNavigation.map((item) => {
             const Icon = item.icon;
+            const active = isSectionActive(item.path, pathname);
             return (
               <NavLink
                 key={item.path}
                 to={item.path}
-                onPointerEnter={() => preloadRoute(item.path)}
-                onFocus={() => preloadRoute(item.path)}
-                className={({ isActive }) =>
-                  [
-                    "inline-flex min-h-11 items-center gap-2 rounded-full px-3.5 text-sm font-semibold transition-colors xl:px-4",
-                    isActive
-                      ? "bg-[var(--primary-soft)] text-[var(--primary)]"
-                      : "text-[var(--text-muted)] hover:bg-[var(--surface-soft)] hover:text-[var(--text)]",
-                  ].join(" ")
-                }
+                aria-label={item.label}
+                title={item.label}
+                aria-current={active ? "page" : undefined}
+                onPointerDown={() => preloadRoute(item.path)}
+                className="flex h-10 w-10 items-center justify-center rounded-[var(--radius-md)] text-[var(--text)]"
               >
-                <Icon size={16} strokeWidth={2} aria-hidden="true" />
-                {item.label}
+                <Icon size={23} strokeWidth={active ? 2.5 : 1.75} aria-hidden="true" />
+              </NavLink>
+            );
+          })}
+          <ThemeToggleButton />
+        </div>
+      </div>
+    </header>
+  );
+}
+
+/** Phones: fixed bottom tab bar. */
+function BottomTabBar({ name }: AccountProps) {
+  const { pathname } = useLocation();
+  const settingsActive = pathname === "/settings";
+
+  return (
+    <nav
+      data-bottom-nav
+      aria-label="Primary navigation"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--border)] bg-[var(--background)] pb-[env(safe-area-inset-bottom)] md:hidden"
+    >
+      <div className="mx-auto flex h-[var(--bottom-nav-height)] max-w-md items-stretch justify-around">
+        {mobileTabNavigation.map((item) => {
+          const Icon = item.icon;
+          const active = isSectionActive(item.path, pathname);
+          return (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              aria-label={item.label}
+              aria-current={active ? "page" : undefined}
+              onPointerDown={() => preloadRoute(item.path)}
+              className="flex flex-1 items-center justify-center text-[var(--text)]"
+            >
+              <Icon size={25} strokeWidth={active ? 2.5 : 1.75} aria-hidden="true" />
+            </NavLink>
+          );
+        })}
+        <NavLink
+          to="/settings"
+          aria-label="Profile and settings"
+          aria-current={settingsActive ? "page" : undefined}
+          className="flex flex-1 items-center justify-center"
+        >
+          <Avatar name={name} active={settingsActive} size={26} />
+        </NavLink>
+      </div>
+    </nav>
+  );
+}
+
+/** Signed-out visitors: one simple top bar on every screen size. */
+function PublicHeader() {
+  const { pathname } = useLocation();
+
+  return (
+    <header className="sticky top-0 z-40 border-b border-[var(--border)] bg-[var(--background)] pt-[env(safe-area-inset-top)]">
+      <div className="mx-auto flex h-[3.75rem] max-w-[1100px] items-center gap-2 px-4 sm:px-6">
+        <NavLink to="/" aria-label="MoosclesPro home" className="mr-auto">
+          <span className="sm:hidden"><BrandLogo compact /></span>
+          <span className="hidden sm:block"><BrandLogo /></span>
+        </NavLink>
+
+        <nav aria-label="Primary navigation" className="flex items-center gap-1">
+          {publicNavigation.map((item) => {
+            const Icon = item.icon;
+            const active = isSectionActive(item.path, pathname);
+            return (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                aria-label={item.label}
+                title={item.label}
+                aria-current={active ? "page" : undefined}
+                className={[
+                  "flex h-10 items-center gap-2 rounded-[var(--radius-md)] px-2.5 text-sm hover:bg-[var(--surface-soft)]",
+                  active ? "font-semibold text-[var(--text)]" : "text-[var(--text)]",
+                ].join(" ")}
+              >
+                <Icon size={20} strokeWidth={active ? 2.5 : 1.75} aria-hidden="true" />
+                <span className="hidden sm:inline">{item.label}</span>
               </NavLink>
             );
           })}
         </nav>
 
-        <div className="ml-auto flex shrink-0 items-center gap-2">
-          {!isPending && loggedIn && (
-            <details className="group relative hidden sm:block">
-              <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-full px-2.5 text-sm font-semibold text-[var(--text)] transition-colors hover:bg-[var(--surface-soft)] [&::-webkit-details-marker]:hidden">
-                <span className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border-strong)] bg-[var(--surface-soft)] text-xs font-black text-[var(--primary)]">
-                  {initial}
-                </span>
-                <span className="hidden xl:inline">{name}</span>
-                <Settings size={16} className="text-[var(--text-muted)]" aria-hidden="true" />
-              </summary>
-              <div className="absolute right-0 top-[calc(100%+0.5rem)] z-50 min-w-52 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-2 shadow-[var(--shadow-lg)]">
-                <NavLink to="/settings" className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold text-[var(--text)] hover:bg-[var(--surface-soft)]">
-                  <Settings size={16} aria-hidden="true" /> Settings
-                </NavLink>
-                <button type="button" onClick={() => void handleSignOut()} className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-semibold text-[var(--danger)] hover:bg-[var(--danger-soft)]">
-                  <LogOut size={16} aria-hidden="true" /> Sign out
-                </button>
-              </div>
-            </details>
-          )}
+        <ThemeToggleButton />
 
-          {!isPending && !loggedIn && (
-            <div className="hidden items-center gap-2 lg:flex">
-              <NavLink to="/login" className="inline-flex min-h-11 items-center rounded-full px-4 text-sm font-semibold text-[var(--text-muted)] hover:bg-[var(--surface-soft)] hover:text-[var(--text)]">
-                Log in
-              </NavLink>
-              <NavLink to="/register"><Button size="sm">Create account</Button></NavLink>
-            </div>
-          )}
-
-          <button
-            type="button"
-            className="theme-toggle px-0 sm:px-3"
-            onClick={toggleTheme}
-            aria-label={theme === "light" ? "Switch to dark theme" : "Switch to light theme"}
-            title={theme === "light" ? "Switch to dark theme" : "Switch to light theme"}
-          >
-            {theme === "light" ? <Moon size={19} strokeWidth={2.3} aria-hidden="true" /> : <Sun size={19} strokeWidth={2.3} aria-hidden="true" />}
-            <span className="hidden text-xs font-bold sm:inline">{theme === "light" ? "Dark" : "Light"}</span>
-          </button>
-
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => setMenuOpen((value) => !value)}
-            className="h-11 w-11 rounded-full p-0 lg:hidden"
-            aria-expanded={menuOpen}
-            aria-controls="mobile-navigation"
-            aria-label={menuOpen ? "Close menu" : "Open menu"}
-          >
-            {menuOpen ? <X size={19} /> : <Menu size={19} />}
-          </Button>
-        </div>
-      </div>
-
-      {signOutError && (
-        <div role="alert" className="mx-auto max-w-[1720px] px-4 pb-3 text-sm font-medium text-[var(--danger)] sm:px-7 lg:px-10">
-          {signOutError}
-        </div>
-      )}
-
-      <div
-        id="mobile-navigation"
-        aria-hidden={!menuOpen}
-        inert={!menuOpen}
-        className={`mobile-navigation border-t border-[var(--border)] bg-[var(--surface)] shadow-lg backdrop-blur-2xl lg:hidden ${menuOpen ? "mobile-navigation-open" : ""}`}
-      >
-          <nav className="mx-auto grid max-w-[1720px] gap-1 px-4 py-3 sm:px-7 lg:px-10" aria-label="Mobile navigation">
-            {navigation.map((item) => {
-              const Icon = item.icon;
-              return (
-                <NavLink
-                  key={item.path}
-                  to={item.path}
-                  onClick={closeMenu}
-                  onPointerEnter={() => preloadRoute(item.path)}
-                  className={({ isActive }) =>
-                    [
-                      "flex min-h-12 items-center gap-3 rounded-2xl px-4 text-sm font-semibold",
-                      isActive
-                        ? "bg-[var(--primary-soft)] text-[var(--primary)]"
-                        : "text-[var(--text-muted)] hover:bg-[var(--surface-soft)] hover:text-[var(--text)]",
-                    ].join(" ")
-                  }
-                >
-                  <Icon size={18} aria-hidden="true" />
-                  {item.label}
-                </NavLink>
-              );
-            })}
-
-            {loggedIn ? (
-              <>
-                <NavLink to="/settings" onClick={closeMenu} className="flex min-h-12 items-center gap-3 rounded-2xl px-4 text-sm font-semibold text-[var(--text-muted)] hover:bg-[var(--surface-soft)] hover:text-[var(--text)]">
-                  <Settings size={18} aria-hidden="true" />
-                  Settings
-                </NavLink>
-                <button type="button" onClick={() => void handleSignOut()} className="flex min-h-12 items-center rounded-2xl px-4 text-left text-sm font-semibold text-[var(--danger)] hover:bg-[var(--danger-soft)]">
-                  Sign out
-                </button>
-              </>
-            ) : (
-              <div className="grid grid-cols-2 gap-2 border-t border-[var(--border)] pt-3">
-                <NavLink to="/login" onClick={closeMenu}><Button variant="secondary" className="w-full">Log in</Button></NavLink>
-                <NavLink to="/register" onClick={closeMenu}><Button className="w-full">Create account</Button></NavLink>
-              </div>
-            )}
-          </nav>
+        <NavLink
+          to="/login"
+          className="hidden h-9 items-center rounded-[var(--radius-md)] px-3 text-sm font-semibold text-[var(--text)] hover:bg-[var(--surface-soft)] sm:inline-flex"
+        >
+          Log in
+        </NavLink>
+        <NavLink
+          to="/register"
+          className="inline-flex h-9 shrink-0 items-center whitespace-nowrap rounded-[var(--radius-md)] bg-[var(--primary)] px-4 text-sm font-semibold text-[var(--primary-foreground)] hover:bg-[var(--primary-hover)]"
+        >
+          Sign up
+        </NavLink>
       </div>
     </header>
   );
 }
+
+type NavbarProps = {
+  loggedIn: boolean;
+  name: string;
+  showBottomNav: boolean;
+};
+
+export default function Navbar({ loggedIn, name, showBottomNav }: NavbarProps) {
+  if (!loggedIn) {
+    return <PublicHeader />;
+  }
+
+  return (
+    <>
+      <Sidebar name={name} />
+      <MobileTopBar />
+      {showBottomNav && <BottomTabBar name={name} />}
+    </>
+  );
+}
+

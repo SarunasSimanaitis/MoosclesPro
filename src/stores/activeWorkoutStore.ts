@@ -3,7 +3,12 @@ import { persist } from "zustand/middleware";
 
 import type { Routine } from "../types/Routine";
 import type { WorkoutExercise } from "../types/WorkoutExercise";
-import { createWorkoutExercises } from "../lib/workoutEngine";
+import type { WorkoutSession } from "../types/WorkoutSession";
+import {
+  createWorkoutExercises,
+  getPreviousPerformance,
+  type PreviousPerformanceMap,
+} from "../lib/workoutEngine";
 
 export type ActiveWorkout = {
   id: string;
@@ -15,11 +20,18 @@ export type ActiveWorkout = {
   isPaused: boolean;
   pauseStartedAt: number | null;
   totalPausedMs: number;
+  /** Last time's completed sets for this routine, shown in the "Previous" column. */
+  previous?: PreviousPerformanceMap;
+};
+
+export type StartWorkoutOptions = {
+  previousSession?: WorkoutSession | null;
+  restOverrides?: Record<string, number>;
 };
 
 type ActiveWorkoutState = {
   activeWorkout: ActiveWorkout | null;
-  startWorkout: (routine: Routine, userId: string) => ActiveWorkout;
+  startWorkout: (routine: Routine, userId: string, options?: StartWorkoutOptions) => ActiveWorkout;
   updateExercises: (updater: (exercises: WorkoutExercise[]) => WorkoutExercise[]) => void;
   togglePause: () => void;
   clearActiveWorkout: () => void;
@@ -30,8 +42,9 @@ export const useActiveWorkoutStore = create<ActiveWorkoutState>()(
     (set) => ({
       activeWorkout: null,
 
-      startWorkout: (routine, userId) => {
+      startWorkout: (routine, userId, options = {}) => {
         const now = new Date().toISOString();
+        const previous = getPreviousPerformance(options.previousSession ?? null);
 
         const workout: ActiveWorkout = {
           id: crypto.randomUUID(),
@@ -39,7 +52,11 @@ export const useActiveWorkoutStore = create<ActiveWorkoutState>()(
           routineId: routine.id,
           startedAt: now,
           updatedAt: now,
-          exercises: createWorkoutExercises(routine),
+          exercises: createWorkoutExercises(routine, {
+            previous,
+            restOverrides: options.restOverrides,
+          }),
+          previous,
           isPaused: false,
           pauseStartedAt: null,
           totalPausedMs: 0,

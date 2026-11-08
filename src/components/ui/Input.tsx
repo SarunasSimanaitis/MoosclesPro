@@ -25,7 +25,7 @@ export default function Input({
   return (
     <div>
       {label && (
-        <label htmlFor={id} className="mb-2 block text-sm font-semibold text-[var(--text)]">
+        <label htmlFor={id} className="mb-1.5 block text-sm font-semibold text-[var(--text)]">
           {label}
         </label>
       )}
@@ -36,7 +36,7 @@ export default function Input({
       )}
       <div className="relative">
         {leadingIcon && (
-          <span aria-hidden="true" className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)]">
+          <span aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]">
             {leadingIcon}
           </span>
         )}
@@ -47,12 +47,12 @@ export default function Input({
           aria-invalid={error ? true : undefined}
           aria-describedby={describedBy}
           className={`
-            min-h-12 w-full rounded-[var(--radius-md)] border
-            ${error ? "border-[var(--danger)]" : "border-[var(--border-strong)]"}
-            bg-[var(--surface-soft)] px-4 py-3 text-[var(--text)]
-            outline-none transition-[background-color,border-color] duration-200
-            focus:bg-[var(--surface)] focus:border-[var(--primary)]
-            disabled:opacity-50 ${leadingIcon ? "pl-11" : ""} ${className}
+            min-h-11 w-full rounded-[var(--radius-md)] border
+            ${error ? "border-[var(--danger)]" : "border-[var(--border)]"}
+            bg-[var(--surface-soft)] px-3 py-2.5 text-[16px] text-[var(--text)] sm:text-sm
+            outline-none transition-[border-color] duration-150
+            focus:border-[var(--text-subtle)]
+            disabled:opacity-50 ${leadingIcon ? "pl-10" : ""} ${className}
           `}
         />
       </div>

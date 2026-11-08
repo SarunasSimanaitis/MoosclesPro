@@ -1,32 +1,14 @@
-import {
-  Navigate,
-  Outlet,
-  useLocation,
-} from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 
 import { authClient } from "../../lib/auth-client";
+import PageLoader from "../ui/PageLoader";
 
 export default function ProtectedRoute() {
-  const location =
-    useLocation();
-
-  const {
-    data: session,
-    isPending,
-  } = authClient.useSession();
+  const location = useLocation();
+  const { data: session, isPending } = authClient.useSession();
 
   if (isPending) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-[var(--background)]">
-        <div
-          role="status"
-          aria-live="polite"
-          className="text-sm font-medium text-[var(--text-muted)]"
-        >
-          Loading...
-        </div>
-      </div>
-    );
+    return <PageLoader />;
   }
 
   if (!session?.user) {

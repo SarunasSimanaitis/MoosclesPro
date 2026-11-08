@@ -2,6 +2,7 @@ import {
   CheckCircle2,
   Circle,
   Clock3,
+  Info,
   Plus,
 } from "lucide-react";
 
@@ -76,6 +77,7 @@ export default function ExerciseCard({
   const isCompleted =
     sets.length > 0 &&
     completedSets === sets.length;
+  const remainingSets = sets.length - completedSets;
 
   const progress =
     sets.length > 0
@@ -88,6 +90,7 @@ export default function ExerciseCard({
   const exerciseRecords = personalRecords.filter(
     (record) => record.exerciseId === exercise.id,
   );
+  const nextSetId = sets.find((set) => !set.completed)?.id;
 
   return (
     <Card
@@ -117,7 +120,7 @@ export default function ExerciseCard({
                   shrink-0
                   items-center
                   justify-center
-                  rounded-xl
+                  rounded-[var(--radius-md)]
                   ${
                     isCompleted
                       ? "bg-[var(--success-soft)] text-[var(--success)]"
@@ -137,7 +140,7 @@ export default function ExerciseCard({
               </div>
 
               <div className="min-w-0">
-                <h2 className="line-clamp-2 break-words text-base font-black leading-tight tracking-tight text-[var(--text)] sm:text-xl md:text-2xl">
+                <h2 className="line-clamp-2 break-words font-bold leading-tight tracking-tight text-[var(--text)] text-lg sm:text-xl">
                   {exercise.name}
                 </h2>
 
@@ -163,6 +166,13 @@ export default function ExerciseCard({
                     {formatRest(restSeconds)}
                   </Badge>
                 </div>
+
+                {!isCompleted && (
+                  <div className="mt-3 flex max-w-xl items-start gap-2 rounded-[var(--radius-md)] border border-[var(--primary)]/15 bg-[var(--primary-soft)] px-3 py-2.5 text-xs leading-relaxed text-[var(--text-muted)] sm:text-sm">
+                    <Info size={15} className="mt-0.5 shrink-0 text-[var(--primary)]" aria-hidden="true" />
+                    <span><strong className="font-bold text-[var(--text)]">Your next step:</strong> Enter the load and reps you completed, then tap <strong className="font-bold text-[var(--text)]">Log set</strong>.</span>
+                  </div>
+                )}
               </div>
           </div>
 
@@ -172,7 +182,7 @@ export default function ExerciseCard({
                 rounded-full
                 px-2.5
                 py-1
-                text-[10px]
+                text-[11px]
                 font-bold
                 tabular-nums
                 sm:px-3
@@ -185,13 +195,12 @@ export default function ExerciseCard({
                 }
               `}
             >
-              {completedSets}/
-              {sets.length} complete
+              {isCompleted ? "All done" : `${remainingSets} left`}
             </div>
           </div>
         </div>
 
-        <div className="mt-3 h-1 overflow-hidden rounded-full bg-[var(--surface-soft)] sm:mt-5">
+        <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[var(--surface-soft)] sm:mt-5" role="progressbar" aria-label="Exercise set completion" aria-valuemin={0} aria-valuemax={sets.length} aria-valuenow={completedSets}>
           <div
             className={`
               h-full
@@ -218,6 +227,7 @@ export default function ExerciseCard({
             <SetRow
               key={set.id}
               workoutSet={set}
+              isNext={set.id === nextSetId}
               weightUnit={weightUnit}
               personalRecordLabels={exerciseRecords.filter((record) => record.setId === set.id).map((record) => getRecordLabel(record.kind))}
               onToggle={() =>
@@ -258,7 +268,7 @@ export default function ExerciseCard({
         <button
           type="button"
           onClick={() => onAddSet(exercise.id)}
-          className="mt-4 inline-flex min-h-12 w-full touch-manipulation items-center justify-center gap-2 rounded-2xl border border-dashed border-[var(--border-strong)] px-4 text-sm font-bold text-[var(--text-muted)] transition-[background-color,border-color,color,transform] duration-200 hover:border-[var(--primary)] hover:bg-[var(--primary-soft)] hover:text-[var(--primary)] active:scale-[0.99] sm:w-auto sm:justify-start sm:rounded-full"
+          className="mt-4 inline-flex min-h-12 w-full touch-manipulation items-center justify-center gap-2 rounded-[var(--radius-lg)] border border-dashed border-[var(--border-strong)] px-4 text-sm font-bold text-[var(--text-muted)] transition-[background-color,border-color,color,transform] duration-200 hover:border-[var(--primary)] hover:bg-[var(--primary-soft)] hover:text-[var(--primary)] active:scale-[0.99] sm:w-auto sm:justify-start sm:rounded-full"
         >
           <Plus size={16} aria-hidden="true" />
           Add set

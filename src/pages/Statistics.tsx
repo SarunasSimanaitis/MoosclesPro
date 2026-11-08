@@ -71,12 +71,12 @@ export default function Statistics() {
 
   if (error || !statistics) {
     return (
-      <main className="mx-auto max-w-2xl">
+      <div className="mx-auto max-w-2xl">
         <Card className="p-7 text-center sm:p-10">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--danger-soft)] text-[var(--danger)]">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-[var(--radius-lg)] bg-[var(--danger-soft)] text-[var(--danger)]">
             <BarChart3 size={26} />
           </div>
-          <h1 className="mt-5 text-2xl font-black">Stats are unavailable</h1>
+          <h1 className="mt-5 font-bold text-[22px] sm:text-2xl">Stats are unavailable</h1>
           <p className="mt-2 leading-relaxed text-[var(--text-muted)]">
             {error ?? "There was a problem loading your statistics."}
           </p>
@@ -84,12 +84,12 @@ export default function Statistics() {
             Try again
           </Button>
         </Card>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className="space-y-6 sm:space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       <PageHeader
         eyebrow="Progress"
         icon={<TrendingUp size={15} />}
@@ -97,7 +97,7 @@ export default function Statistics() {
         description="Useful numbers about the work you've already done."
       />
 
-      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-4">
         <StatCard icon={<Dumbbell size={20} />} label="Workouts" value={statistics.overview.workouts.toString()} suffix="completed" />
         <StatCard icon={<TrendingUp size={20} />} label="Volume" value={formatVolume(statistics.overview.volume, weightUnit)} suffix={weightUnit} />
         <StatCard icon={<Clock3 size={20} />} label="Training time" value={statistics.overview.trainingHours.toLocaleString(undefined, { maximumFractionDigits: 1 })} suffix="hours" tone="success" />
@@ -107,11 +107,11 @@ export default function Statistics() {
       <Card className="p-5 sm:p-7">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.18em] text-[var(--primary)]">
+            <p className="flex items-center gap-2 text-xs font-semibold text-[var(--text-muted)]">
               <Activity size={15} />
               Consistency
             </p>
-            <h2 className="mt-2 text-2xl font-black">Last 8 weeks</h2>
+            <h2 className="mt-2 font-bold text-lg sm:text-xl">Last 8 weeks</h2>
             <p className="mt-1 text-sm text-[var(--text-muted)]">
               How often you've trained, week by week.
             </p>
@@ -135,16 +135,16 @@ export default function Statistics() {
 
             return (
               <div key={week.start} className="flex min-w-0 flex-col items-center gap-2">
-                <span className="text-xs font-black text-[var(--text)]">
+                <span className="text-xs font-bold text-[var(--text)]">
                   {week.workouts}
                 </span>
                 <div className="flex h-36 w-full items-end rounded-[var(--radius-md)] bg-[var(--surface-soft)] p-1">
                   <div
-                    className={`w-full rounded-[var(--radius-sm)] ${highest ? "bg-[var(--primary)]" : "bg-[var(--success)]"}`}
+                    className={`w-full rounded-[var(--radius-sm)] ${highest ? "bg-[var(--primary)]" : "bg-[var(--primary)]/45"}`}
                     style={{ height: `${height}%` }}
                   />
                 </div>
-                <span className="truncate text-[10px] font-bold text-[var(--text-muted)] sm:text-xs">
+                <span className="truncate text-[11px] font-bold text-[var(--text-muted)] sm:text-xs">
                   {week.label}
                 </span>
               </div>
@@ -162,7 +162,6 @@ export default function Statistics() {
           valueFormatter={(item) =>
             `${item.workouts} ${item.workouts === 1 ? "workout" : "workouts"}`
           }
-          tone="primary"
         />
         <ExerciseRanking
           eyebrow="Volume"
@@ -170,7 +169,6 @@ export default function Statistics() {
           description="Exercises contributing the most total weight."
           exercises={statistics.topVolumeExercises}
           valueFormatter={(item) => `${formatVolume(item.volume, weightUnit)} ${weightUnit}`}
-          tone="primary"
         />
       </section>
 
@@ -178,21 +176,21 @@ export default function Statistics() {
         statistics.topVolumeExercises.length === 0 && (
           <Card className="border-dashed p-7 text-center sm:p-10">
             <BarChart3 size={25} className="mx-auto text-[var(--text-muted)]" />
-            <h2 className="mt-4 text-xl font-black">More data will appear here</h2>
+            <h2 className="mt-4 font-bold text-lg sm:text-xl">More data will appear here</h2>
             <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-[var(--text-muted)]">
               Complete a few workouts and your exercise trends will start to fill in.
             </p>
           </Card>
         )}
-    </main>
+    </div>
   );
 }
 
 function Insight({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-[var(--radius-md)] bg-[var(--surface-soft)] px-3 py-2.5 text-center">
-      <p className="text-[10px] font-black uppercase tracking-[0.12em] text-[var(--text-muted)]">{label}</p>
-      <p className="mt-1 text-sm font-black">{value}</p>
+      <p className="text-[11px] font-bold text-[var(--text-muted)]">{label}</p>
+      <p className="mt-1 text-sm font-bold">{value}</p>
     </div>
   );
 }
@@ -203,26 +201,22 @@ function ExerciseRanking({
   description,
   exercises,
   valueFormatter,
-  tone,
 }: {
   eyebrow: string;
   title: string;
   description: string;
   exercises: ExerciseStatistic[];
   valueFormatter: (exercise: ExerciseStatistic) => string;
-  tone: "primary" | "success";
 }) {
-  const color =
-    tone === "primary" ? "var(--primary)" : "var(--primary)";
-  const bg =
-    tone === "primary" ? "var(--primary-soft)" : "var(--primary-soft)";
+  const color = "var(--primary)";
+  const bg = "var(--primary-soft)";
 
   return (
     <Card className="p-5 sm:p-7">
-      <p className="text-xs font-black uppercase tracking-[0.18em]" style={{ color }}>
+      <p className="text-xs font-bold" style={{ color }}>
         {eyebrow}
       </p>
-      <h2 className="mt-2 text-2xl font-black">{title}</h2>
+      <h2 className="mt-2 font-bold text-lg sm:text-xl">{title}</h2>
       <p className="mt-1 text-sm leading-relaxed text-[var(--text-muted)]">{description}</p>
 
       {exercises.length === 0 ? (
@@ -234,7 +228,7 @@ function ExerciseRanking({
         <div className="mt-6 space-y-2">
           {exercises.map((exercise, index) => (
             <div key={exercise.exerciseId} className="flex items-center gap-3 rounded-[var(--radius-md)] bg-[var(--surface-soft)] p-3.5">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl font-black" style={{ backgroundColor: bg, color }}>
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-md)] font-bold" style={{ backgroundColor: bg, color }}>
                 {index + 1}
               </div>
               <div className="min-w-0 flex-1">
@@ -243,7 +237,7 @@ function ExerciseRanking({
                   {exercise.sets} {exercise.sets === 1 ? "set" : "sets"}
                 </p>
               </div>
-              <span className="shrink-0 text-right text-sm font-black">
+              <span className="shrink-0 text-right text-sm font-bold">
                 {valueFormatter(exercise)}
               </span>
             </div>
@@ -256,13 +250,13 @@ function ExerciseRanking({
 
 function StatisticsSkeleton() {
   return (
-    <main className="space-y-6" role="status" aria-label="Loading statistics">
+    <div className="space-y-6" role="status" aria-label="Loading statistics">
       <div className="space-y-3">
         <div className="h-4 w-24 animate-pulse rounded bg-[var(--surface-soft)]" />
-        <div className="h-10 w-56 animate-pulse rounded-xl bg-[var(--surface-soft)]" />
+        <div className="h-10 w-56 animate-pulse rounded-[var(--radius-md)] bg-[var(--surface-soft)]" />
         <div className="h-5 w-full max-w-xl animate-pulse rounded bg-[var(--surface-soft)]" />
       </div>
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-4">
         {[1, 2, 3, 4].map((item) => (
           <div key={item} className="h-32 animate-pulse rounded-[var(--radius-xl)] bg-[var(--surface-soft)]" />
         ))}
@@ -273,6 +267,6 @@ function StatisticsSkeleton() {
           <div key={item} className="h-72 animate-pulse rounded-[var(--radius-xl)] bg-[var(--surface-soft)]" />
         ))}
       </div>
-    </main>
+    </div>
   );
 }

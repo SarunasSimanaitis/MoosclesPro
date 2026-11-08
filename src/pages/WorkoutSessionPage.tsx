@@ -38,7 +38,7 @@ import { routines } from "../data/routines";
 import { useRestTimer } from "../hooks/useRestTimer";
 import { useWorkoutSession } from "../hooks/useWorkoutSession";
 import { useWorkoutTimer } from "../hooks/useWorkoutTimer";
-import { useRoutineStore } from "../stores/routineStore";
+import { useCustomRoutines } from "../hooks/useCustomRoutines";
 import { useActiveWorkoutStore } from "../stores/activeWorkoutStore";
 import { authClient } from "../lib/auth-client";
 import { getAppPreferences } from "../lib/preferences";
@@ -58,10 +58,12 @@ export default function WorkoutSessionPage() {
     isPending: sessionPending,
   } = authClient.useSession();
 
-  const customRoutines =
-    useRoutineStore(
-      (state) => state.customRoutines,
-    );
+  const isBuiltInRoutine = routines.some((item) => item.id === routineId);
+
+  const {
+    customRoutines,
+    status: customRoutinesStatus,
+  } = useCustomRoutines(Boolean(session?.user) && !isBuiltInRoutine);
 
   const activeWorkout =
     useActiveWorkoutStore(
@@ -78,6 +80,8 @@ export default function WorkoutSessionPage() {
     );
 
   const [isStarting, setIsStarting] = useState(false);
+  /* Bumped to start a fresh workout (with last-time prefill) after discarding one. */
+  const [startRequest, setStartRequest] = useState(0);
   const userId = session?.user?.id;
 
   const allRoutines = useMemo(
@@ -152,6 +156,7 @@ export default function WorkoutSessionPage() {
     sessionPending,
     startWorkout,
     updateExercises,
+    startRequest,
   ]);
 
   useEffect(() => {
@@ -168,6 +173,10 @@ export default function WorkoutSessionPage() {
 
   if (!session?.user) {
     return null;
+  }
+
+  if (!routine && customRoutinesStatus === "loading") {
+    return <SessionLoading />;
   }
 
   if (!routine) {
@@ -218,11 +227,7 @@ export default function WorkoutSessionPage() {
         }
         onStartNew={() => {
           clearActiveWorkout();
-
-          startWorkout(
-            routine,
-            session.user.id,
-          );
+          setStartRequest((value) => value + 1);
         }}
         onBack={() =>
           navigate("/workouts")
@@ -428,17 +433,14 @@ function WorkoutSession({
     setSaveError(null);
 
     try {
-      const session =
-        createSession();
+      const session = createSession();
 
-      await workoutSessionsApi.create(
-        session,
-      );
+      await workoutSessionsApi.create(session);
 
       stopRestTimer();
       clearActiveWorkout();
 
-      navigate("/history", {
+      navigate(`/history/${session.id}`, {
         replace: true,
       });
     } catch (error) {
@@ -463,7 +465,7 @@ function WorkoutSession({
   }
 
   return (
-    <main className="mx-auto max-w-7xl space-y-6 pb-10">
+    <div className="mx-auto max-w-7xl space-y-6 pb-56 md:pb-40">
       <button
         type="button"
         onClick={handleExit}
@@ -591,7 +593,7 @@ function WorkoutSession({
           void finishWorkout()
         }
       />
-    </main>
+    </div>
   );
 }
 
@@ -611,30 +613,30 @@ function ExerciseFocusNavigation({
   const isComplete = activeExercise.sets.length > 0 && activeExercise.sets.every((set) => set.completed);
 
   return (
-    <Card className="sticky top-[4.25rem] z-30 overflow-hidden border-[var(--border-strong)] bg-[var(--surface)]/95 p-2.5 shadow-[var(--shadow-md)] backdrop-blur-2xl sm:top-[4.75rem] sm:px-4 sm:py-3">
+    <Card className="sticky top-[calc(var(--topbar-height)+env(safe-area-inset-top)+0.5rem)] z-30 overflow-hidden border-[var(--border-strong)] bg-[var(--surface)]/95 p-2.5 shadow-[var(--shadow-md)] md:top-3 sm:px-4 sm:py-3">
       <div className="flex min-w-0 items-center gap-2">
         <button
           type="button"
           onClick={() => previous && onSelect(previous.exercise.id)}
           disabled={!previous}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-[var(--text-muted)] transition-[background-color,color,opacity] hover:bg-[var(--surface-soft)] hover:text-[var(--text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] disabled:opacity-30"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-lg)] text-[var(--text-muted)] transition-[background-color,color,opacity] hover:bg-[var(--surface-soft)] hover:text-[var(--text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] disabled:opacity-30"
           aria-label="Previous exercise"
         >
           <ArrowLeft size={18} aria-hidden="true" />
         </button>
 
         <div className="min-w-0 flex-1">
-          <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[var(--primary)]">
+          <p className="text-xs font-semibold text-[var(--text-muted)]">
             Exercise {activeIndex + 1} of {exercises.length}{isComplete ? " · Complete" : " · In progress"}
           </p>
-          <p className="truncate text-sm font-black text-[var(--text)] sm:text-base">{activeExercise.exercise.name}</p>
+          <p className="truncate text-sm font-bold text-[var(--text)] sm:text-base">{activeExercise.exercise.name}</p>
         </div>
 
         <button
           type="button"
           onClick={() => next && onSelect(next.exercise.id)}
           disabled={!next}
-          className="flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-2xl bg-[var(--primary-soft)] px-3 text-xs font-black text-[var(--primary)] transition-[background-color,opacity,transform] hover:bg-[var(--primary)] hover:text-[var(--primary-foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] active:scale-[0.97] disabled:opacity-35 disabled:hover:bg-[var(--primary-soft)] disabled:hover:text-[var(--primary)]"
+          className="flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-[var(--radius-lg)] bg-[var(--primary-soft)] px-3 text-xs font-bold text-[var(--primary)] transition-[background-color,opacity,transform] hover:bg-[var(--primary)] hover:text-[var(--primary-foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] active:scale-[0.97] disabled:opacity-35 disabled:hover:bg-[var(--primary-soft)] disabled:hover:text-[var(--primary)]"
           aria-label={next ? `Next exercise: ${next.exercise.name}` : "Last exercise"}
         >
           Next
@@ -672,13 +674,13 @@ function MissingWorkout({
   onBack: () => void;
 }) {
   return (
-    <main className="mx-auto flex min-h-[65vh] max-w-2xl items-center justify-center">
+    <div className="mx-auto flex min-h-[65vh] max-w-2xl items-center justify-center">
       <Card className="w-full p-10 text-center">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--primary-soft)] text-[var(--primary)]">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-[var(--radius-lg)] bg-[var(--primary-soft)] text-[var(--primary)]">
           <Dumbbell size={28} />
         </div>
 
-        <h1 className="mt-6 text-3xl font-black text-[var(--text)]">
+        <h1 className="mt-6 font-bold text-[var(--text)] text-[22px] sm:text-2xl">
           Workout not found
         </h1>
 
@@ -697,7 +699,7 @@ function MissingWorkout({
           Back to workouts
         </Button>
       </Card>
-    </main>
+    </div>
   );
 }
 
@@ -715,17 +717,17 @@ function WorkoutConflict({
   onBack: () => void;
 }) {
   return (
-    <main className="mx-auto flex min-h-[65vh] max-w-2xl items-center justify-center">
+    <div className="mx-auto flex min-h-[65vh] max-w-2xl items-center justify-center">
       <Card className="w-full p-8 md:p-10">
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--warning-soft)] text-[var(--warning)]">
+        <div className="flex h-14 w-14 items-center justify-center rounded-[var(--radius-lg)] bg-[var(--warning-soft)] text-[var(--warning)]">
           <TriangleAlert size={25} />
         </div>
 
-        <p className="mt-6 text-xs font-bold uppercase tracking-[0.2em] text-[var(--primary)]">
+        <p className="mt-6 text-xs font-semibold text-[var(--text-muted)]">
           Workout already active
         </p>
 
-        <h1 className="mt-2 text-3xl font-black tracking-tight text-[var(--text)]">
+        <h1 className="mt-2 font-bold tracking-tight text-[var(--text)] text-[22px] sm:text-2xl">
           Finish what you started?
         </h1>
 
@@ -767,13 +769,13 @@ function WorkoutConflict({
           Back to workouts
         </button>
       </Card>
-    </main>
+    </div>
   );
 }
 
 function SessionLoading() {
   return (
-    <main
+    <div
       role="status"
       aria-label="Loading workout"
       className="mx-auto max-w-7xl space-y-6"
@@ -787,6 +789,6 @@ function SessionLoading() {
       <div className="h-64 animate-pulse rounded-[var(--radius-xl)] bg-[var(--surface-soft)]" />
 
       <div className="h-96 animate-pulse rounded-[var(--radius-xl)] bg-[var(--surface-soft)]" />
-    </main>
+    </div>
   );
 }

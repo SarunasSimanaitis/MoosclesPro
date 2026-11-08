@@ -478,7 +478,7 @@ function RoutineEditor({
 
   if (isLoadingRoutine) {
     return (
-      <main
+      <div
         role="status"
         aria-label="Loading routine"
         className="mx-auto max-w-7xl"
@@ -491,21 +491,21 @@ function RoutineEditor({
           <div className="h-5 w-36 animate-pulse rounded bg-[var(--surface-soft)]" />
 
           <div className="space-y-4">
-            <div className="h-10 w-80 animate-pulse rounded-xl bg-[var(--surface-soft)]" />
+            <div className="h-10 w-80 animate-pulse rounded-[var(--radius-md)] bg-[var(--surface-soft)]" />
 
-            <div className="h-6 w-full max-w-2xl animate-pulse rounded-lg bg-[var(--surface-soft)]" />
+            <div className="h-6 w-full max-w-2xl animate-pulse rounded-[var(--radius-md)] bg-[var(--surface-soft)]" />
           </div>
 
           <div className="h-32 animate-pulse rounded-[var(--radius-xl)] bg-[var(--surface-soft)]" />
 
           <div className="h-96 animate-pulse rounded-[var(--radius-xl)] bg-[var(--surface-soft)]" />
         </div>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className="mx-auto max-w-7xl space-y-6 pb-10">
+    <div className="mx-auto max-w-7xl space-y-6 pb-10">
       {/* Back */}
       <button
         type="button"
@@ -530,13 +530,13 @@ function RoutineEditor({
 
       {/* Header */}
       <section>
-        <p className="text-sm font-bold uppercase tracking-[0.25em] text-[var(--primary)]">
+        <p className="text-sm font-bold text-[var(--primary)]">
           Routine Builder
         </p>
 
         <div className="mt-3 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
           <div>
-            <h1 className="text-3xl font-black tracking-tight text-[var(--text)] sm:text-4xl md:text-5xl">
+            <h1 className="font-bold tracking-tight text-[var(--text)] text-[22px] sm:text-2xl">
               {isEditing
                 ? "Edit your routine"
                 : "Create your routine"}
@@ -577,19 +577,35 @@ function RoutineEditor({
         </Card>
       )}
 
+      <section className="grid gap-2 sm:grid-cols-3" aria-label="Routine creation steps">
+        {[
+          ["01", "Name your routine", "Give it a name you'll recognize."],
+          ["02", "Choose exercises", "Add movements and set your targets."],
+          ["03", "Save and train", "Your routine will be ready to use."],
+        ].map(([number, title, description], index) => (
+          <div key={number} className={`rounded-[var(--radius-lg)] border p-4 ${index === 0 ? "border-[var(--primary)]/35 bg-[var(--primary-soft)]" : "border-[var(--border)] bg-[var(--surface)]"}`}>
+            <div className="flex items-center gap-2">
+              <span className="flex h-7 w-7 items-center justify-center rounded-[var(--radius-md)] bg-[var(--primary)] text-xs font-bold text-white">{number}</span>
+              <p className="text-sm font-bold text-[var(--text)]">{title}</p>
+            </div>
+            <p className="mt-2 pl-9 text-xs leading-relaxed text-[var(--text-muted)]">{description}</p>
+          </div>
+        ))}
+      </section>
+
       {/* Routine details */}
       <Card className="p-5 sm:p-7">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--primary-soft)] text-[var(--primary)]">
+          <div className="flex h-10 w-10 items-center justify-center rounded-[var(--radius-md)] bg-[var(--primary-soft)] text-[var(--primary)]">
             <Dumbbell size={19} />
           </div>
 
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--primary)]">
+            <p className="text-xs font-semibold text-[var(--text-muted)]">
               Basics
             </p>
 
-            <h2 className="mt-1 text-xl font-black text-[var(--text)]">
+            <h2 className="mt-1 font-bold text-[var(--text)] text-lg sm:text-xl">
               Routine details
             </h2>
           </div>
@@ -615,11 +631,11 @@ function RoutineEditor({
       <Card className="p-5 sm:p-7">
         <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--primary)]">
+            <p className="text-xs font-semibold text-[var(--text-muted)]">
               Workout structure
             </p>
 
-            <h2 className="mt-1 text-2xl font-black tracking-tight text-[var(--text)]">
+            <h2 className="mt-1 font-bold tracking-tight text-[var(--text)] text-lg sm:text-xl">
               Exercises
             </h2>
 
@@ -720,11 +736,11 @@ function RoutineEditor({
           </div>
         ) : (
           <div className="mt-6 rounded-[var(--radius-lg)] border border-dashed border-[var(--border-strong)] px-6 py-14 text-center">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--primary-soft)] text-[var(--primary)]">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-[var(--radius-lg)] bg-[var(--primary-soft)] text-[var(--primary)]">
               <Dumbbell size={28} />
             </div>
 
-            <h3 className="mt-5 text-xl font-black text-[var(--text)]">
+            <h3 className="mt-5 text-xl font-bold text-[var(--text)]">
               Your routine is empty
             </h3>
 
@@ -787,10 +803,10 @@ function RoutineEditor({
       </section>
 
       {/* Save bar */}
-      <div className="sticky bottom-4 z-20">
+      <div className="sticky bottom-[calc(var(--bottom-offset)+0.75rem)] z-20 md:bottom-4">
         <Card className="flex flex-col gap-4 border-[var(--border-strong)] bg-[var(--surface)]/95 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
           <div className="flex items-center gap-3">
-            <div className="hidden h-9 w-9 items-center justify-center rounded-xl bg-[var(--success-soft)] text-[var(--success)] sm:flex">
+            <div className="hidden h-9 w-9 items-center justify-center rounded-[var(--radius-md)] bg-[var(--success-soft)] text-[var(--success)] sm:flex">
               <CheckCircle2 size={18} />
             </div>
 
@@ -840,7 +856,7 @@ function RoutineEditor({
           </div>
         </Card>
       </div>
-    </main>
+    </div>
   );
 }
 
@@ -858,12 +874,12 @@ function SummaryCard({
       <div className="flex items-center gap-2 text-[var(--primary)]">
         {icon}
 
-        <span className="text-xs font-bold uppercase tracking-[0.15em] text-[var(--text-muted)]">
+        <span className="text-xs font-bold text-[var(--text-muted)]">
           {label}
         </span>
       </div>
 
-      <p className="mt-3 text-2xl font-black tracking-tight text-[var(--text)]">
+      <p className="mt-3 text-2xl font-bold tracking-tight text-[var(--text)]">
         {value}
       </p>
     </Card>

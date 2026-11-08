@@ -4,6 +4,7 @@ import {
   CheckCircle2,
   Clock3,
   Dumbbell,
+  Trophy,
 } from "lucide-react";
 import {
   useEffect,
@@ -28,6 +29,7 @@ import { useRoutineStore } from "../stores/routineStore";
 import type { WorkoutSession } from "../types/WorkoutSession";
 import { getAppPreferences } from "../lib/preferences";
 import { formatVolume, formatWeight } from "../lib/units";
+import { collectPersonalRecords, findWorkoutPersonalRecords } from "../lib/personalRecords";
 
 import {
   formatWorkoutDate,
@@ -65,6 +67,8 @@ export default function WorkoutDetails() {
     setIsLoading,
   ] = useState(true);
 
+  const [previousSessions, setPreviousSessions] = useState<WorkoutSession[]>([]);
+
   const [
     error,
     setError,
@@ -84,13 +88,17 @@ export default function WorkoutDetails() {
           );
         }
 
-        const data =
-          await workoutSessionsApi.get(
-            sessionId,
-          );
+        const [data, allSessions] = await Promise.all([
+          workoutSessionsApi.get(sessionId),
+          workoutSessionsApi.list().catch((historyError: unknown) => {
+            console.error("Could not load previous sessions for personal records:", historyError);
+            return [];
+          }),
+        ]);
 
         if (!cancelled) {
           setSession(data);
+          setPreviousSessions(allSessions.filter((item) => item.id !== data.id));
         }
       } catch (requestError) {
         console.error(
@@ -145,16 +153,16 @@ export default function WorkoutDetails() {
 
   if (error || !session) {
     return (
-      <main className="mx-auto flex min-h-[65vh] max-w-3xl items-center justify-center">
+      <div className="mx-auto flex min-h-[65vh] max-w-3xl items-center justify-center">
         <Card
           role="alert"
           className="w-full p-10 text-center"
         >
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--surface-soft)] text-[var(--text-muted)]">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-[var(--radius-lg)] bg-[var(--surface-soft)] text-[var(--text-muted)]">
             <Dumbbell size={28} />
           </div>
 
-          <h1 className="mt-6 text-3xl font-black tracking-tight text-[var(--text)]">
+          <h1 className="mt-6 font-bold tracking-tight text-[var(--text)] text-[22px] sm:text-2xl">
             Workout not found
           </h1>
 
@@ -174,7 +182,7 @@ export default function WorkoutDetails() {
             Back to history
           </Button>
         </Card>
-      </main>
+      </div>
     );
   }
 
@@ -190,6 +198,14 @@ export default function WorkoutDetails() {
   const duration =
     getSessionDuration(session);
 
+  const completedExercises = session.exercises.filter((exercise) =>
+    exercise.sets.some((set) => set.completed),
+  ).length;
+  const newPersonalRecords = findWorkoutPersonalRecords(
+    session.exercises,
+    collectPersonalRecords(previousSessions),
+  );
+
   const completionPercentage =
     totalSets > 0
       ? Math.round(
@@ -200,7 +216,7 @@ export default function WorkoutDetails() {
       : 0;
 
   return (
-    <main className="mx-auto max-w-7xl space-y-8 pb-10">
+    <div className="mx-auto max-w-7xl space-y-8 pb-10">
       <Link
         to="/history"
         className="
@@ -219,20 +235,20 @@ export default function WorkoutDetails() {
       </Link>
 
       {/* Header */}
-      <section className="relative overflow-hidden rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--surface)] p-6 md:p-8">
+      <section className="relative overflow-hidden rounded-[var(--radius-xl)] border border-[var(--primary)]/15 bg-[var(--surface)] p-6 shadow-[var(--shadow-md)] md:p-8">
 
 
         <div className="relative">
           <div className="flex flex-col gap-7 lg:flex-row lg:items-start lg:justify-between">
             <div className="min-w-0">
-              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-[var(--success)]">
+              <div className="flex items-center gap-2 text-xs font-bold text-[var(--success)]">
                 <CheckCircle2
                   size={16}
                 />
                 Completed workout
               </div>
 
-              <h1 className="mt-4 text-3xl font-black tracking-tight text-[var(--text)] md:text-4xl">
+              <h1 className="mt-4 font-bold tracking-tight text-[var(--text)] text-[22px] sm:text-2xl">
                 {routineName}
               </h1>
 
@@ -260,10 +276,10 @@ export default function WorkoutDetails() {
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-2 sm:gap-3">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
               <SummaryStat
-                label="Exercises"
-                value={session.exercises.length.toString()}
+                label="Exercises done"
+                value={`${completedExercises}/${session.exercises.length}`}
               />
 
               <SummaryStat
@@ -284,12 +300,12 @@ export default function WorkoutDetails() {
                 Workout completion
               </span>
 
-              <span className="font-black text-[var(--primary)]">
+              <span className="font-bold text-[var(--primary)]">
                 {completionPercentage}%
               </span>
             </div>
 
-            <div className="mt-3 h-2 overflow-hidden rounded-full bg-[var(--surface-soft)]">
+            <div className="mt-3 h-2 overflow-hidden rounded-full bg-[var(--surface-soft)]" role="progressbar" aria-label="Workout completion" aria-valuemin={0} aria-valuemax={100} aria-valuenow={completionPercentage}>
               <div
                 className="h-full rounded-full bg-[var(--primary)] transition-[width] duration-500"
                 style={{
@@ -301,14 +317,37 @@ export default function WorkoutDetails() {
         </div>
       </section>
 
+      {newPersonalRecords.length > 0 && (
+        <section aria-labelledby="session-records-heading" className="space-y-3">
+          <div className="flex items-center gap-2 text-[var(--primary)]">
+            <Trophy size={18} aria-hidden="true" />
+            <p className="text-xs font-bold">New personal records</p>
+          </div>
+          <Card className="grid gap-3 border-[var(--primary)]/25 bg-[var(--primary-soft)] p-4 sm:grid-cols-2 sm:p-5">
+            {newPersonalRecords.map((record) => (
+              <div key={`${record.exerciseId}-${record.kind}`} className="rounded-[var(--radius-lg)] border border-[var(--primary)]/15 bg-[var(--surface)] px-4 py-3">
+                <p className="text-sm font-bold text-[var(--text)]">{record.exerciseName}</p>
+                <p className="mt-1 text-xs font-semibold text-[var(--text-muted)]">
+                  {record.kind === "load" ? "Heaviest set" : record.kind === "estimated-one-rep-max" ? "Estimated 1RM" : "Rep record"}
+                </p>
+                <p className="mt-1 text-lg font-bold tabular-nums text-[var(--primary)]">
+                  {record.kind === "reps" ? `${record.value} reps` : record.kind === "estimated-one-rep-max" ? `≈ ${formatWeight(record.value, weightUnit)} ${weightUnit}` : `${formatWeight(record.value, weightUnit)} ${weightUnit} × ${record.reps}`}
+                </p>
+                {record.previousValue === null && <p className="mt-1 text-[11px] text-[var(--text-muted)]">First record logged</p>}
+              </div>
+            ))}
+          </Card>
+        </section>
+      )}
+
       {/* Exercise breakdown */}
       <section className="space-y-5">
         <div>
-          <p className="text-sm font-bold uppercase tracking-[0.2em] text-[var(--primary)]">
+          <p className="text-sm font-bold text-[var(--primary)]">
             Performance
           </p>
 
-          <h2 className="mt-2 text-3xl font-black tracking-tight text-[var(--text)]">
+          <h2 className="mt-2 font-bold tracking-tight text-[var(--text)] text-lg sm:text-xl">
             Exercise breakdown
           </h2>
 
@@ -340,7 +379,7 @@ export default function WorkoutDetails() {
             return (
               <Card
                 key={exercise.exercise.id}
-                className="overflow-hidden"
+                className="overflow-hidden border-[var(--border)] transition-colors hover:border-[var(--primary)]/25"
               >
                 <div className="p-6 md:p-7">
                   <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-start">
@@ -363,7 +402,7 @@ export default function WorkoutDetails() {
                         </Badge>
                       </div>
 
-                      <h3 className="mt-4 text-xl font-black tracking-tight text-[var(--text)] md:text-2xl">
+                      <h3 className="mt-4 text-xl font-bold tracking-tight text-[var(--text)] md:text-2xl">
                         {
                           exercise
                             .exercise.name
@@ -405,10 +444,10 @@ export default function WorkoutDetails() {
                       <div key={set.id} className="p-4">
                         <div className="flex items-center justify-between gap-3">
                           <div>
-                            <p className="text-xs font-bold uppercase tracking-[0.12em] text-[var(--text-muted)]">
+                            <p className="text-xs font-bold text-[var(--text-muted)]">
                               Set {set.order}
                             </p>
-                            <p className="mt-1 font-black text-[var(--text)]">
+                            <p className="mt-1 font-bold text-[var(--text)]">
                               {formatWeight(set.weight, weightUnit)} {weightUnit} × {set.reps}
                             </p>
                           </div>
@@ -439,7 +478,7 @@ export default function WorkoutDetails() {
                 <div className="hidden overflow-x-auto border-t border-[var(--border)] md:block">
                   <table className="w-full min-w-[560px] border-collapse">
                     <thead>
-                      <tr className="bg-[var(--surface-soft)] text-left text-xs font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">
+                      <tr className="bg-[var(--surface-soft)] text-left text-xs font-bold text-[var(--text-muted)]">
                         <th className="px-5 py-3">
                           Set
                         </th>
@@ -533,7 +572,7 @@ export default function WorkoutDetails() {
           />
         </Button>
       </Card>
-    </main>
+    </div>
   );
 }
 
@@ -546,11 +585,11 @@ function SummaryStat({
 }) {
   return (
     <div className="min-w-20 rounded-[var(--radius-md)] bg-[var(--surface-soft)] px-3 py-3 text-center sm:min-w-24">
-      <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text-muted)]">
+      <p className="text-[11px] font-bold text-[var(--text-muted)]">
         {label}
       </p>
 
-      <p className="mt-1 text-sm font-black text-[var(--text)]">
+      <p className="mt-1 text-sm font-bold text-[var(--text)]">
         {value}
       </p>
     </div>
@@ -559,7 +598,7 @@ function SummaryStat({
 
 function DetailsSkeleton() {
   return (
-    <main
+    <div
       role="status"
       aria-label="Loading workout details"
       className="mx-auto max-w-7xl space-y-6"
@@ -578,6 +617,6 @@ function DetailsSkeleton() {
           className="h-72 animate-pulse rounded-[var(--radius-xl)] bg-[var(--surface-soft)]"
         />
       ))}
-    </main>
+    </div>
   );
 }

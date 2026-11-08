@@ -55,7 +55,7 @@ export default function LandingPage() {
 
         <div className="relative grid items-center gap-10 lg:grid-cols-[1.05fr_0.95fr]">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-sm font-semibold text-[var(--text-muted)] shadow-sm">
+            <div className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-sm font-semibold text-[var(--text-muted)]">
               <Sparkles
                 size={15}
                 className="text-[var(--primary)]"
@@ -63,7 +63,7 @@ export default function LandingPage() {
               Training made measurable.
             </div>
 
-            <h1 className="mt-7 max-w-[1400px] 2xl:max-w-7xl text-4xl font-black tracking-tight text-[var(--text)] sm:text-5xl md:text-6xl">
+            <h1 className="mt-6 text-[32px] font-bold leading-[1.1] tracking-tight text-[var(--text)] sm:text-5xl">
               Train smarter.
               <span className="block text-[var(--primary)]">
                 Keep progressing.
@@ -110,19 +110,19 @@ export default function LandingPage() {
           <div className="relative">
 
             <Card className="relative overflow-hidden p-5 md:p-6">
-              <div className="rounded-[1.5rem] bg-[var(--text)] p-5 text-[var(--surface)] md:p-6">
+              <div className="rounded-[var(--radius-lg)] bg-[var(--text)] p-5 text-[var(--surface)] md:p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--primary)]">
+                    <p className="text-xs font-semibold text-[var(--primary)]">
                       Active workout
                     </p>
 
-                    <h2 className="mt-2 text-2xl font-black">
+                    <h2 className="mt-2 text-2xl font-bold">
                       Upper Body
                     </h2>
                   </div>
 
-                  <div className="rounded-xl bg-[var(--surface)]/10 px-3 py-2 text-sm font-bold">
+                  <div className="rounded-[var(--radius-md)] bg-[var(--surface)]/10 px-3 py-2 text-sm font-bold">
                     42:18
                   </div>
                 </div>
@@ -173,11 +173,11 @@ export default function LandingPage() {
 
       <section>
         <div className="max-w-2xl">
-          <p className="text-sm font-semibold uppercase tracking-[0.25em] text-[var(--primary)]">
+          <p className="text-sm font-semibold text-[var(--primary)]">
             Everything in one place
           </p>
 
-          <h2 className="mt-3 text-3xl font-black tracking-tight text-[var(--text)] sm:text-4xl md:text-5xl">
+          <h2 className="mt-3 text-3xl font-bold tracking-tight text-[var(--text)] sm:text-2xl md:text-3xl">
             Your training should be easy to follow.
           </h2>
 
@@ -200,11 +200,11 @@ export default function LandingPage() {
                 hover
                 className="p-6"
               >
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--primary-soft)] text-[var(--primary)]">
+                <div className="flex h-12 w-12 items-center justify-center rounded-[var(--radius-lg)] bg-[var(--primary-soft)] text-[var(--primary)]">
                   <Icon size={23} />
                 </div>
 
-                <h3 className="mt-6 text-xl font-black text-[var(--text)]">
+                <h3 className="mt-6 text-xl font-bold text-[var(--text)]">
                   {title}
                 </h3>
 
@@ -221,11 +221,11 @@ export default function LandingPage() {
 
       <section className="grid items-center gap-10 lg:grid-cols-[0.9fr_1.1fr]">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.25em] text-[var(--primary)]">
+          <p className="text-sm font-semibold text-[var(--primary)]">
             Built around your training
           </p>
 
-          <h2 className="mt-3 text-3xl font-black tracking-tight text-[var(--text)] sm:text-4xl md:text-5xl">
+          <h2 className="mt-3 text-3xl font-bold tracking-tight text-[var(--text)] sm:text-2xl md:text-3xl">
             Less friction.
             <span className="block">
               More consistency.
@@ -294,11 +294,11 @@ export default function LandingPage() {
 
       <section className="overflow-hidden rounded-[var(--radius-xl)] bg-[var(--feature-background)] p-6 text-[var(--feature-text)] sm:p-8 md:p-10">
         <div className="max-w-3xl">
-          <p className="text-sm font-semibold uppercase tracking-[0.25em] text-[var(--primary)]">
+          <p className="text-sm font-semibold text-[var(--primary)]">
             Start training
           </p>
 
-          <h2 className="mt-4 text-4xl font-black tracking-tight md:text-5xl">
+          <h2 className="mt-4 text-2xl font-bold tracking-tight md:text-3xl">
             Your next workout starts here.
           </h2>
 
@@ -333,7 +333,7 @@ function PreviewSet({
   complete?: boolean;
 }) {
   return (
-    <div className="flex items-center justify-between gap-4 rounded-2xl bg-[var(--surface)]/10 px-4 py-3">
+    <div className="flex items-center justify-between gap-4 rounded-[var(--radius-lg)] bg-[var(--surface)]/10 px-4 py-3">
       <div className="min-w-0">
         <p className="truncate font-semibold">
           {name}
@@ -345,7 +345,7 @@ function PreviewSet({
       </div>
 
       <div
-        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${
+        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-[var(--radius-md)] ${
           complete
             ? "bg-[var(--primary)] text-[var(--text)]"
             : "border border-[var(--surface)]/20"
@@ -367,12 +367,12 @@ function PreviewMetric({
   value: string;
 }) {
   return (
-    <div className="rounded-2xl bg-[var(--surface)]/10 p-3">
-      <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--surface)]/50">
+    <div className="rounded-[var(--radius-lg)] bg-[var(--surface)]/10 p-3">
+      <p className="text-[11px] font-semibold tracking-wider text-[var(--surface)]/50">
         {label}
       </p>
 
-      <p className="mt-1 text-sm font-black">
+      <p className="mt-1 text-sm font-bold">
         {value}
       </p>
     </div>
@@ -391,16 +391,16 @@ function MiniFeature({
   description: string;
 }) {
   return (
-    <div className="rounded-2xl bg-[var(--surface-soft)] p-5">
-      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--primary-soft)] text-[var(--primary)]">
+    <div className="rounded-[var(--radius-lg)] bg-[var(--surface-soft)] p-5">
+      <div className="flex h-10 w-10 items-center justify-center rounded-[var(--radius-md)] bg-[var(--primary-soft)] text-[var(--primary)]">
         {icon}
       </div>
 
-      <p className="mt-5 text-xs font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">
+      <p className="mt-5 text-xs font-bold text-[var(--text-muted)]">
         {title}
       </p>
 
-      <h3 className="mt-2 text-lg font-black text-[var(--text)]">
+      <h3 className="mt-2 text-lg font-bold text-[var(--text)]">
         {value}
       </h3>
 

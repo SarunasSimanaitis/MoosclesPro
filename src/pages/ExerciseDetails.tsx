@@ -76,13 +76,13 @@ export default function ExerciseDetails() {
    */
   if (!exercise) {
     return (
-      <main className="mx-auto max-w-6xl 2xl:max-w-7xl py-10">
+      <div className="mx-auto max-w-6xl 2xl:max-w-7xl py-10">
         <Card className="p-10 text-center">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--surface-soft)] text-[var(--text-muted)]">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-[var(--radius-lg)] bg-[var(--surface-soft)] text-[var(--text-muted)]">
             <Dumbbell size={26} />
           </div>
 
-          <h1 className="mt-5 text-2xl font-black text-[var(--text)]">
+          <h1 className="mt-5 font-bold text-[var(--text)] text-[22px] sm:text-2xl">
             Exercise not found
           </h1>
 
@@ -102,7 +102,7 @@ export default function ExerciseDetails() {
             Back to Exercises
           </Button>
         </Card>
-      </main>
+      </div>
     );
   }
 
@@ -196,7 +196,7 @@ export default function ExerciseDetails() {
   }
 
   return (
-    <main className="space-y-8">
+    <div className="space-y-8">
       {/* Back */}
       <NavLink
         to="/exercises"
@@ -224,22 +224,22 @@ export default function ExerciseDetails() {
               <div className={`grid h-full w-full ${selectedExercise.imageUrlEnd ? "grid-cols-2" : "grid-cols-1"}`}>
                 <figure className="relative flex min-w-0 items-center justify-center overflow-hidden bg-[var(--surface-soft)]">
                   <img src={selectedExercise.imageUrl} alt={`Starting position reference for ${selectedExercise.imageSourceName ?? selectedExercise.name}`} loading="eager" fetchPriority="high" decoding="async" className="h-full min-h-[300px] max-h-[460px] w-full object-contain p-2 sm:min-h-[360px] md:min-h-[460px]" />
-                  <figcaption className="absolute bottom-3 left-3 rounded-full border border-[var(--border)] bg-[var(--surface)]/90 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-[var(--text-muted)] shadow-sm">Start</figcaption>
+                  <figcaption className="absolute bottom-3 left-3 rounded-full border border-[var(--border)] bg-[var(--surface)]/90 px-3 py-1 text-[11px] font-bold text-[var(--text-muted)]">Start</figcaption>
                 </figure>
                 {selectedExercise.imageUrlEnd && (
                   <figure className="relative flex min-w-0 items-center justify-center overflow-hidden border-l border-[var(--border)] bg-[var(--surface-soft)]">
                     <img src={selectedExercise.imageUrlEnd} alt={`Finishing position reference for ${selectedExercise.imageSourceName ?? selectedExercise.name}`} loading="lazy" decoding="async" className="h-full min-h-[300px] max-h-[460px] w-full object-contain p-2 sm:min-h-[360px] md:min-h-[460px]" />
-                    <figcaption className="absolute bottom-3 left-3 rounded-full border border-[var(--border)] bg-[var(--surface)]/90 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-[var(--text-muted)] shadow-sm">Finish</figcaption>
+                    <figcaption className="absolute bottom-3 left-3 rounded-full border border-[var(--border)] bg-[var(--surface)]/90 px-3 py-1 text-[11px] font-bold text-[var(--text-muted)]">Finish</figcaption>
                   </figure>
                 )}
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center px-8 text-center">
-                <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-[var(--primary-soft)] text-[var(--primary)]">
+                <div className="flex h-20 w-20 items-center justify-center rounded-[var(--radius-lg)] bg-[var(--primary-soft)] text-[var(--primary)]">
                   <Dumbbell size={36} />
                 </div>
 
-                <p className="mt-5 text-sm font-semibold uppercase tracking-[0.2em] text-[var(--text-muted)]">
+                <p className="mt-5 text-sm font-semibold text-[var(--text-muted)]">
                   Exercise
                 </p>
 
@@ -310,7 +310,7 @@ export default function ExerciseDetails() {
             </Badge>
           </div>
 
-          <h1 className="mt-6 text-3xl font-black tracking-tight text-[var(--text)] sm:text-4xl md:text-5xl">
+          <h1 className="mt-6 font-bold tracking-tight text-[var(--text)] text-[22px] sm:text-2xl">
             {selectedExercise.name}
           </h1>
 
@@ -365,11 +365,11 @@ export default function ExerciseDetails() {
       {/* Instructions */}
       <section>
         <div className="mb-5">
-          <p className="text-sm font-semibold uppercase tracking-[0.25em] text-[var(--primary)]">
+          <p className="text-sm font-semibold text-[var(--primary)]">
             Technique
           </p>
 
-          <h2 className="mt-2 text-3xl font-black text-[var(--text)]">
+          <h2 className="mt-2 font-bold text-[var(--text)] text-lg sm:text-xl">
             How to perform it
           </h2>
         </div>
@@ -387,7 +387,7 @@ export default function ExerciseDetails() {
                     key={`${selectedExercise.id}-instruction-${index}`}
                     className="flex gap-5"
                   >
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[var(--primary-soft)] text-sm font-black text-[var(--primary)]">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-md)] bg-[var(--primary-soft)] text-sm font-bold text-[var(--primary)]">
                       {index + 1}
                     </div>
 
@@ -533,7 +533,7 @@ export default function ExerciseDetails() {
                     </div>
 
                     {wasAdded ? (
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--success)] text-white">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-md)] bg-[var(--success)] text-white">
                         <Check
                           size={18}
                         />
@@ -547,7 +547,7 @@ export default function ExerciseDetails() {
                         Adding...
                       </span>
                     ) : (
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--primary-soft)] text-[var(--primary)]">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-md)] bg-[var(--primary-soft)] text-[var(--primary)]">
                         <Plus size={19} />
                       </div>
                     )}
@@ -600,7 +600,7 @@ export default function ExerciseDetails() {
           </div>
         )}
       </Modal>
-    </main>
+    </div>
   );
 }
 
@@ -617,7 +617,7 @@ function MuscleSection({
 }: MuscleSectionProps) {
   return (
     <div>
-      <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]">
+      <p className="text-xs font-bold text-[var(--text-muted)]">
         {title}
       </p>
 
@@ -626,7 +626,7 @@ function MuscleSection({
           <span
             key={muscle}
             className={`
-              rounded-xl
+              rounded-[var(--radius-md)]
               px-3
               py-2
               text-sm
@@ -657,7 +657,7 @@ function InfoCard({
 }: InfoCardProps) {
   return (
     <Card className="p-6">
-      <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]">
+      <p className="text-xs font-bold text-[var(--text-muted)]">
         {label}
       </p>
 

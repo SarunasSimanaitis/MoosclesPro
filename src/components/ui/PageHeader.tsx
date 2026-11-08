@@ -18,27 +18,27 @@ export default function PageHeader({
   className = "",
 }: PageHeaderProps) {
   return (
-    <header className={"mb-7 flex flex-col gap-5 sm:mb-9 lg:flex-row lg:items-end lg:justify-between 2xl:mb-11 " + className}>
+    <header className={"mb-5 flex flex-col gap-4 sm:mb-7 sm:flex-row sm:items-end sm:justify-between " + className}>
       <div className="min-w-0">
         {eyebrow && (
-          <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-[var(--primary)] sm:text-sm">
+          <p className="flex items-center gap-1.5 text-xs font-medium text-[var(--text-muted)] [&_svg]:h-3.5 [&_svg]:w-3.5">
             {icon}
             {eyebrow}
           </p>
         )}
 
-        <h1 className="mt-2 text-3xl font-black tracking-[-0.04em] text-[var(--text)] sm:text-4xl lg:text-5xl 2xl:text-6xl">
+        <h1 className="mt-1 font-bold leading-tight tracking-tight text-[var(--text)] text-[22px] sm:text-2xl">
           {title}
         </h1>
 
         {description && (
-          <p className="mt-3 max-w-3xl text-sm leading-6 text-[var(--text-muted)] sm:text-base sm:leading-7 lg:text-lg">
+          <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-[var(--text-muted)]">
             {description}
           </p>
         )}
       </div>
 
-      {action && <div className="w-full shrink-0 lg:w-auto">{action}</div>}
+      {action && <div className="w-full shrink-0 sm:w-auto">{action}</div>}
     </header>
   );
 }

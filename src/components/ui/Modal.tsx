@@ -162,8 +162,8 @@ export default function Modal({
         flex
         items-end
         justify-center
-        bg-black/55
-        p-3
+        bg-black/60
+        p-0
         sm:items-center
         sm:p-5
       "
@@ -189,28 +189,27 @@ export default function Modal({
         tabIndex={-1}
         className={`
           flex
-          max-h-[calc(100dvh-1.5rem)]
+          elevated
+          max-h-[calc(100dvh-3rem)]
           w-full
           ${sizeClasses[size]}
           flex-col
           overflow-hidden
-          rounded-[var(--radius-xl)]
-          border
-          border-[var(--border)]
+          rounded-t-[var(--radius-lg)]
           bg-[var(--surface)]
+          pb-[env(safe-area-inset-bottom)]
+          shadow-[var(--shadow-xl)]
           outline-none
+          sm:rounded-[var(--radius-lg)]
+          sm:pb-0
           sm:max-h-[calc(100dvh-2.5rem)]
         `}
       >
-        <div className="flex items-start justify-between gap-4 border-b border-[var(--border)] px-5 py-5 md:px-7 md:py-6">
+        <div className="flex items-start justify-between gap-4 border-b border-[var(--border)] px-4 py-3.5 sm:px-5">
           <div className="min-w-0">
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--primary)]">
-              MoosclesPro
-            </p>
-
             <h2
               id={titleId}
-              className="mt-1.5 text-xl font-black tracking-tight text-[var(--text)] md:text-2xl"
+              className="text-base font-semibold text-[var(--text)]"
             >
               {title}
             </h2>
@@ -218,7 +217,7 @@ export default function Modal({
             {description && (
               <p
                 id={descriptionId}
-                className="mt-2 max-w-xl text-sm leading-relaxed text-[var(--text-muted)]"
+                className="mt-1 max-w-xl text-sm leading-relaxed text-[var(--text-muted)]"
               >
                 {description}
               </p>
@@ -250,7 +249,7 @@ export default function Modal({
           </button>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5 md:px-7 md:py-6">
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-5">
           {children}
         </div>
       </div>

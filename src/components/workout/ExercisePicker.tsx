@@ -69,11 +69,11 @@ export default function ExercisePicker({
       <div className="border-b border-[var(--border)] bg-[var(--surface-soft)] p-5 md:p-6">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--primary)]">
+            <p className="text-xs font-semibold text-[var(--text-muted)]">
               Exercise library
             </p>
 
-            <h3 className="mt-2 text-xl font-black tracking-tight text-[var(--text)]">
+            <h3 className="mt-2 text-xl font-bold tracking-tight text-[var(--text)]">
               Add exercises
             </h3>
 
@@ -140,7 +140,7 @@ export default function ExercisePicker({
       <div className="max-h-[32rem] overflow-y-auto p-4">
         {filteredExercises.length === 0 ? (
           <div className="px-6 py-12 text-center">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--surface-soft)] text-[var(--text-muted)]">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-[var(--radius-lg)] bg-[var(--surface-soft)] text-[var(--text-muted)]">
               <Search size={23} />
             </div>
 
@@ -202,7 +202,7 @@ export default function ExercisePicker({
                           shrink-0
                           items-center
                           justify-center
-                          rounded-xl
+                          rounded-[var(--radius-md)]
                           ${
                             isSelected
                               ? "bg-[var(--success-soft)] text-[var(--success)]"

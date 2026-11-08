@@ -16,7 +16,6 @@ import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 
 import { routines } from "../data/routines";
-import { useRoutineStore } from "../stores/routineStore";
 import {
   formatElapsedTime,
   getActiveWorkoutCompletedSets,
@@ -28,6 +27,7 @@ import { useActiveWorkoutStore } from "../stores/activeWorkoutStore";
 import { authClient } from "../lib/auth-client";
 import { getAppPreferences } from "../lib/preferences";
 import { formatVolume } from "../lib/units";
+import { useCustomRoutines } from "../hooks/useCustomRoutines";
 
 export default function Session() {
   const navigate = useNavigate();
@@ -54,10 +54,7 @@ export default function Session() {
         state.clearActiveWorkout,
     );
 
-  const customRoutines =
-    useRoutineStore(
-      (state) => state.customRoutines,
-    );
+  const { customRoutines } = useCustomRoutines();
 
   const [now, setNow] =
     useState(() => Date.now());
@@ -107,15 +104,15 @@ export default function Session() {
 
   if (isPending) {
     return (
-      <main className="mx-auto max-w-4xl">
+      <div className="mx-auto max-w-4xl">
         <Card className="p-8">
-          <div className="h-8 w-48 animate-pulse rounded-lg bg-[var(--surface-soft)]" />
+          <div className="h-8 w-48 animate-pulse rounded-[var(--radius-md)] bg-[var(--surface-soft)]" />
 
-          <div className="mt-6 h-16 w-full animate-pulse rounded-xl bg-[var(--surface-soft)]" />
+          <div className="mt-6 h-16 w-full animate-pulse rounded-[var(--radius-md)] bg-[var(--surface-soft)]" />
 
-          <div className="mt-4 h-20 w-full animate-pulse rounded-xl bg-[var(--surface-soft)]" />
+          <div className="mt-4 h-20 w-full animate-pulse rounded-[var(--radius-md)] bg-[var(--surface-soft)]" />
         </Card>
-      </main>
+      </div>
     );
   }
 
@@ -181,13 +178,13 @@ export default function Session() {
   }
 
   return (
-    <main className="mx-auto max-w-3xl space-y-7 sm:space-y-8">
+    <div className="mx-auto max-w-3xl space-y-7 sm:space-y-8">
       <section>
-        <p className="text-sm font-bold uppercase tracking-[0.25em] text-[var(--primary)]">
+        <p className="text-sm font-bold text-[var(--primary)]">
           Active session
         </p>
 
-        <h1 className="mt-3 text-3xl font-black tracking-tight text-[var(--text)] sm:text-4xl md:text-5xl">
+        <h1 className="mt-3 font-bold tracking-tight text-[var(--text)] text-[22px] sm:text-2xl">
           Continue training
         </h1>
 
@@ -205,12 +202,12 @@ export default function Session() {
           <div className="relative">
             <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-[var(--primary)]">
+                <div className="flex items-center gap-2 text-xs font-bold text-[var(--primary)]">
                   <span className="h-2 w-2 animate-pulse rounded-full bg-[var(--primary)]" />
                   In progress
                 </div>
 
-                <h2 className="mt-3 text-3xl font-black tracking-tight text-[var(--feature-text)]">
+                <h2 className="mt-3 font-bold tracking-tight text-[var(--feature-text)] text-lg sm:text-xl">
                   {routineName}
                 </h2>
 
@@ -222,11 +219,11 @@ export default function Session() {
               </div>
 
               <div className="rounded-[var(--radius-lg)] border border-[var(--feature-border)] bg-[var(--feature-surface)] px-5 py-4 text-center">
-                <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[var(--feature-subtle)]">
+                <p className="text-[11px] font-bold text-[var(--feature-subtle)]">
                   Elapsed
                 </p>
 
-                <p className="mt-1 font-mono text-2xl font-black text-[var(--feature-text)]">
+                <p className="mt-1 font-mono text-2xl font-bold text-[var(--feature-text)]">
                   {formatElapsedTime(
                     elapsedSeconds,
                   )}
@@ -241,7 +238,7 @@ export default function Session() {
                   {totalSets} sets
                 </span>
 
-                <span className="font-black text-[var(--primary)]">
+                <span className="font-bold text-[var(--primary)]">
                   {progress}%
                 </span>
               </div>
@@ -310,7 +307,7 @@ export default function Session() {
           </button>
         </div>
       </Card>
-    </main>
+    </div>
   );
 }
 
@@ -320,17 +317,17 @@ function EmptySession({
   onBrowse: () => void;
 }) {
   return (
-    <main className="mx-auto max-w-3xl">
+    <div className="mx-auto max-w-3xl">
       <Card className="p-10 text-center md:p-14">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--primary-soft)] text-[var(--primary)]">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-[var(--radius-lg)] bg-[var(--primary-soft)] text-[var(--primary)]">
           <Play size={27} />
         </div>
 
-        <p className="mt-6 text-sm font-bold uppercase tracking-[0.2em] text-[var(--primary)]">
+        <p className="mt-6 text-sm font-bold text-[var(--primary)]">
           Session
         </p>
 
-        <h1 className="mt-2 text-3xl font-black tracking-tight text-[var(--text)] md:text-4xl">
+        <h1 className="mt-2 font-bold tracking-tight text-[var(--text)] text-[22px] sm:text-2xl">
           No active workout
         </h1>
 
@@ -348,7 +345,7 @@ function EmptySession({
           <ArrowRight size={17} />
         </Button>
       </Card>
-    </main>
+    </div>
   );
 }
 
@@ -368,7 +365,7 @@ function SessionMetric({
         {label}
       </div>
 
-      <p className="mt-2 font-black text-[var(--text)]">
+      <p className="mt-2 font-bold text-[var(--text)]">
         {value}
       </p>
     </div>

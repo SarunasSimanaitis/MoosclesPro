@@ -15,13 +15,13 @@ export default function ProgramCard({ program, onView }: ProgramCardProps) {
     <Card hover className="overflow-hidden">
       <div className="border-b border-[var(--border)] bg-[var(--feature-background)] p-5 sm:p-6">
         <div className="flex items-center justify-between gap-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--primary-soft)] text-[var(--primary)]">
+          <div className="flex h-12 w-12 items-center justify-center rounded-[var(--radius-lg)] bg-[var(--primary-soft)] text-[var(--primary)]">
             <Dumbbell size={23} />
           </div>
           <Badge variant="primary">Free</Badge>
         </div>
 
-        <h2 className="mt-5 text-2xl font-black tracking-tight text-[var(--feature-text)]">
+        <h2 className="mt-5 font-bold tracking-tight text-[var(--feature-text)] text-lg sm:text-xl">
           {program.name}
         </h2>
         <p className="mt-2 text-sm leading-relaxed text-[var(--feature-muted)]">
@@ -65,7 +65,7 @@ function InfoTile({
         {icon}
         {label}
       </div>
-      <p className="mt-1 font-black">{value}</p>
+      <p className="mt-1 font-bold">{value}</p>
     </div>
   );
 }

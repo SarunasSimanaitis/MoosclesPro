@@ -62,12 +62,12 @@ export default function RoutineExerciseEditor({
           <GripVertical size={18} />
         </div>
 
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--primary-soft)] text-sm font-black text-[var(--primary)]">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[var(--radius-md)] bg-[var(--primary-soft)] text-sm font-bold text-[var(--primary)]">
           {index + 1}
         </div>
 
         <div className="min-w-0 flex-1">
-          <h3 className="truncate text-lg font-black tracking-tight text-[var(--text)]">
+          <h3 className="truncate text-lg font-bold tracking-tight text-[var(--text)]">
             {exercise.name}
           </h3>
 
@@ -160,7 +160,7 @@ export default function RoutineExerciseEditor({
 
       <div className="mt-6 grid gap-4 border-t border-[var(--border)] pt-6 lg:grid-cols-[180px_1fr_2fr]">
         <div>
-          <p className="mb-2 text-xs font-bold uppercase tracking-[0.15em] text-[var(--text-muted)]">
+          <p className="mb-2 text-xs font-bold text-[var(--text-muted)]">
             Sets
           </p>
 
@@ -186,7 +186,7 @@ export default function RoutineExerciseEditor({
         </div>
 
         <label className="block">
-          <span className="mb-2 block text-xs font-bold uppercase tracking-[0.15em] text-[var(--text-muted)]">
+          <span className="mb-2 block text-xs font-bold text-[var(--text-muted)]">
             Target reps
           </span>
 
@@ -229,7 +229,7 @@ export default function RoutineExerciseEditor({
 
         <div>
           <div className="mb-2 flex items-center justify-between gap-3">
-            <span className="text-xs font-bold uppercase tracking-[0.15em] text-[var(--text-muted)]">
+            <span className="text-xs font-bold text-[var(--text-muted)]">
               Rest between sets
             </span>
 

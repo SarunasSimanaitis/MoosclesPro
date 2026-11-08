@@ -33,12 +33,12 @@ export default function RoutineCard({
   return (
     <Card hover className="p-5 sm:p-6">
       <div className="flex items-start gap-3">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[var(--success-soft)] text-[var(--success)]">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[var(--radius-lg)] bg-[var(--success-soft)] text-[var(--success)]">
           <Dumbbell size={21} />
         </div>
 
         <div className="min-w-0 flex-1">
-          <h3 className="truncate text-lg font-black sm:text-xl">{routine.name}</h3>
+          <h3 className="truncate text-lg font-bold sm:text-xl">{routine.name}</h3>
           <p className="mt-1 text-sm text-[var(--text-muted)]">
             {routine.exercises.length} {routine.exercises.length === 1 ? "exercise" : "exercises"}
             <span className="mx-1.5">·</span>
@@ -78,7 +78,7 @@ export default function RoutineCard({
       <div className="mt-4 space-y-2">
         {routine.exercises.slice(0, 3).map((item, index) => (
           <div key={item.exercise.id} className="flex items-center gap-3 rounded-[var(--radius-md)] bg-[var(--surface-soft)] px-3.5 py-3">
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[var(--surface)] text-[10px] font-black text-[var(--text-muted)]">
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[var(--radius-md)] bg-[var(--surface)] text-[11px] font-bold text-[var(--text-muted)]">
               {index + 1}
             </span>
             <span className="min-w-0 flex-1 truncate text-sm font-bold">{item.exercise.name}</span>

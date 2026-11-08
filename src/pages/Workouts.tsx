@@ -96,7 +96,7 @@ export default function Workouts() {
   if (isLoading) return <WorkoutsSkeleton />;
 
   return (
-    <main className="space-y-7 sm:space-y-8" onClick={() => setOpenMenu(null)}>
+    <div className="space-y-7 sm:space-y-8" onClick={() => setOpenMenu(null)}>
       <PageHeader
         eyebrow="Training"
         icon={<Dumbbell size={15} />}
@@ -123,8 +123,8 @@ export default function Workouts() {
       <section>
         <div className="mb-4 flex items-end justify-between gap-3">
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--primary)]">Start here</p>
-            <h2 className="mt-1 text-2xl font-black tracking-tight sm:text-3xl">Free programs</h2>
+            <p className="text-xs font-semibold text-[var(--text-muted)]">Start here</p>
+            <h2 className="mt-1 font-bold tracking-tight text-lg sm:text-xl">Free programs</h2>
           </div>
           <div className="hidden items-center gap-2 text-sm font-semibold text-[var(--text-muted)] sm:flex">
             <Users size={16} />
@@ -146,8 +146,8 @@ export default function Workouts() {
       <section>
         <div className="mb-4 flex items-end justify-between gap-3">
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--success)]">Your workouts</p>
-            <h2 className="mt-1 text-2xl font-black tracking-tight sm:text-3xl">My routines</h2>
+            <p className="text-xs font-bold text-[var(--success)]">Your workouts</p>
+            <h2 className="mt-1 font-bold tracking-tight text-lg sm:text-xl">My routines</h2>
           </div>
           <span className="text-sm font-semibold text-[var(--text-muted)]">
             {customRoutines.length} saved
@@ -174,11 +174,11 @@ export default function Workouts() {
         ) : (
           <Card className="border-dashed p-7 sm:p-10">
             <div className="grid gap-5 sm:grid-cols-[auto_1fr_auto] sm:items-center">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--success-soft)] text-[var(--success)]">
+              <div className="flex h-14 w-14 items-center justify-center rounded-[var(--radius-lg)] bg-[var(--success-soft)] text-[var(--success)]">
                 <Dumbbell size={25} />
               </div>
               <div>
-                <h3 className="text-xl font-black">Create your first routine</h3>
+                <h3 className="text-xl font-bold">Create your first routine</h3>
                 <p className="mt-1 max-w-xl text-sm leading-relaxed text-[var(--text-muted)]">
                   Add your exercises, set your targets once, then use the same routine whenever you train.
                 </p>
@@ -192,16 +192,16 @@ export default function Workouts() {
         )}
       </section>
 
-    </main>
+    </div>
   );
 }
 
 function WorkoutsSkeleton() {
   return (
-    <main className="space-y-6">
+    <div className="space-y-6">
       <div className="space-y-3">
         <div className="h-4 w-24 animate-pulse rounded bg-[var(--surface-soft)]" />
-        <div className="h-10 w-56 max-w-full animate-pulse rounded-xl bg-[var(--surface-soft)]" />
+        <div className="h-10 w-56 max-w-full animate-pulse rounded-[var(--radius-md)] bg-[var(--surface-soft)]" />
         <div className="h-5 w-full max-w-xl animate-pulse rounded bg-[var(--surface-soft)]" />
       </div>
       <div className="grid gap-4 lg:grid-cols-2">
@@ -214,6 +214,6 @@ function WorkoutsSkeleton() {
           <div key={item} className="h-64 animate-pulse rounded-[var(--radius-xl)] bg-[var(--surface-soft)]" />
         ))}
       </div>
-    </main>
+    </div>
   );
 }

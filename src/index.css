@@ -2,61 +2,61 @@
 
 :root {
   color-scheme: light;
-  --background: #f8f6f1;
-  --surface: rgba(255, 254, 251, 0.9);
-  --surface-soft: #f1eee7;
-  --surface-hover: #e9e4d9;
-  --primary: #997246;
-  --primary-hover: #7f5c37;
-  --primary-soft: rgba(153, 114, 70, 0.13);
-  --primary-foreground: #fffdf8;
-  --text: #24231f;
-  --text-muted: #69665e;
-  --text-subtle: #89857c;
-  --border: rgba(91, 79, 58, 0.15);
-  --border-strong: rgba(91, 79, 58, 0.28);
-  --success: #547d66;
-  --success-soft: rgba(84, 125, 102, 0.12);
-  --warning: #ad704d;
-  --warning-soft: rgba(173, 112, 77, 0.12);
-  --danger: #ad514a;
-  --danger-soft: rgba(173, 81, 74, 0.11);
-  --focus-ring: rgba(153, 114, 70, 0.26);
-  --shadow-sm: 0 4px 16px rgba(56, 47, 32, 0.055);
-  --shadow-lg: 0 24px 70px rgba(56, 47, 32, 0.11);
-  --shadow-xl: 0 36px 100px rgba(56, 47, 32, 0.15);
-  --radius-sm: 0.8rem;
-  --radius-md: 1.1rem;
-  --radius-lg: 1.45rem;
-  --radius-xl: 1.8rem;
+  --background: #CCD0CF;
+  --surface: #e5e8e7;
+  --surface-soft: #9BA8AB;
+  --surface-hover: #b8c1c1;
+  --primary: #253745;
+  --primary-hover: #11212D;
+  --primary-soft: rgba(37, 55, 69, 0.12);
+  --primary-foreground: #CCD0CF;
+  --text: #06141B;
+  --text-muted: #253745;
+  --text-subtle: #4A5C6A;
+  --border: rgba(6, 20, 27, 0.14);
+  --border-strong: rgba(6, 20, 27, 0.26);
+  --success: #34835d;
+  --success-soft: rgba(52, 131, 93, 0.12);
+  --warning: #a66b2c;
+  --warning-soft: rgba(166, 107, 44, 0.12);
+  --danger: #bd514d;
+  --danger-soft: rgba(189, 81, 77, 0.1);
+  --focus-ring: rgba(37, 55, 69, 0.24);
+  --shadow-sm: 0 3px 12px rgba(6, 20, 27, 0.07);
+  --shadow-lg: 0 18px 48px rgba(6, 20, 27, 0.12);
+  --shadow-xl: 0 28px 72px rgba(6, 20, 27, 0.16);
+  --radius-sm: 0.75rem;
+  --radius-md: 1rem;
+  --radius-lg: 1.25rem;
+  --radius-xl: 1.5rem;
   --content-width: 1720px;
 }
 
 .dark {
   color-scheme: dark;
-  --background: #08090a;
-  --surface: rgba(18, 19, 20, 0.94);
-  --surface-soft: #151718;
-  --surface-hover: #202223;
-  --primary: #d7b777;
-  --primary-hover: #e8c991;
-  --primary-soft: rgba(215, 183, 119, 0.15);
-  --primary-foreground: #18140d;
-  --text: #f5f2ec;
-  --text-muted: #b2ada3;
-  --text-subtle: #858077;
-  --border: rgba(225, 211, 185, 0.13);
-  --border-strong: rgba(225, 211, 185, 0.24);
-  --success: #94c2a3;
-  --success-soft: rgba(148, 194, 163, 0.14);
-  --warning: #e5a780;
-  --warning-soft: rgba(229, 167, 128, 0.13);
-  --danger: #e58c82;
-  --danger-soft: rgba(229, 140, 130, 0.14);
-  --focus-ring: rgba(215, 183, 119, 0.32);
-  --shadow-sm: 0 5px 18px rgba(0, 0, 0, 0.25);
-  --shadow-lg: 0 24px 72px rgba(0, 0, 0, 0.42);
-  --shadow-xl: 0 38px 110px rgba(0, 0, 0, 0.6);
+  --background: #06141B;
+  --surface: #11212D;
+  --surface-soft: #253745;
+  --surface-hover: #4A5C6A;
+  --primary: #9BA8AB;
+  --primary-hover: #CCD0CF;
+  --primary-soft: rgba(155, 168, 171, 0.14);
+  --primary-foreground: #06141B;
+  --text: #CCD0CF;
+  --text-muted: #9BA8AB;
+  --text-subtle: #9BA8AB;
+  --border: rgba(155, 168, 171, 0.14);
+  --border-strong: rgba(155, 168, 171, 0.26);
+  --success: #5dbb88;
+  --success-soft: rgba(93, 187, 136, 0.14);
+  --warning: #e4b477;
+  --warning-soft: rgba(228, 180, 119, 0.14);
+  --danger: #ee928b;
+  --danger-soft: rgba(238, 146, 139, 0.14);
+  --focus-ring: rgba(155, 168, 171, 0.32);
+  --shadow-sm: 0 4px 16px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 20px 56px rgba(0, 0, 0, 0.34);
+  --shadow-xl: 0 32px 88px rgba(0, 0, 0, 0.46);
 }
 
 *,
@@ -77,9 +77,8 @@ body {
   min-height: 100vh;
   background-color: var(--background);
   background-image:
-    radial-gradient(ellipse at 8% 2%, rgba(221, 198, 157, 0.19), transparent 36%),
-    radial-gradient(ellipse at 96% 92%, rgba(196, 185, 163, 0.14), transparent 38%),
-    linear-gradient(145deg, rgba(255, 255, 255, 0.22), transparent 55%);
+    radial-gradient(ellipse at 8% 2%, rgba(74, 92, 106, 0.12), transparent 38%),
+    radial-gradient(ellipse at 96% 92%, rgba(74, 92, 106, 0.10), transparent 40%);
   color: var(--text);
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-synthesis: none;
@@ -91,21 +90,20 @@ body {
 
 .dark body {
   background-image:
-    radial-gradient(ellipse at 8% 2%, rgba(112, 91, 57, 0.15), transparent 36%),
-    radial-gradient(ellipse at 96% 92%, rgba(67, 81, 80, 0.12), transparent 38%),
-    linear-gradient(145deg, rgba(255, 255, 255, 0.012), transparent 55%);
+    radial-gradient(ellipse at 8% 2%, rgba(74, 92, 106, 0.14), transparent 38%),
+    radial-gradient(ellipse at 96% 92%, rgba(74, 92, 106, 0.10), transparent 40%);
 }
 
 .app-shell {
   min-height: 100vh;
   background:
-    radial-gradient(ellipse at 14% 0%, rgba(219, 196, 157, 0.08), transparent 40%),
+    radial-gradient(ellipse at 14% 0%, rgba(74, 92, 106, 0.06), transparent 40%),
     transparent;
 }
 
 .dark .app-shell {
   background:
-    radial-gradient(ellipse at 14% 0%, rgba(111, 89, 54, 0.075), transparent 42%),
+    radial-gradient(ellipse at 14% 0%, rgba(74, 92, 106, 0.08), transparent 42%),
     transparent;
 }
 
@@ -113,25 +111,25 @@ body {
   background-color: var(--background);
   background-image:
     radial-gradient(ellipse at 14% 10%, rgba(255, 255, 255, 0.8), transparent 45%),
-    radial-gradient(ellipse at 95% 92%, rgba(202, 174, 123, 0.19), transparent 42%);
+    radial-gradient(ellipse at 95% 92%, rgba(74, 92, 106, 0.14), transparent 42%);
 }
 
 .dark .auth-shell {
   background-image:
-    radial-gradient(ellipse at 14% 10%, rgba(67, 62, 52, 0.22), transparent 45%),
-    radial-gradient(ellipse at 95% 92%, rgba(72, 77, 77, 0.16), transparent 42%);
+    radial-gradient(ellipse at 14% 10%, rgba(74, 92, 106, 0.14), transparent 45%),
+    radial-gradient(ellipse at 95% 92%, rgba(155, 168, 171, 0.10), transparent 42%);
 }
 
 .auth-art {
   background:
-    radial-gradient(ellipse at 82% 20%, rgba(205, 179, 132, 0.26), transparent 46%),
+    radial-gradient(ellipse at 82% 20%, rgba(74, 92, 106, 0.18), transparent 46%),
     radial-gradient(ellipse at 15% 90%, rgba(255, 255, 255, 0.72), transparent 50%);
 }
 
 .dark .auth-art {
   background:
-    radial-gradient(ellipse at 82% 20%, rgba(129, 104, 64, 0.2), transparent 46%),
-    radial-gradient(ellipse at 15% 90%, rgba(55, 60, 61, 0.24), transparent 50%);
+    radial-gradient(ellipse at 82% 20%, rgba(74, 92, 106, 0.18), transparent 46%),
+    radial-gradient(ellipse at 15% 90%, rgba(74, 92, 106, 0.10), transparent 50%);
 }
 
 * {
@@ -355,5 +353,86 @@ textarea::placeholder {
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
+  }
+}
+
+
+/* Calm, consistent surfaces and clearer interaction states across every page. */
+.site-card {
+  border-color: var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.site-card-hover {
+  transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+
+.site-card-hover:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:not(:disabled),
+a {
+  transition-property: color, background-color, border-color, box-shadow, transform;
+  transition-duration: 160ms;
+  transition-timing-function: ease;
+}
+
+input,
+select,
+textarea {
+  color: var(--text);
+}
+
+::placeholder {
+  color: var(--text-subtle);
+}
+
+@media (max-width: 639px) {
+  .app-content {
+    padding-top: 1.25rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-card-hover:hover {
+    transform: none;
+  }
+}
+
+/* Responsive finishing touches: safe-area support and stable mobile menu sizing. */
+.mobile-navigation-open {
+  max-height: min(75dvh, 36rem);
+  padding-bottom: env(safe-area-inset-bottom);
+  overscroll-behavior: contain;
+}
+
+@media (max-width: 639px) {
+  .app-content {
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
+
+  .site-card-hover:hover {
+    transform: none;
+  }
+}
+
+@media (max-width: 359px) {
+  .app-content {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
   }
 }

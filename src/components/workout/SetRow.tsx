@@ -8,6 +8,7 @@ import NumberStepper from "../ui/NumberStepper";
 
 type SetRowProps = {
   workoutSet: WorkoutSet;
+  isNext?: boolean;
   weightUnit: WeightUnit;
   personalRecordLabels?: string[];
   onToggle: () => void;
@@ -19,6 +20,7 @@ type SetRowProps = {
 
 export default function SetRow({
   workoutSet,
+  isNext = false,
   weightUnit,
   personalRecordLabels = [],
   onToggle,
@@ -43,15 +45,15 @@ export default function SetRow({
         isCompleted
           ? "set-row-completed border-[var(--success)]/40 bg-[var(--success-soft)]"
           : "border-[var(--border)] bg-[var(--surface-soft)]/70"
-      } ${hasRecord ? "set-row-record border-[var(--primary)]/55" : ""}`}
+      } ${hasRecord ? "set-row-record border-[var(--primary)]/55" : ""} ${isNext && !isCompleted ? "border-[var(--primary)]/60 bg-[var(--primary-soft)]/35 shadow-[0_0_0_1px_var(--primary)/10]" : ""}`}
     >
       <div className="col-span-2 flex min-w-0 items-center justify-between gap-2 md:col-span-1 md:justify-center">
         <div className="flex min-w-0 items-center gap-2.5 md:flex-col md:gap-1">
           <span className={`flex h-9 min-w-9 items-center justify-center rounded-xl text-sm font-black tabular-nums md:h-8 md:min-w-8 ${isCompleted ? "bg-[var(--success)] text-white" : "bg-[var(--surface)] text-[var(--text-muted)]"}`}>
             {workoutSet.order}
           </span>
-          <span className="text-xs font-bold text-[var(--text-muted)] md:hidden">Set {workoutSet.order}</span>
-          {isCompleted && <span className="hidden text-[10px] font-black uppercase tracking-wide text-[var(--success)] md:inline">Done</span>}
+          <span className="flex items-center gap-2 text-xs font-bold text-[var(--text-muted)] md:hidden">Set {workoutSet.order}{isNext && !isCompleted && <span className="rounded-full bg-[var(--primary-soft)] px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-[var(--primary)]">Next</span>}</span>
+          {isCompleted ? <span className="hidden text-[10px] font-black uppercase tracking-wide text-[var(--success)] md:inline">Done</span> : isNext ? <span className="hidden rounded-full bg-[var(--primary-soft)] px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-[var(--primary)] md:inline">Next</span> : null}
         </div>
 
         {hasRecord && (

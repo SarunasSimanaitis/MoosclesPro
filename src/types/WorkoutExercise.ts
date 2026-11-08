@@ -9,4 +9,7 @@ export interface WorkoutExercise {
   restSeconds: number;
 
   sets: WorkoutSet[];
+
+  /** Skipped during the workout: its unfinished sets don't count toward progress. */
+  skipped?: boolean;
 }

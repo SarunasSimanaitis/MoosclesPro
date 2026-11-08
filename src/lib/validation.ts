@@ -4,6 +4,12 @@ import type { RoutineExercise } from "../types/RoutineExercise.js";
 import type { WorkoutExercise } from "../types/WorkoutExercise.js";
 import type { WorkoutSession } from "../types/WorkoutSession.js";
 import type { WorkoutSet } from "../types/WorkoutSet.js";
+import { isValidRpe } from "./rpe.js";
+
+/** Heaviest load accepted for a single set, in kilograms. */
+const MAX_SET_WEIGHT_KG = 2000;
+/** Most reps accepted for a single set. */
+const MAX_SET_REPS = 1000;
 
 type ValidationSuccess<T> = {
   success: true;
@@ -187,12 +193,15 @@ function validateWorkoutSet(
 
   return (
     isNonEmptyString(value.id) &&
+    // Any precision is fine: pounds convert to kilograms with decimals.
     isNonNegativeNumber(value.weight) &&
-    Number.isInteger(value.weight * 2) &&
+    value.weight <= MAX_SET_WEIGHT_KG &&
     isNonNegativeNumber(value.reps) &&
     Number.isInteger(value.reps) &&
+    value.reps <= MAX_SET_REPS &&
     typeof value.completed === "boolean" &&
-    isPositiveInteger(value.order)
+    isPositiveInteger(value.order) &&
+    (value.rpe === undefined || value.rpe === null || isValidRpe(value.rpe))
   );
 }
 
@@ -211,7 +220,8 @@ function validateWorkoutExercise(
     Number.isInteger(value.restSeconds) &&
     Array.isArray(value.sets) &&
     value.sets.length > 0 &&
-    value.sets.every(validateWorkoutSet)
+    value.sets.every(validateWorkoutSet) &&
+    (value.skipped === undefined || typeof value.skipped === "boolean")
   );
 }
 
@@ -465,6 +475,34 @@ export function validateWorkoutSessionPayload(
 
   return {
     success: true,
-    data: value,
+    data: sanitizeWorkoutSession(value),
+  };
+}
+
+/**
+ * Copies only the fields the app knows about, so nothing unexpected from a
+ * request body ends up in the database. Weights are rounded to 0.01 kg.
+ */
+function sanitizeWorkoutSession(session: WorkoutSession): WorkoutSession {
+  return {
+    id: session.id,
+    routineId: session.routineId,
+    startedAt: session.startedAt,
+    completedAt: session.completedAt,
+    exercises: session.exercises.map((exercise) => ({
+      exercise: exercise.exercise,
+      targetSets: exercise.targetSets,
+      targetReps: exercise.targetReps,
+      restSeconds: exercise.restSeconds,
+      ...(exercise.skipped ? { skipped: true } : {}),
+      sets: exercise.sets.map((set) => ({
+        id: set.id,
+        weight: Math.round(set.weight * 100) / 100,
+        reps: set.reps,
+        completed: set.completed,
+        order: set.order,
+        ...(isValidRpe(set.rpe) ? { rpe: set.rpe } : {}),
+      })),
+    })),
   };
 }

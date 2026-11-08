@@ -374,7 +374,7 @@ export default function Select({
       {label && (
         <label
           id={labelId}
-          className="mb-2 block text-xs font-bold uppercase tracking-[0.15em] text-[var(--text-muted)]"
+          className="mb-2 block text-xs font-bold text-[var(--text-muted)]"
         >
           {label}
         </label>

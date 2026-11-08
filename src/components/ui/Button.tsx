@@ -21,20 +21,20 @@ export default function Button({
   ...props
 }: ButtonProps) {
   const variants: Record<ButtonVariant, string> = {
-    primary: "bg-[var(--primary)] text-[var(--primary-foreground)] shadow-sm hover:bg-[var(--primary-hover)] hover:shadow-lg",
-    secondary: "border border-[var(--border-strong)] bg-[var(--surface)] text-[var(--text)] shadow-sm hover:border-[var(--primary)] hover:bg-[var(--surface-hover)]",
+    primary: "bg-[var(--primary)] text-[var(--primary-foreground)] hover:bg-[var(--primary-hover)]",
+    secondary: "bg-[var(--surface-soft)] text-[var(--text)] hover:bg-[var(--surface-hover)]",
     ghost: "text-[var(--text)] hover:bg-[var(--surface-soft)]",
     danger: "bg-[var(--danger)] text-white hover:opacity-90",
   };
 
   const sizes: Record<ButtonSize, string> = {
-    sm: "min-h-11 px-4 py-2.5 text-sm",
-    md: "min-h-12 px-5 py-3 text-sm sm:px-6",
-    lg: "min-h-14 px-7 py-4 text-base",
+    sm: "min-h-9 px-3.5 py-2 text-sm",
+    md: "min-h-11 px-4 py-2.5 text-sm",
+    lg: "min-h-12 px-5 py-3 text-[15px]",
   };
 
   const classes = [
-    "inline-flex touch-manipulation items-center justify-center gap-2.5 rounded-full border border-transparent font-semibold leading-none transition-[background-color,border-color,color,box-shadow,transform,opacity] duration-200 active:scale-[0.985] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] disabled:opacity-50",
+    "inline-flex touch-manipulation select-none items-center justify-center gap-2 rounded-[var(--radius-md)] font-semibold leading-none transition-[background-color,color,opacity] duration-150 active:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] disabled:opacity-40",
     variants[variant],
     sizes[size],
     className,

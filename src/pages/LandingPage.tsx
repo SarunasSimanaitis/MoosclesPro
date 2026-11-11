@@ -14,6 +14,7 @@ import {
 } from "react-router-dom";
 
 import Button from "../components/ui/Button";
+import { DEMO_ENABLED } from "../lib/demo";
 import Card from "../components/ui/Card";
 
 const features = [
@@ -102,6 +103,14 @@ export default function LandingPage() {
             <p className="mt-4 text-sm text-[var(--text-muted)]">
               No account needed to explore the
               public parts of MoosclesPro.
+              {DEMO_ENABLED && (
+                <>
+                  {" "}
+                  <NavLink to="/login" className="font-semibold text-[var(--primary)] underline-offset-2 hover:underline">
+                    Or try the demo account.
+                  </NavLink>
+                </>
+              )}
             </p>
           </div>
 

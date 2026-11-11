@@ -1,8 +1,18 @@
 # MoosclesPro
 
-MoosclesPro is a focused workout tracking and logging app built around one simple loop:
+**Live app: [mooscles-pro.vercel.app](https://mooscles-pro.vercel.app/)**
+
+A workout tracker built around one simple loop:
 
 **plan a workout → log every set → finish the session → learn from the history.**
+
+![Dashboard](screenshots/dashboard.png)
+
+| Logging a workout | Rest timer | Dark mode |
+| --- | --- | --- |
+| ![Workout screen on a phone](screenshots/mobile-workout-light.png) | ![Rest timer](screenshots/mobile-rest-timer.png) | ![Workout screen in dark mode](screenshots/mobile-workout-dark.png) |
+
+More screenshots: [workout on desktop](screenshots/workout.png) · [routines](screenshots/workouts.png) · [statistics](screenshots/statistics.png) · [history](screenshots/history.png)
 
 ## Product
 
@@ -22,8 +32,9 @@ MoosclesPro is a focused workout tracking and logging app built around one simpl
 - Responsive desktop and mobile layouts
 - Session-based authentication and user-scoped MongoDB data
 
-## 🧪 Automated Testing & Business Logic
-To guarantee reliability across complex workout tracking state machines and mathematical calculations, this project includes comprehensive unit test suites powered by **Vitest**.
+## Tests
+
+The workout logic is covered by unit tests written with **Vitest**. They run on GitHub Actions on every push.
 
 ### What the tests cover
 - **Statistics:** volume and counts only include completed sets and sessions.
@@ -31,7 +42,7 @@ To guarantee reliability across complex workout tracking state machines and math
 - **Saving:** server validation of sets (RPE range, pound weights, impossible numbers) and that only known fields are stored.
 - **Rest timer:** countdown from an end time, ±15 s adjustments, and edge cases.
 
-To execute the test runner locally:
+Run them locally:
 ```bash
 npm run test
 ```
@@ -66,3 +77,7 @@ Weights are stored in kilograms. The selected kg/lb preference is a display and 
 3. Start that routine, enter weights and reps, complete sets, and use the rest timer.
 4. Finish the workout, open History, and confirm the routine, sets, volume, and duration were saved.
 5. Return to the dashboard and Statistics and confirm their totals match the saved history. Switch to another account to demonstrate private data separation.
+
+## Demo account (optional)
+
+To let visitors look around without registering, create an account in the app, then set `VITE_DEMO_EMAIL` and `VITE_DEMO_PASSWORD` (see `.env.example`). The sign-in page then shows a "Try the demo account" button. Without those values the button is hidden.

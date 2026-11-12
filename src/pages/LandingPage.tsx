@@ -106,7 +106,7 @@ export default function LandingPage() {
               {DEMO_ENABLED && (
                 <>
                   {" "}
-                  <NavLink to="/login" className="font-semibold text-[var(--primary)] underline-offset-2 hover:underline">
+                  <NavLink to="/login?demo=1" className="font-semibold text-[var(--primary)] underline-offset-2 hover:underline">
                     Or try the demo account.
                   </NavLink>
                 </>

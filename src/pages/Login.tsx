@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { ArrowRight, LockKeyhole, Mail } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -60,6 +60,18 @@ export default function Login() {
     if (!DEMO_EMAIL || !DEMO_PASSWORD) return;
     void signIn({ email: DEMO_EMAIL, password: DEMO_PASSWORD });
   }
+
+  /* Arriving from a "Try the demo" link (/login?demo=1) signs in straight away. */
+  const wantsDemo = DEMO_ENABLED && new URLSearchParams(location.search).get("demo") === "1";
+  const demoStarted = useRef(false);
+
+  useEffect(() => {
+    if (!wantsDemo || demoStarted.current) return;
+    demoStarted.current = true;
+    handleDemo();
+    // Runs once on arrival; handleDemo only reads build-time constants.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wantsDemo]);
 
   return (
     <AuthFrame
